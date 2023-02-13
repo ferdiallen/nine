@@ -18,6 +18,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,16 +41,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.example.nineintelligence.R
+import com.example.nineintelligence.navigation.NavigationHolder
+import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.PlaceholderColor
+import com.example.nineintelligence.ui.theme.Poppins
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginForm(
     type: String,
-    viewModel: EnterViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: EnterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    controller: NavController
 ) {
     val email by viewModel.currentEmail.collectAsStateWithLifecycle()
     val password by viewModel.currentPassword.collectAsStateWithLifecycle()
@@ -67,122 +74,129 @@ fun LoginForm(
             this.pop()
         }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MainBlueColor),
-        verticalArrangement = Arrangement.Bottom
-    ) {
-        Card(
+    DeliverCustomFonts(font = Poppins.fonts) { font ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.95F),
-            shape = RoundedCornerShape(36.dp, 36.dp),
-            colors = CardDefaults.cardColors(Color.White)
+                .fillMaxSize()
+                .background(MainBlueColor),
+            verticalArrangement = Arrangement.Bottom
         ) {
-            Column(
+            Card(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 24.dp)
-                    .padding(horizontal = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.95F),
+                shape = RoundedCornerShape(36.dp, 36.dp),
+                colors = CardDefaults.cardColors(Color.White)
             ) {
-                Text(text = "Login $type", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(70.dp))
-                Text(
-                    text = "Username",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = viewModel::onEmailChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    placeholder = {
-                        Text(
-                            text = "Email or Phone Number",
-                            fontWeight = FontWeight.SemiBold,
-                            color = PlaceholderColor.copy(0.7F)
-                        )
-                    })
-
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    text = "Password",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = viewModel::onPasswordChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    placeholder = {
-                        Text(
-                            text = "Password",
-                            fontWeight = FontWeight.SemiBold,
-                            color = PlaceholderColor.copy(0.7F)
-                        )
-                    })
-
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(top = 24.dp)
+                        .padding(horizontal = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Checkbox(
-                        checked = checkedRemember,
-                        onCheckedChange = viewModel::onCheckedChange
+                    Text(
+                        text = "Login $type",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = font
                     )
-                    Text(text = "Remember Me", modifier = Modifier.clickable {
-                        viewModel.onCheckedChange(data = !checkedRemember)
-                    })
-                }
-                Spacer(modifier = Modifier.height(32.dp))
-                Button(
-                    onClick = {
-
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.15F),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MainYellowColor)
-                ) {
-                    Text(text = "Sign In", fontSize = 18.sp)
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                when (type) {
-                    stringResource(id = R.string.siswa) -> {
-                        ClickableText(text = annotatedText, onClick = { offset ->
-                            annotatedText.getStringAnnotations(
-                                tag = context.getString(R.string.signup_tag),
-                                start = offset,
-                                end = offset
-                            ).firstOrNull()?.let { clickedValue ->
-                                println(clickedValue.item)
-                            }
+                    Spacer(modifier = Modifier.height(70.dp))
+                    Text(
+                        text = "Username",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start,
+                        fontFamily = font
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(value = email,
+                        onValueChange = viewModel::onEmailChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        placeholder = {
+                            Text(
+                                text = "Email or Phone Number",
+                                fontWeight = FontWeight.SemiBold,
+                                color = PlaceholderColor.copy(0.7F),
+                                fontFamily = font,
+                                fontSize = 14.sp
+                            )
                         })
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        text = "Password",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start,
+                        fontFamily = font
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(value = password,
+                        onValueChange = viewModel::onPasswordChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        placeholder = {
+                            Text(
+                                text = "Password",
+                                fontWeight = FontWeight.SemiBold,
+                                color = PlaceholderColor.copy(0.7F),
+                                fontFamily = font,
+                                fontSize = 14.sp
+                            )
+                        })
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = checkedRemember, onCheckedChange = viewModel::onCheckedChange,
+                            colors = CheckboxDefaults.colors(checkedColor = MainBlueColor)
+                        )
+                        Text(text = "Remember Me", modifier = Modifier.clickable {
+                            viewModel.onCheckedChange(data = !checkedRemember)
+                        }, fontFamily = font, fontSize = 14.sp, color = MainBlueColor)
                     }
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Button(
+                        onClick = {
 
-                    stringResource(id = R.string.mentor) -> {
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.2F),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MainYellowColor)
+                    ) {
+                        Text(text = "Sign In", fontSize = 16.sp, fontFamily = font)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    when (type) {
+                        stringResource(id = R.string.siswa) -> {
+                            ClickableText(text = annotatedText, onClick = { offset ->
+                                annotatedText.getStringAnnotations(
+                                    tag = context.getString(R.string.signup_tag),
+                                    start = offset,
+                                    end = offset
+                                ).firstOrNull()?.let { clickedValue ->
+                                    controller.navigate(NavigationHolder.RegisterScreen.route)
+                                }
+                            }, style = TextStyle(fontFamily = font, fontSize = 12.sp))
+                        }
 
+                        stringResource(id = R.string.mentor) -> {
+
+                        }
                     }
                 }
             }
         }
+
     }
 
-}
-
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun LoginPreview() {
-    LoginForm(type = "Siswa")
 }
