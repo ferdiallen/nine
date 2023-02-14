@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.nineintelligence.navigation.RootNavigation
 import com.example.nineintelligence.presentation.enter.RegisterScreen
+import com.example.nineintelligence.presentation.home.HomeScreen
+import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,7 +22,10 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    RootNavigation()
+                    ProfileScreen(
+                        Modifier
+                            .padding(horizontal = 32.dp)
+                            .padding(top = 8.dp))
                 }
             }
         }

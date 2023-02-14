@@ -165,7 +165,7 @@ fun LoginForm(
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
                         onClick = {
-
+                            controller.navigate(NavigationHolder.HomeScreen.route)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -183,7 +183,7 @@ fun LoginForm(
                                     tag = context.getString(R.string.signup_tag),
                                     start = offset,
                                     end = offset
-                                ).firstOrNull()?.let { clickedValue ->
+                                ).firstOrNull()?.let { _ ->
                                     controller.navigate(NavigationHolder.RegisterScreen.route)
                                 }
                             }, style = TextStyle(fontFamily = font, fontSize = 12.sp))

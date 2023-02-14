@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -29,6 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,27 +67,33 @@ val offerListItem = mapOf(
 @Composable
 fun HomeScreen(controller: NavController = rememberAnimatedNavController()) {
     val windowInfo = rememberWindoInfo()
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            HeaderRow(
-                username = "Ferdialif",
-                image = R.drawable.generated,
-                modifier = Modifier.padding(horizontal = 8.dp),
-                info = windowInfo
-            )
+    Scaffold(bottomBar = {
+        BottomBarCustom(modifier = Modifier.border(0.1.dp, Color.Black), info = windowInfo)
+    }, topBar = {
+        HeaderRow(
+            username = "Ferdialif",
+            image = R.drawable.generated,
+            modifier = Modifier.padding(horizontal = 8.dp),
+            info = windowInfo
+        )
+    }) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding().minus(30.dp)
+                )
+        ) {
             MiddleItems(modifier = Modifier.padding(top = 32.dp))
         }
-        BottomBarCustom(modifier = Modifier.border(0.1.dp, Color.Black), info = windowInfo)
     }
 }
 
 @Composable
 private fun HeaderRow(
     modifier: Modifier = Modifier,
-    username: String,
-    image: Any?,
-    info: WindowType
+    username: String, image: Any?, info: WindowType
 ) {
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Card(
@@ -138,7 +146,8 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
                 fontFamily = font,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = MainBlueColor, modifier = Modifier.padding(start = 14.dp)
+                color = MainBlueColor,
+                modifier = Modifier.padding(start = 14.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Card(
@@ -157,7 +166,8 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp)
-                            .padding(vertical = 4.dp), color = MainBlueColor
+                            .padding(vertical = 4.dp),
+                        color = MainBlueColor
                     )
 
                 }
@@ -174,18 +184,17 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
                         -(14).toDp()
                     })) {
                         Text(
-                            text = "8", fontSize = 12.sp,
-                            modifier = Modifier.padding(4.dp)
+                            text = "8", fontSize = 12.sp, modifier = Modifier.padding(4.dp)
                         )
                     }
                 }) {
                     Card(
-                        shape = CircleShape,
-                        colors = CardDefaults.cardColors(MainYellowColor)
+                        shape = CircleShape, colors = CardDefaults.cardColors(MainYellowColor)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.doorbell),
-                            contentDescription = null, modifier = Modifier
+                            contentDescription = null,
+                            modifier = Modifier
                                 .size(35.dp)
                                 .padding(4.dp)
                         )
@@ -214,78 +223,38 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
                         fontSize = 16.sp
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth(0.85F)
-                            .height(90.dp),
-                        colors = CardDefaults.cardColors(
-                            MainYellowColor
-                        ),
-                        elevation = CardDefaults.cardElevation(8.dp),
-                        shape = RoundedCornerShape(12.dp)
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Card(
-                                shape = CircleShape,
-                                modifier = Modifier.size(30.dp),
-                                colors = CardDefaults.cardColors(MainBlueColor)
+                        items(5) {
+                            ProgressCard(
+                                font = font,
+                                studyName = "Biologi",
+                                percentage = 0.5F, indexOf = it
+                            )
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(
+                                text = "Apa saja yang ada di dalam aplikasi ini?",
+                                fontFamily = font,
+                                fontWeight = FontWeight.Bold,
+                                style = TextStyle(letterSpacing = 0.3.sp),
+                                fontSize = 16.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "1",
-                                        fontSize = 16.sp,
-                                        fontFamily = font,
-                                        fontWeight = FontWeight.Bold, color = MainYellowColor
-                                    )
+                                items(offerListItem) { out ->
+                                    ItemOffer(image = out.second, text = out.first, font)
+                                    Spacer(modifier = Modifier.width(8.dp))
                                 }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "Biologi",
-                                fontFamily = font,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp),
-                                horizontalArrangement = Arrangement.End
-                            ) {
-                                CustomPercentage(
-                                    0.57F,
-                                    inactiveColor = Color.White,
-                                    activeColor = MainBlueColor,
-                                    modifier = Modifier.fillMaxWidth(0.8F)
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(38.dp))
-                    Text(
-                        text = "Apa saja yang ada di dalam aplikasi ini?",
-                        fontFamily = font,
-                        fontWeight = FontWeight.Bold,
-                        style = TextStyle(letterSpacing = 0.3.sp),
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        items(offerListItem) { out ->
-                            ItemOffer(image = out.second, text = out.first, font)
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 }
@@ -296,23 +265,82 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ItemOffer(
-    image: Any?,
-    text: String, font: FontFamily
+private fun ProgressCard(
+    font: FontFamily,
+    studyName: String,
+    percentage: Float,
+    indexOf: Int
 ) {
     Card(
-        modifier = Modifier.size(90.dp),
-        colors = CardDefaults.cardColors(Color.White),
-        elevation = CardDefaults.cardElevation(8.dp)
+        modifier = Modifier
+            .fillMaxWidth(0.85F)
+            .height(90.dp), colors = CardDefaults.cardColors(
+            MainYellowColor
+        ), elevation = CardDefaults.cardElevation(8.dp), shape = RoundedCornerShape(12.dp)
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Card(
+                shape = CircleShape,
+                modifier = Modifier.size(30.dp),
+                colors = CardDefaults.cardColors(MainBlueColor)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = indexOf.toString(),
+                        fontSize = 16.sp,
+                        fontFamily = font,
+                        fontWeight = FontWeight.Bold,
+                        color = MainYellowColor
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = studyName,
+                fontFamily = font, fontSize = 16.sp, fontWeight = FontWeight.Bold
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                CustomPercentage(
+                    percentage,
+                    inactiveColor = Color.White,
+                    activeColor = MainBlueColor,
+                    modifier = Modifier.fillMaxWidth(0.8F)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ItemOffer(
+    image: Any?, text: String, font: FontFamily
+) {
+    Card(modifier = Modifier.size(90.dp),
+        colors = CardDefaults.cardColors(Color.White),
+        elevation = CardDefaults.cardElevation(8.dp),
+        onClick = {
+
+        }) {
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AsyncImage(
-                model = image,
-                contentDescription = null, modifier = Modifier.size(50.dp)
+                model = image, contentDescription = null, modifier = Modifier.size(50.dp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = text, fontFamily = font, fontSize = 14.sp)
@@ -333,8 +361,7 @@ fun CustomPercentage(
             .height(15.dp)
     ) {
         Card(
-            modifier = Modifier.fillMaxSize(),
-            colors = CardDefaults.cardColors(inactiveColor)
+            modifier = Modifier.fillMaxSize(), colors = CardDefaults.cardColors(inactiveColor)
         ) {}
         Card(
             modifier = Modifier
@@ -342,10 +369,7 @@ fun CustomPercentage(
                 .fillMaxHeight(),
             colors = CardDefaults.cardColors(activeColor),
             shape = if (currentPercentage == 1F) CardDefaults.shape else RoundedCornerShape(
-                topEnd = 0.dp,
-                bottomEnd = 0.dp,
-                topStart = 8.dp,
-                bottomStart = 8.dp
+                topEnd = 0.dp, bottomEnd = 0.dp, topStart = 8.dp, bottomStart = 8.dp
             )
         ) {}
     }
@@ -363,60 +387,69 @@ private val dataBottomBar = mapOf(
 @Composable
 private fun BottomBarCustom(modifier: Modifier = Modifier, info: WindowType) {
     DeliverCustomFonts(font = Poppins.fonts) { font ->
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
             Surface(modifier = Modifier.wrapContentSize(), shadowElevation = 32.dp) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.09F)
-                        .then(modifier),
-                    shape = RoundedCornerShape(0.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.09F)
+                            .then(modifier),
+                        shape = RoundedCornerShape(0.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        dataBottomBar.forEachIndexed { index, indexAt ->
-                            if (index == 2) {
-                                Spacer(modifier = Modifier.width(100.dp))
-                                return@forEachIndexed
-                            }
-                            Card(
-                                modifier = Modifier
-                                    .size(70.dp)
-                                    .padding(start = 4.dp),
-                                onClick = {},
-                                shape = CircleShape,
-                                colors = CardDefaults.cardColors(Color.Transparent)
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            dataBottomBar.forEachIndexed { index, indexAt ->
+                                if (index == 2) {
+                                    Spacer(modifier = Modifier.width(100.dp))
+                                    return@forEachIndexed
+                                }
+                                Card(
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(horizontal = 4.dp),
-                                    verticalArrangement = Arrangement.Center
+                                        .size(70.dp)
+                                        .padding(start = 4.dp),
+                                    onClick = {},
+                                    shape = CircleShape,
+                                    colors = CardDefaults.cardColors(Color.Transparent)
                                 ) {
-                                    AsyncImage(
-                                        model = indexAt.second,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(25.dp)
-                                    )
-                                    Text(text = indexAt.first, fontSize = 11.sp, fontFamily = font)
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = 4.dp),
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        AsyncImage(
+                                            model = indexAt.second,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(25.dp)
+                                        )
+                                        Text(
+                                            text = indexAt.first,
+                                            fontSize = 11.sp,
+                                            fontFamily = font
+                                        )
+                                    }
+
                                 }
 
+                                Spacer(modifier = Modifier.width(2.dp))
                             }
-
-                            Spacer(modifier = Modifier.width(2.dp))
                         }
+
+
                     }
 
                 }
             }
+
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(
                         bottom = when {
                             info.screenWidthDp < 360.dp -> 12.dp
@@ -424,8 +457,7 @@ private fun BottomBarCustom(modifier: Modifier = Modifier, info: WindowType) {
                             info.screenWidthDp == 540.dp -> 32.dp
                             else -> 12.dp
                         }
-                    ),
-                contentAlignment = Alignment.BottomCenter
+                    ), contentAlignment = Alignment.BottomCenter
             ) {
                 Card(
                     shape = CircleShape,
@@ -461,13 +493,12 @@ private fun BottomBarCustom(modifier: Modifier = Modifier, info: WindowType) {
                 }
             }
         }
-
     }
+
 }
 
 @Preview(
-    showBackground = true, showSystemUi = true,
-    device = "spec:width=1080px,height=2280px,dpi=480"
+    showBackground = true, showSystemUi = true, device = "spec:width=1080px,height=2280px,dpi=480"
 )
 @Composable
 fun SmallPreview() {
@@ -475,8 +506,7 @@ fun SmallPreview() {
 }
 
 @Preview(
-    showBackground = true, showSystemUi = true,
-    device = "spec:width=320dp,height=533.3dp,dpi=640"
+    showBackground = true, showSystemUi = true, device = "spec:width=320dp,height=533.3dp,dpi=640"
 )
 @Composable
 fun MediumPreview() {
@@ -484,8 +514,7 @@ fun MediumPreview() {
 }
 
 @Preview(
-    showBackground = true, showSystemUi = true,
-    device = "id:pixel_c"
+    showBackground = true, showSystemUi = true, device = "id:pixel_c"
 )
 @Composable
 fun LargePreview() {
@@ -493,7 +522,8 @@ fun LargePreview() {
 }
 
 @Preview(
-    showBackground = true, showSystemUi = true,
+    showBackground = true,
+    showSystemUi = true,
     device = "spec:width=2400px,height=1080px,dpi=320,orientation=portrait"
 )
 @Composable

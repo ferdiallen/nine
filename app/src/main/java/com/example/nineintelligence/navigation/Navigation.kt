@@ -33,11 +33,12 @@ fun RootNavigation() {
     val sysUi = rememberSystemUiController()
     val currentStack by controller.currentBackStackEntryAsState()
     LaunchedEffect(key1 = currentStack, block = {
-        when(currentStack?.destination?.route){
-            NavigationHolder.LoginScreen.route ->{
+        when (currentStack?.destination?.route) {
+            NavigationHolder.LoginScreen.route -> {
                 sysUi.setStatusBarColor(MainBlueColor, darkIcons = false)
             }
-            NavigationHolder.RegisterScreen.route->{
+
+            NavigationHolder.RegisterScreen.route -> {
                 sysUi.setStatusBarColor(Color.White, darkIcons = true)
             }
         }
@@ -47,7 +48,10 @@ fun RootNavigation() {
         route = Graph.ROOT, startDestination = Graph.AUTH
     ) {
         authRoute(controller)
-        composable(route = NavigationHolder.HomeScreen.route) {
+        composable(route = NavigationHolder.HomeScreen.route,
+            enterTransition = {
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(300))
+            }) {
             HomeScreen()
         }
     }
