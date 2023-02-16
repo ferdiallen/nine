@@ -52,7 +52,7 @@ fun RootNavigation() {
             enterTransition = {
                 slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(300))
             }) {
-            HomeScreen()
+            HomeScreen(systemUi = sysUi)
         }
     }
 }

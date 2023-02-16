@@ -3,4 +3,6 @@
     <string name="signup_tag">SignUp</string>
     <string name="siswa">Siswa</string>
     <string name="mentor">Mentor</string>
+    <string name="start">Mulai</string>
+    <string name="discussion">Pembahasan</string>
 </resources>

@@ -24,8 +24,10 @@ class MainActivity : ComponentActivity() {
                 ) {
                     ProfileScreen(
                         Modifier
-                            .padding(horizontal = 32.dp)
-                            .padding(top = 8.dp))
+                            .fillMaxSize()
+                            .padding()
+                            .padding(horizontal = 20.dp)
+                    )
                 }
             }
         }

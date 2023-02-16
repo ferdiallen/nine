@@ -1,6 +1,11 @@
 package com.example.nineintelligence.presentation.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +40,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,15 +55,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.Navigation
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
+import com.example.nineintelligence.navigation.NavigationHolder
+import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
+import com.example.nineintelligence.util.BottomBarData
 import com.example.nineintelligence.util.WindowType
+import com.example.nineintelligence.util.listBottomNavigation
 import com.example.nineintelligence.util.rememberWindoInfo
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.google.accompanist.systemuicontroller.SystemUiController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 val offerListItem = mapOf(
     Pair("Bank Soal", R.drawable.amico),
@@ -63,37 +83,92 @@ val offerListItem = mapOf(
     Pair("Paket", R.drawable.payment),
 ).toList()
 
+private val dataBottomBar = mapOf(
+    Pair("Bank Soal", R.drawable.hand_with_pen),
+    Pair("Materi", R.drawable.open_book),
+    Pair("TryOut", R.drawable.grade),
+    Pair("Paket", R.drawable.online_payment),
+    Pair("Profile", R.drawable.customer),
+).toList()
+
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(controller: NavController = rememberAnimatedNavController()) {
+fun HomeScreen(
+    controller: NavHostController = rememberAnimatedNavController(), systemUi: SystemUiController
+) {
     val windowInfo = rememberWindoInfo()
+    val currentStack by controller.currentBackStackEntryAsState()
+    LaunchedEffect(key1 = currentStack, block = {
+        when (currentStack?.destination?.route) {
+            NavigationHolder.HomeScreenChild.route -> systemUi.setStatusBarColor(
+                MainBlueColor, darkIcons = false
+            )
+
+            NavigationHolder.ProfileScreenChild.route -> systemUi.setStatusBarColor(
+                Color.White, darkIcons = true
+            )
+        }
+    })
     Scaffold(bottomBar = {
-        BottomBarCustom(modifier = Modifier.border(0.1.dp, Color.Black), info = windowInfo)
-    }, topBar = {
-        HeaderRow(
-            username = "Ferdialif",
-            image = R.drawable.generated,
-            modifier = Modifier.padding(horizontal = 8.dp),
-            info = windowInfo
+        BottomBarCustom(
+            modifier = Modifier.border(0.1.dp, Color.Black),
+            info = windowInfo,
+            listItem = listBottomNavigation,
+            controller
         )
-    }) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = paddingValues.calculateTopPadding(),
-                    bottom = paddingValues.calculateBottomPadding().minus(30.dp)
-                )
+    }, topBar = {
+        AnimatedVisibility(
+            visible = currentStack?.destination?.route == NavigationHolder.HomeScreenChild.route,
+            exit = slideOutVertically(tween(500), targetOffsetY = {
+                -200
+            }),
+            enter = slideInVertically(tween(500))
         ) {
-            MiddleItems(modifier = Modifier.padding(top = 32.dp))
+            HeaderRow(
+                username = "Ferdialif",
+                image = R.drawable.generated,
+                modifier = Modifier.padding(horizontal = 8.dp),
+                info = windowInfo
+            )
+        }
+
+    }) { paddingValues ->
+        AnimatedNavHost(
+            navController = controller, startDestination = NavigationHolder.HomeScreenChild.route
+        ) {
+            composable(route = NavigationHolder.HomeScreenChild.route) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            top = paddingValues.calculateTopPadding(),
+                            bottom = paddingValues
+                                .calculateBottomPadding()
+                                .minus(30.dp)
+                        )
+                ) {
+                    MiddleItems(modifier = Modifier.padding(top = 32.dp))
+                }
+            }
+            composable(route = NavigationHolder.ProfileScreenChild.route) {
+                ProfileScreen(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            bottom = paddingValues
+                                .calculateBottomPadding()
+                                .minus(30.dp)
+                        )
+                        .padding(horizontal = 20.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun HeaderRow(
-    modifier: Modifier = Modifier,
-    username: String, image: Any?, info: WindowType
+    modifier: Modifier = Modifier, username: String, image: Any?, info: WindowType
 ) {
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Card(
@@ -224,15 +299,15 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     LazyColumn(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(5) {
                             ProgressCard(
-                                font = font,
-                                studyName = "Biologi",
-                                percentage = 0.5F, indexOf = it
+                                font = font, studyName = "Biologi", percentage = 0.5F, indexOf = it
                             )
                         }
                         item {
@@ -266,10 +341,7 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ProgressCard(
-    font: FontFamily,
-    studyName: String,
-    percentage: Float,
-    indexOf: Int
+    font: FontFamily, studyName: String, percentage: Float, indexOf: Int
 ) {
     Card(
         modifier = Modifier
@@ -303,8 +375,7 @@ private fun ProgressCard(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = studyName,
-                fontFamily = font, fontSize = 16.sp, fontWeight = FontWeight.Bold
+                text = studyName, fontFamily = font, fontSize = 16.sp, fontWeight = FontWeight.Bold
             )
             Row(
                 modifier = Modifier
@@ -375,17 +446,14 @@ fun CustomPercentage(
     }
 }
 
-private val dataBottomBar = mapOf(
-    Pair("Bank Soal", R.drawable.hand_with_pen),
-    Pair("Materi", R.drawable.open_book),
-    Pair("TryOut", R.drawable.grade),
-    Pair("Paket", R.drawable.online_payment),
-    Pair("Profile", R.drawable.customer),
-).toList()
-
 @ExperimentalMaterial3Api
 @Composable
-private fun BottomBarCustom(modifier: Modifier = Modifier, info: WindowType) {
+private fun BottomBarCustom(
+    modifier: Modifier = Modifier,
+    info: WindowType,
+    listItem: List<BottomBarData>,
+    controller: NavController
+) {
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
             Surface(modifier = Modifier.wrapContentSize(), shadowElevation = 32.dp) {
@@ -403,7 +471,7 @@ private fun BottomBarCustom(modifier: Modifier = Modifier, info: WindowType) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            dataBottomBar.forEachIndexed { index, indexAt ->
+                            listItem.forEachIndexed { index, indexAt ->
                                 if (index == 2) {
                                     Spacer(modifier = Modifier.width(100.dp))
                                     return@forEachIndexed
@@ -412,7 +480,16 @@ private fun BottomBarCustom(modifier: Modifier = Modifier, info: WindowType) {
                                     modifier = Modifier
                                         .size(70.dp)
                                         .padding(start = 4.dp),
-                                    onClick = {},
+                                    onClick = {
+                                        indexAt.route?.let { out ->
+                                            controller.navigate(out) {
+                                                launchSingleTop = true
+                                                popUpTo(
+                                                    NavigationHolder.HomeScreenChild.route
+                                                )
+                                            }
+                                        }
+                                    },
                                     shape = CircleShape,
                                     colors = CardDefaults.cardColors(Color.Transparent)
                                 ) {
@@ -424,12 +501,12 @@ private fun BottomBarCustom(modifier: Modifier = Modifier, info: WindowType) {
                                         verticalArrangement = Arrangement.Center
                                     ) {
                                         AsyncImage(
-                                            model = indexAt.second,
+                                            model = indexAt.icon,
                                             contentDescription = null,
                                             modifier = Modifier.size(25.dp)
                                         )
                                         Text(
-                                            text = indexAt.first,
+                                            text = indexAt.label,
                                             fontSize = 11.sp,
                                             fontFamily = font
                                         )
@@ -497,36 +574,3 @@ private fun BottomBarCustom(modifier: Modifier = Modifier, info: WindowType) {
 
 }
 
-@Preview(
-    showBackground = true, showSystemUi = true, device = "spec:width=1080px,height=2280px,dpi=480"
-)
-@Composable
-fun SmallPreview() {
-    HomeScreen()
-}
-
-@Preview(
-    showBackground = true, showSystemUi = true, device = "spec:width=320dp,height=533.3dp,dpi=640"
-)
-@Composable
-fun MediumPreview() {
-    HomeScreen()
-}
-
-@Preview(
-    showBackground = true, showSystemUi = true, device = "id:pixel_c"
-)
-@Composable
-fun LargePreview() {
-    HomeScreen()
-}
-
-@Preview(
-    showBackground = true,
-    showSystemUi = true,
-    device = "spec:width=2400px,height=1080px,dpi=320,orientation=portrait"
-)
-@Composable
-fun Note9Pro() {
-    HomeScreen()
-}
