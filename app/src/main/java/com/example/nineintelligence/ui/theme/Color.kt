@@ -15,3 +15,8 @@ val MainYellowColor = Color(0xFFFFD60A)
 val MainDarkBlueColor = Color(0xFF001D3D)
 val PlaceholderColor = Color(0xFF004CA6)
 val RegistrationBlueColor = Color(0xFF468BDC)
+
+val WeakYellow = Color(0xFFFEE6D4)
+val StrongYellow = Color(0xFFFA8026)
+val StrongGreen = Color(0xFF08560B)
+val WeakGreen = Color(0xFFE9FBD4)
