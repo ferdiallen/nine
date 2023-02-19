@@ -68,7 +68,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha05")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0-beta01")
+    implementation("androidx.compose.material:material-icons-extended")
 
     //Accompanist
     val accompanistVersion = "0.28.0"
