@@ -1,6 +1,7 @@
 package com.example.nineintelligence
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -35,7 +36,6 @@ import com.example.nineintelligence.ui.theme.Poppins
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContent {
             NineIntelligenceTheme {
@@ -43,40 +43,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    var currentDialogSize by remember {
-                        mutableStateOf(0.dp)
-                    }
-                    val density = LocalDensity.current
-                    /*ProfileScreen(
-                        Modifier
-                            .fillMaxSize()
-                            .padding()
-                            .padding(horizontal = 20.dp)
-                    )*/
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .statusBarsPadding()
-                            .navigationBarsPadding()
-                            .imePadding()
-                            .onSizeChanged { out ->
-                                with(density) {
-                                    currentDialogSize = out.height.toDp()
-                                }
-                            }
-                    ) {
-                        Dialog(
-                            onDismissRequest = {}
-                        ) {
-                            ProfileEdit(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(0.dp, currentDialogSize),
-                                onSaved = {},
-                                Poppins.fonts
-                            )
-                        }
-                    }
+                    ProfileScreen()
                 }
             }
         }
