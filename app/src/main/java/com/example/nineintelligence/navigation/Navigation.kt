@@ -14,9 +14,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.nineintelligence.R
+import com.example.nineintelligence.presentation.boarding.MainBoardingScreen
 import com.example.nineintelligence.presentation.enter.LoginForm
 import com.example.nineintelligence.presentation.enter.RegisterScreen
 import com.example.nineintelligence.presentation.home.HomeScreen
@@ -59,8 +62,11 @@ fun RootNavigation() {
 
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.authRoute(controller: NavController) {
-    navigation(startDestination = NavigationHolder.LoginScreen.route, route = Graph.AUTH) {
-        composable(route = NavigationHolder.LoginScreen.route, enterTransition = {
+    navigation(
+        startDestination = NavigationHolder.BoardingScreen.route,
+        route = Graph.AUTH
+    ) {
+        composable(route = NavigationHolder.LoginScreen.route+ "/{type}", enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentScope.SlideDirection.Left,
                 tween(300)
@@ -69,8 +75,19 @@ fun NavGraphBuilder.authRoute(controller: NavController) {
             slideOutOfContainer(AnimatedContentScope.SlideDirection.Up, tween(300))
         }, popEnterTransition = {
             slideIntoContainer(AnimatedContentScope.SlideDirection.Down, tween(300))
-        }) {
-            LoginForm(type = stringResource(id = R.string.siswa), controller = controller)
+        }, arguments = listOf(navArgument(
+            "type"
+        ) {
+            type = NavType.StringType
+            defaultValue = ""
+        })
+        ) { out ->
+            out.arguments?.let { argument ->
+                LoginForm(
+                    type = argument.getString("type", ""),
+                    controller = controller
+                )
+            }
         }
         composable(route = NavigationHolder.RegisterScreen.route,
             enterTransition = {
@@ -86,6 +103,9 @@ fun NavGraphBuilder.authRoute(controller: NavController) {
                 slideIntoContainer(AnimatedContentScope.SlideDirection.Down, tween(300))
             }) {
             RegisterScreen(controller = controller)
+        }
+        composable(route = NavigationHolder.BoardingScreen.route) {
+            MainBoardingScreen(controller)
         }
     }
 }

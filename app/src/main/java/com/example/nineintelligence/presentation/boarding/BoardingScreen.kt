@@ -28,7 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.nineintelligence.R
+import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 
@@ -38,9 +40,10 @@ val userType = mapOf(
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showSystemUi = true, showBackground = true)
 @Composable
-fun MainBoardingScreen() {
+fun MainBoardingScreen(
+    controller: NavController
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -72,7 +75,7 @@ fun MainBoardingScreen() {
                     Surface(color = Color.Transparent,
                         shape = RoundedCornerShape(12.dp),
                         onClick = {
-
+                            controller.navigate(NavigationHolder.LoginScreen.route + "/${it.first}")
                         }) {
                         CustomerType(it.first, it.second)
                     }

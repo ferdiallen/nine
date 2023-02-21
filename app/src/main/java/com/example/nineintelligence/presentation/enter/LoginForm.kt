@@ -179,7 +179,8 @@ fun LoginForm(
                                 )
                             }
                         },
-                        visualTransformation = if (passwordVisibility) PasswordVisualTransformation() else VisualTransformation.None,
+                        visualTransformation = if (passwordVisibility) PasswordVisualTransformation()
+                        else VisualTransformation.None,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                     )
@@ -204,7 +205,7 @@ fun LoginForm(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(0.2F),
+                            .height(50.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MainYellowColor)
                     ) {

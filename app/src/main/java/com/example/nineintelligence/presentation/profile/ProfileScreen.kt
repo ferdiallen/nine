@@ -1,19 +1,14 @@
 package com.example.nineintelligence.presentation.profile
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +27,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
@@ -40,12 +34,9 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -58,6 +49,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -76,21 +69,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.DrawStyle
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -101,7 +84,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
-import com.example.nineintelligence.presentation.home.CustomPercentage
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
@@ -114,25 +96,32 @@ import com.example.nineintelligence.util.ActivityType
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 
-val tabNameList = listOf("Statistik", "Kegiatanku", "History")
+private val tabNameList = listOf("Statistik", "Kegiatanku", "History")
+private val genderList = listOf("Laki-laki", "Perempuan")
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(modifier: Modifier = Modifier, onBackPress: () -> Unit) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
     var shouldShowEditMenu by remember {
+        mutableStateOf(false)
+    }
+    var shouldShowSettingsMenu by remember {
         mutableStateOf(false)
     }
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Scaffold(modifier = Modifier
             .fillMaxSize()
             .then(modifier), topBar = {
-            TopBarMain(font)
+            TopBarMain(font, onBackPress = {
+                onBackPress.invoke()
+            })
         }) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -160,7 +149,9 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
                                 .padding(horizontal = 4.dp)
                                 .padding(top = 8.dp), horizontalArrangement = Arrangement.Center
                         ) {
-                            IconButton(onClick = { }) {
+                            IconButton(onClick = {
+                                shouldShowSettingsMenu = !shouldShowSettingsMenu
+                            }) {
                                 Icon(
                                     imageVector = Icons.Filled.Settings,
                                     contentDescription = null,
@@ -295,17 +286,30 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
                 font = font,
                 onTapExit = {
                     shouldShowEditMenu = false
-                })
+                }, true
+            )
+        }
+        if (shouldShowSettingsMenu) {
+            SettingsMenu(
+                font = font,
+                onTapExit = { shouldShowSettingsMenu = false },
+                enableOnDismiss = true, modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5F)
+                    .padding(24.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun TopBarMain(font: FontFamily) {
+private fun TopBarMain(font: FontFamily, onBackPress: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { }) {
+        IconButton(onClick = {
+            onBackPress.invoke()
+        }) {
             Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = null)
         }
         Text(text = "Back", fontFamily = font, fontSize = 16.sp, color = MainBlueColor)
@@ -448,65 +452,7 @@ private fun StatisticScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                    }/*val animateGraph = remember {
-                    Animatable(0F)
-                }
-                LaunchedEffect(key1 = Unit, block = {
-                    animateGraph.animateTo(1F, tween(4000))
-                })
-                Spacer(modifier = Modifier
-                    .fillMaxSize()
-                    .padding(4.dp)
-                    .drawWithCache {
-                        onDrawBehind {
-                            drawRect(Color.Red, style = Stroke(1.dp.toPx()))
-                            val verticalLines = 5
-                            val verticalSize = size.width / (verticalLines + 1)
-                            repeat(verticalLines) { out ->
-                                val startX = verticalSize * (out + 1)
-                                drawLine(
-                                    Color.Green,
-                                    start = Offset(startX, 0F),
-                                    end = Offset(startX, size.height), strokeWidth = 2.dp.toPx()
-                                )
-                            }
-                            val horizontalLines = 4
-                            val horizontalSize = size.height / (horizontalLines + 1)
-                            repeat(horizontalLines) { out ->
-                                val startY = horizontalSize * (out + 1)
-                                drawLine(
-                                    Color.Green,
-                                    start = Offset(x = 0F, startY),
-                                    end = Offset(x = size.width, startY),
-                                    strokeWidth = 2.dp.toPx()
-                                )
-                            }
-                            val path = Path()
-                            path.apply {
-                                val data = mapOf(
-                                    100F to 100F,
-                                    200F to 100F,
-                                    300F to 200F,
-                                    500F to 200F,
-                                    650F to 20F,
-                                    750F to 20F,
-                                ).toList()
-                                data.forEachIndexed { index, information ->
-                                    cubicTo(
-                                        x1 = information.first - 20F,
-                                        information.second + 30F,
-                                        information.first + -10F,
-                                        information.second + 5F,
-                                        x3 = information.first,
-                                        y3 = information.second
-                                    )
-                                }
-                            }
-                            clipRect(right = size.width * animateGraph.value) {
-                                drawPath(path, Color.Red, style = Stroke(2.dp.toPx()))
-                            }
-                        }
-                    })*/
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -639,22 +585,38 @@ private fun ActivityList(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileEdit(
+private fun ProfileEdit(
     modifier: Modifier = Modifier,
     onSaved: () -> Unit, font: FontFamily,
-    onTapExit: () -> Unit
+    onTapExit: () -> Unit, enableOnDismiss: Boolean
 ) {
     var animatedFloat by remember {
-        mutableStateOf(0.1F)
+        mutableStateOf(0.01F)
     }
     val animateBackground = animateFloatAsState(
         targetValue = animatedFloat, tween(500)
     )
+    var shouldExpandGenderList by remember {
+        mutableStateOf(false)
+    }
+    var selectedGender by remember {
+        mutableStateOf("")
+    }
+    var userName by remember {
+        mutableStateOf("")
+    }
+    var address by remember {
+        mutableStateOf("")
+    }
+    var phoneNumber by remember {
+        mutableStateOf("")
+    }
     LaunchedEffect(key1 = Unit, block = {
+        delay(500)
         animatedFloat = 0.7F
     })
     LaunchedEffect(key1 = animateBackground.value, block = {
-        if (animateBackground.value == 0F) {
+        if (animateBackground.value == 0F && enableOnDismiss) {
             onTapExit.invoke()
         }
     })
@@ -664,7 +626,9 @@ fun ProfileEdit(
             .background(Color.Black.copy(animateBackground.value))
             .clickable(interactionSource = MutableInteractionSource(),
                 indication = null, onClick = {
-                    animatedFloat = 0F
+                    if (enableOnDismiss) {
+                        animatedFloat = 0F
+                    }
                 }
             )
     ) {
@@ -673,207 +637,345 @@ fun ProfileEdit(
             enter = fadeIn(tween(250)),
             exit = fadeOut(tween(400))
         ) {
-            Card(
-                modifier = modifier
-                    .fillMaxSize(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                LazyColumn(
+            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+                Card(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .navigationBarsPadding()
-                        .imePadding()
-                        .padding(12.dp)
+                        .wrapContentSize()
+                        .then(modifier)
+                        .clickable(MutableInteractionSource(), null,
+                            false, onClick = {
+
+                            }),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    item {
-                        Text(
-                            text = "Ubah Profile",
-                            fontFamily = font,
-                            fontSize = 20.sp,
-                            color = MainBlueColor,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            AsyncImage(
-                                model = R.drawable.generated,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(CircleShape)
+                    LazyColumn(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .statusBarsPadding()
+                            .navigationBarsPadding()
+                            .imePadding()
+                            .padding(12.dp)
+                    ) {
+                        item {
+                            Text(
+                                text = "Ubah Profile",
+                                fontFamily = font,
+                                fontSize = 20.sp,
+                                color = MainBlueColor,
+                                fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Card(
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
                                 modifier = Modifier
-                                    .size(140.dp, 50.dp),
-                                border = BorderStroke(1.dp, Color.Black)
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
+                                AsyncImage(
+                                    model = R.drawable.generated,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Card(
+                                    modifier = Modifier
+                                        .size(140.dp, 50.dp),
+                                    border = BorderStroke(1.dp, Color.Black), onClick = {
+
+                                    }
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Upload,
-                                        contentDescription = null
-                                    )
-                                    Text(
-                                        text = "Ubah Foto",
-                                        fontFamily = font,
-                                        fontWeight = FontWeight.Light
-                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Upload,
+                                            contentDescription = null
+                                        )
+                                        Text(
+                                            text = "Ubah Foto",
+                                            fontFamily = font,
+                                            fontWeight = FontWeight.Light
+                                        )
+                                    }
                                 }
                             }
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Text(
-                            text = "Nama", fontFamily = font,
-                            fontSize = 16.sp, fontWeight = FontWeight.Light,
-                            color = MainBlueColor
-                        )
-                        OutlinedTextField(
-                            value = "",
-                            onValueChange = {
-
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(fontFamily = font),
-                            singleLine = true, placeholder = {
-                                Text(
-                                    text = "Masukkan Nama",
-                                    fontFamily = font,
-                                    color = Color.LightGray
-                                )
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Jenis Kelamin", fontFamily = font,
-                            fontSize = 16.sp, fontWeight = FontWeight.Light,
-                            color = MainBlueColor
-                        )
-                        OutlinedTextField(
-                            value = "",
-                            onValueChange = {
-
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(fontFamily = font),
-                            singleLine = true, placeholder = {
-                                Text(
-                                    text = "Pilih Jenis Kelamin",
-                                    fontFamily = font,
-                                    color = Color.LightGray
-                                )
-                            }, trailingIcon = {
-                                IconButton(onClick = { }) {
-                                    Icon(
-                                        imageVector = Icons.Filled.ArrowBackIosNew,
-                                        contentDescription = null,
-                                        modifier = Modifier.rotate(270F)
-                                    )
-                                }
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Alamat", fontFamily = font,
-                            fontSize = 16.sp, fontWeight = FontWeight.Light,
-                            color = MainBlueColor
-                        )
-                        OutlinedTextField(
-                            value = "",
-                            onValueChange = {
-
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(fontFamily = font),
-                            singleLine = true, placeholder = {
-                                Text(
-                                    text = "Masukkan Alamat",
-                                    fontFamily = font,
-                                    color = Color.LightGray
-                                )
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Tanggal Lahir", fontFamily = font,
-                            fontSize = 16.sp, fontWeight = FontWeight.Light,
-                            color = MainBlueColor
-                        )
-                        OutlinedTextField(
-                            value = "",
-                            onValueChange = {
-
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(fontFamily = font),
-                            singleLine = true, placeholder = {
-                                Text(
-                                    text = "Masukkan Tanggal Lahir",
-                                    fontFamily = font,
-                                    color = Color.LightGray
-                                )
-                            }, trailingIcon = {
-                                IconButton(onClick = { }) {
-                                    Icon(
-                                        imageVector = Icons.Filled.CalendarMonth,
-                                        contentDescription = null
-                                    )
-                                }
-                            }, readOnly = true
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "No. Telp", fontFamily = font,
-                            fontSize = 16.sp, fontWeight = FontWeight.Light,
-                            color = MainBlueColor
-                        )
-                        OutlinedTextField(
-                            modifier = Modifier.imePadding(), value = "",
-                            onValueChange = {
-
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            textStyle = TextStyle(fontFamily = font),
-                            singleLine = true, placeholder = {
-                                Text(
-                                    text = "Masukkan Nomor Telepon",
-                                    fontFamily = font,
-                                    color = Color.LightGray
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-                        Spacer(modifier = Modifier.heightIn(12.dp))
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Bottom
-                        ) {
-                            Button(
-                                onClick = { },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(40.dp, 70.dp),
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(
+                                text = "Nama", fontFamily = font,
+                                fontSize = 16.sp, fontWeight = FontWeight.Light,
+                                color = MainBlueColor
+                            )
+                            OutlinedTextField(
+                                value = userName,
+                                onValueChange = {
+                                    userName = it
+                                },
                                 shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(MainBlueColor)
-                            ) {
-                                Text(
-                                    text = "Simpan",
-                                    fontSize = 16.sp,
-                                    fontFamily = font,
-                                    fontWeight = FontWeight.Bold, color = MainYellowColor
+                                textStyle = TextStyle(fontFamily = font),
+                                singleLine = true, placeholder = {
+                                    Text(
+                                        text = "Masukkan Nama",
+                                        fontFamily = font,
+                                        color = Color.LightGray
+                                    )
+                                }, modifier = Modifier.fillMaxWidth(0.9F)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Jenis Kelamin", fontFamily = font,
+                                fontSize = 16.sp, fontWeight = FontWeight.Light,
+                                color = MainBlueColor
+                            )
+                            Column {
+                                var sizeTextField by remember {
+                                    mutableStateOf(0.dp)
+                                }
+                                val density = LocalDensity.current
+                                OutlinedTextField(modifier = Modifier
+                                    .onSizeChanged {
+                                        with(density) {
+                                            sizeTextField = it.width.toDp()
+                                        }
+                                    }
+                                    .fillMaxWidth(0.9F),
+                                    value = selectedGender,
+                                    onValueChange = {},
+                                    shape = RoundedCornerShape(12.dp),
+                                    textStyle = TextStyle(fontFamily = font),
+                                    singleLine = true, placeholder = {
+                                        Text(
+                                            text = "Pilih Jenis Kelamin",
+                                            fontFamily = font,
+                                            color = Color.LightGray
+                                        )
+                                    }, trailingIcon = {
+                                        IconButton(onClick = {
+                                            shouldExpandGenderList = !shouldExpandGenderList
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Filled.ArrowBackIosNew,
+                                                contentDescription = null,
+                                                modifier = Modifier.rotate(
+                                                    if (shouldExpandGenderList) 270F else 90F
+                                                )
+                                            )
+                                        }
+                                    }, readOnly = true
                                 )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                DropdownMenu(
+                                    expanded = shouldExpandGenderList,
+                                    onDismissRequest = {
+                                        shouldExpandGenderList = false
+                                    },
+                                    modifier = Modifier.width(sizeTextField)
+                                ) {
+                                    genderList.forEachIndexed { index, out ->
+                                        Text(
+                                            text = out,
+                                            fontFamily = font,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    selectedGender = out
+                                                    shouldExpandGenderList = false
+                                                }
+                                                .padding(horizontal = 20.dp)
+                                                .padding(bottom = 8.dp)
+                                        )
+                                        if (index < genderList.size - 1) {
+                                            Divider()
+                                        }
+                                    }
+                                }
+
                             }
+                            Text(
+                                text = "Alamat", fontFamily = font,
+                                fontSize = 16.sp, fontWeight = FontWeight.Light,
+                                color = MainBlueColor
+                            )
+                            OutlinedTextField(
+                                value = address,
+                                onValueChange = {
+                                    address = it
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                textStyle = TextStyle(fontFamily = font),
+                                singleLine = true, placeholder = {
+                                    Text(
+                                        text = "Masukkan Alamat",
+                                        fontFamily = font,
+                                        color = Color.LightGray
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(0.9F)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Tanggal Lahir", fontFamily = font,
+                                fontSize = 16.sp, fontWeight = FontWeight.Light,
+                                color = MainBlueColor
+                            )
+                            OutlinedTextField(
+                                value = "",
+                                onValueChange = {
+
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                textStyle = TextStyle(fontFamily = font),
+                                singleLine = true, placeholder = {
+                                    Text(
+                                        text = "Masukkan Tanggal Lahir",
+                                        fontFamily = font,
+                                        color = Color.LightGray
+                                    )
+                                }, trailingIcon = {
+                                    IconButton(onClick = { }) {
+                                        Icon(
+                                            imageVector = Icons.Filled.CalendarMonth,
+                                            contentDescription = null
+                                        )
+                                    }
+                                }, readOnly = true,
+                                modifier = Modifier.fillMaxWidth(0.9F)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "No. Telp", fontFamily = font,
+                                fontSize = 16.sp, fontWeight = FontWeight.Light,
+                                color = MainBlueColor
+                            )
+                            OutlinedTextField(
+                                value = phoneNumber,
+                                onValueChange = {
+                                    phoneNumber = it
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                textStyle = TextStyle(fontFamily = font),
+                                singleLine = true, placeholder = {
+                                    Text(
+                                        text = "Masukkan Nomor Telepon",
+                                        fontFamily = font,
+                                        color = Color.LightGray
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth(0.9F)
+                            )
+                            Spacer(modifier = Modifier.heightIn(12.dp))
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.Bottom
+                            ) {
+                                Button(
+                                    onClick = {
+                                        onSaved.invoke()
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(40.dp, 70.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(MainBlueColor)
+                                ) {
+                                    Text(
+                                        text = "Simpan",
+                                        fontSize = 16.sp,
+                                        fontFamily = font,
+                                        fontWeight = FontWeight.Bold, color = MainYellowColor
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 }
+
+            }
+
+        }
+
+    }
+}
+
+@Composable
+private fun SettingsMenu(
+    modifier: Modifier = Modifier,
+    font: FontFamily,
+    onTapExit: () -> Unit,
+    enableOnDismiss: Boolean
+) {
+    var animatedFloat by remember {
+        mutableStateOf(0.01F)
+    }
+    val animateBackground = animateFloatAsState(
+        targetValue = animatedFloat, tween(500)
+    )
+    LaunchedEffect(key1 = Unit, block = {
+        delay(500)
+        animatedFloat = 0.7F
+    })
+    LaunchedEffect(key1 = animateBackground.value, block = {
+        if (animateBackground.value == 0F && enableOnDismiss) {
+            onTapExit.invoke()
+        }
+    })
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(animateBackground.value))
+            .clickable(interactionSource = MutableInteractionSource(),
+                indication = null, onClick = {
+                    if (enableOnDismiss) {
+                        animatedFloat = 0F
+                    }
+                }
+            )
+    ) {
+        AnimatedVisibility(
+            visible = animateBackground.value == 0.7F,
+            enter = fadeIn(tween(250)),
+            exit = fadeOut(tween(400))
+        ) {
+            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+                Card(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .then(modifier)
+                        .clickable(MutableInteractionSource(), null,
+                            false, onClick = {
+
+                            }),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .statusBarsPadding()
+                            .navigationBarsPadding()
+                            .imePadding()
+                            .padding(12.dp)
+                            .padding(horizontal = 12.dp)
+                    ) {
+                        item {
+                            Text(
+                                text = "Pengaturan",
+                                color = MainBlueColor,
+                                fontFamily = font,
+                                fontWeight = FontWeight.Bold, fontSize = 20.sp
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(
+                                text = "Logout", color = MainBlueColor,
+                                fontFamily = font, fontSize = 17.sp
+                            )
+                        }
+                    }
+                }
+
             }
 
         }
