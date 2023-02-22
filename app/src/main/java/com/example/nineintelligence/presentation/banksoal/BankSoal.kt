@@ -1,5 +1,9 @@
 package com.example.nineintelligence.presentation.banksoal
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,31 +21,65 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.nineintelligence.presentation.home.CustomPercentage
+import com.example.nineintelligence.MainActivity
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
+    val context = (LocalContext.current as MainActivity)
+    val pagerState = rememberPagerState()
+    val scope = rememberCoroutineScope()
+    BackHandler {
+        if (pagerState.currentPage > 0) {
+            scope.launch {
+                pagerState.animateScrollToPage(0)
+            }
+            return@BackHandler
+        }
+        /*controller.popBackStack()*/
+        context.finish()
+    }
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Column(modifier = modifier) {
-            TopBar(onBackPress = { }, font = font)
+            TopBar(onBackPress = {
+                if (pagerState.currentPage > 0) {
+                    scope.launch {
+                        pagerState.animateScrollToPage(0)
+                    }
+                }
+            }, font = font)
             Spacer(modifier = Modifier.height(12.dp))
             Column(
                 modifier = Modifier
@@ -63,17 +101,88 @@ fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
                     color = MainBlueColor, fontSize = 14.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 12.dp)
-                ) {
-                    items(6) {
-                        BankSoalItemList(
-                            font = font,
-                            studyName = "Computer Science", indexOf = it + 1
-                        )
+                HorizontalPager(
+                    count = 2, state = pagerState,
+                    userScrollEnabled = false
+                ) { out ->
+                    when (out) {
+                        0 -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(bottom = 12.dp)
+                            ) {
+                                items(6) { each ->
+                                    var animateVisibility by remember {
+                                        mutableStateOf(false)
+                                    }
+                                    LaunchedEffect(key1 = pagerState.isScrollInProgress, block = {
+                                        if(!pagerState.isScrollInProgress){
+                                            delay(300 * each + 1.toLong())
+                                            animateVisibility = true
+                                        }
+                                    })
+                                    AnimatedVisibility(
+                                        visible = animateVisibility,
+                                        enter = slideInHorizontally(
+                                            tween(200), initialOffsetX = {
+                                                550
+                                            }
+                                        )
+                                    ) {
+                                        BankSoalItemList(
+                                            font = font,
+                                            studyName = "Computer Science", indexOf = each + 1,
+                                            onItemClick = {
+                                                scope.launch {
+                                                    pagerState.animateScrollToPage(1)
+                                                }
+                                            }, showButton = false
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        1 -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(bottom = 12.dp)
+                            ) {
+                                items(6) { each ->
+                                    var animateVisibility by remember {
+                                        mutableStateOf(false)
+                                    }
+                                    LaunchedEffect(key1 = pagerState.currentPage, block = {
+                                        animateVisibility = if (pagerState.currentPage == 1) {
+                                            delay(300 * each + 1.toLong())
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    })
+                                    AnimatedVisibility(
+                                        visible = animateVisibility,
+                                        enter = slideInHorizontally(
+                                            tween(200), initialOffsetX = {
+                                                550
+                                            }
+                                        )
+                                    ) {
+                                        BankSoalItemList(
+                                            font = font,
+                                            studyName = "Computer Science 2", indexOf = each + 1,
+                                            onItemClick = {
+
+                                            }, showButton = true
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -95,16 +204,22 @@ private fun TopBar(onBackPress: () -> Unit, font: FontFamily) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BankSoalItemList(
-    font: FontFamily, studyName: String, indexOf: Int
+    font: FontFamily, studyName: String, indexOf: Int,
+    onItemClick: () -> Unit, showButton: Boolean
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth(0.9F)
-            .height(90.dp), colors = CardDefaults.cardColors(
+            .fillMaxWidth(1F)
+            .height(70.dp)
+            .padding(horizontal = 4.dp), colors = CardDefaults.cardColors(
             MainYellowColor
-        ), elevation = CardDefaults.cardElevation(8.dp), shape = RoundedCornerShape(12.dp)
+        ), elevation = CardDefaults.cardElevation(8.dp),
+        shape = RoundedCornerShape(12.dp), onClick = {
+            onItemClick.invoke()
+        }
     ) {
         Row(
             modifier = Modifier
@@ -118,7 +233,8 @@ private fun BankSoalItemList(
                 colors = CardDefaults.cardColors(MainBlueColor)
             ) {
                 Box(
-                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = indexOf.toString(),
@@ -131,8 +247,30 @@ private fun BankSoalItemList(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = studyName, fontFamily = font, fontSize = 16.sp, fontWeight = FontWeight.Bold
+                text = studyName,
+                fontFamily = font,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
             )
+            if (showButton) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = { }, modifier = Modifier
+                            .fillMaxWidth(0.8F)
+                            .height(28.dp), colors = ButtonDefaults.buttonColors(MainBlueColor)
+                    ) {
+                        Text(
+                            text = "Mulai", fontFamily = font,
+                            fontSize = 10.sp, color = MainYellowColor
+                        )
+                    }
+
+                }
+
+            }
         }
     }
 }

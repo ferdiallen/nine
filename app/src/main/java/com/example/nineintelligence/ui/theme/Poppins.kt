@@ -1,5 +1,6 @@
 package com.example.nineintelligence.ui.theme
 
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -31,10 +32,12 @@ object Poppins {
                 R.font.poppins_extralightitalic,
                 weight = FontWeight.ExtraLight,
                 style = FontStyle.Italic
-            ),Font(
+            ),
+            Font(
                 R.font.poppins_semibold,
                 weight = FontWeight.SemiBold
-            ),Font(
+            ),
+            Font(
                 R.font.poppins_semibolditalic,
                 weight = FontWeight.SemiBold,
                 style = FontStyle.Italic

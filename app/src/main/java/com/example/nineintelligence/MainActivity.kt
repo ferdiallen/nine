@@ -9,7 +9,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
+import com.example.nineintelligence.navigation.RootNavigation
 import com.example.nineintelligence.presentation.banksoal.BankSoal
+import com.example.nineintelligence.presentation.exam.ExamScreen
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,12 +23,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    BankSoal(
-                        controller = rememberNavController(),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 12.dp)
-                    )
+                    ExamScreen(Modifier.fillMaxSize())
                 }
             }
         }
