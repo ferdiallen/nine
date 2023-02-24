@@ -166,10 +166,6 @@ fun HomeScreen(
                 ProfileScreen(
                     Modifier
                         .fillMaxSize()
-                        .padding(
-                            bottom = paddingValues
-                                .calculateBottomPadding()
-                        )
                         .padding(horizontal = 20.dp), onBackPress = {
                         controller.popBackStack()
                     }
@@ -193,8 +189,7 @@ fun HomeScreen(
                 slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(500))
             }) {
                 ExamScreen(
-                    controller = controller, modifier = Modifier
-                        .fillMaxSize()
+                    controller = controller, modifier = Modifier.fillMaxSize()
                         .padding(horizontal = 22.dp)
                 )
             }

@@ -31,8 +31,10 @@ import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Menu
@@ -76,12 +78,14 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
     }
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
     Column(modifier = modifier) {
-        Spacer(modifier = Modifier.height(12.dp))
-        TopBar(onBackPress = {
-            controller.popBackStack()
-        })
-        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            TopBar(onBackPress = {
+                controller.popBackStack()
+            })
+        }
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -115,66 +119,76 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
                 CustomText(text = "--:--", fontWeight = FontWeight.Bold, color = MainBlueColor)
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        var savedAnswer by remember {
-            mutableStateOf<String?>(null)
-        }
-        val listAnswer = remember {
-            listOf("Atreus", "Kratos", "Zeus", "Gaia")
-        }
-        HorizontalPager(count = 10, state = pagerState, userScrollEnabled = false) {
-            QuestionArea(
-                questionText = "Who is Kratos $it",
-                questionAnswerList = listAnswer,
-                onClickedAnswer = { index, answer ->
-                    savedAnswer = answer
-                }, selectedAnswerIndex = savedAnswer ?: ""
-            )
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .verticalScroll(state = scrollState)
+                .padding(bottom = 12.dp)
         ) {
-            Button(
-                onClick = {
-                    if (pagerState.currentPage == 0) {
-                        return@Button
-                    }
-                    scope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                    }
-                }, modifier = Modifier
-                    .fillMaxWidth(0.3F)
-                    .height(35.dp),
-                shape = RoundedCornerShape(4.dp), colors = ButtonDefaults.buttonColors(
-                    MainBlueColor
-                )
-            ) {
-                CustomText(text = "Previous", fontSize = 12.sp, color = MainYellowColor)
+            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            var savedAnswer by remember {
+                mutableStateOf<String?>(null)
             }
-            Spacer(modifier = Modifier.weight(1F))
-            Button(
-                onClick = {
-                    scope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                    }
-                }, modifier = Modifier
-                    .fillMaxWidth(0.4F)
-                    .height(35.dp),
-                shape = RoundedCornerShape(4.dp), colors = ButtonDefaults.buttonColors(
-                    MainBlueColor
+            val listAnswer = remember {
+                listOf("Atreus", "Kratos", "Zeus", "Gaia")
+            }
+
+            HorizontalPager(count = 10, state = pagerState, userScrollEnabled = false) {
+                QuestionArea(
+                    questionText = "Who is Kratos $it",
+                    questionAnswerList = listAnswer,
+                    onClickedAnswer = { index, answer ->
+                        savedAnswer = answer
+                    }, selectedAnswerIndex = savedAnswer ?: ""
                 )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                CustomText(text = "Next", fontSize = 12.sp, color = MainYellowColor)
+                Button(
+                    onClick = {
+                        if (pagerState.currentPage == 0) {
+                            return@Button
+                        }
+                        scope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                        }
+                    }, modifier = Modifier
+                        .fillMaxWidth(0.3F)
+                        .height(35.dp),
+                    shape = RoundedCornerShape(4.dp), colors = ButtonDefaults.buttonColors(
+                        MainBlueColor
+                    )
+                ) {
+                    CustomText(text = "Previous", fontSize = 12.sp, color = MainYellowColor)
+                }
+                Spacer(modifier = Modifier.weight(1F))
+                Button(
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    }, modifier = Modifier
+                        .fillMaxWidth(0.4F)
+                        .height(35.dp),
+                    shape = RoundedCornerShape(4.dp), colors = ButtonDefaults.buttonColors(
+                        MainBlueColor
+                    )
+                ) {
+                    CustomText(text = "Next", fontSize = 12.sp, color = MainYellowColor)
+                }
+            }
+
+            if (shouldShowQuestionList) {
+                ListQuestionHolder(onDismiss = {
+                    shouldShowQuestionList = false
+                })
             }
         }
     }
-    if (shouldShowQuestionList) {
-        ListQuestionHolder(onDismiss = {
-            shouldShowQuestionList = false
-        })
-    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -211,56 +225,53 @@ private fun QuestionArea(
         val availableAnswer = remember {
             ('A'..'D').toList()
         }
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            itemsIndexed(questionAnswerList) { indexAt, out ->
-                Card(colors = CardDefaults.cardColors(
-                    if (selectedAnswerIndex == out)
-                        MainBlueColor else Color.Transparent
-                ),
-                    border = BorderStroke(1.dp, Color.Black),
-                    modifier = Modifier.height(70.dp),
-                    onClick = {
-                        onClickedAnswer.invoke(indexAt, out)
-                    }) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .padding(horizontal = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Card(
-                            shape = CircleShape,
-                            modifier = Modifier.size(30.dp),
-                            colors = CardDefaults.cardColors(
-                                if (selectedAnswerIndex == out)
-                                    MainYellowColor else Color.LightGray
-                            )
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CustomText(
-                                    text = availableAnswer[indexAt].toString(),
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (selectedAnswerIndex == out)
-                                        MainBlueColor else Color.Gray
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        CustomText(
-                            text = out, color = if (selectedAnswerIndex == out)
-                                MainYellowColor else MainBlueColor
+        availableAnswer.forEachIndexed { index, out ->
+            Card(colors = CardDefaults.cardColors(
+                if (selectedAnswerIndex == out.toString())
+                    MainBlueColor else Color.Transparent
+            ),
+                border = BorderStroke(1.dp, Color.Black),
+                modifier = Modifier.height(70.dp),
+                onClick = {
+                    onClickedAnswer.invoke(index, out.toString())
+                }) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Card(
+                        shape = CircleShape,
+                        modifier = Modifier.size(30.dp),
+                        colors = CardDefaults.cardColors(
+                            if (selectedAnswerIndex == out.toString())
+                                MainYellowColor else Color.LightGray
                         )
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CustomText(
+                                text = availableAnswer[index].toString(),
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedAnswerIndex == out.toString())
+                                    MainBlueColor else Color.Gray
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CustomText(
+                        text = out.toString(),
+                        color = if (selectedAnswerIndex == out.toString())
+                            MainYellowColor else MainBlueColor
+                    )
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
         }
-
     }
 }
 

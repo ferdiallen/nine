@@ -1,6 +1,7 @@
 package com.example.nineintelligence.presentation.profile
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
@@ -104,7 +105,7 @@ import kotlin.random.Random
 private val tabNameList = listOf("Statistik", "Kegiatanku", "History")
 private val genderList = listOf("Laki-laki", "Perempuan")
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun ProfileScreen(modifier: Modifier = Modifier, onBackPress: () -> Unit) {
     val scope = rememberCoroutineScope()
@@ -116,169 +117,163 @@ fun ProfileScreen(modifier: Modifier = Modifier, onBackPress: () -> Unit) {
         mutableStateOf(false)
     }
     DeliverCustomFonts(font = Poppins.fonts) { font ->
-        Scaffold(modifier = Modifier
-            .fillMaxSize()
-            .then(modifier), topBar = {
+        Column(
+            modifier = modifier
+                .animateContentSize(tween(100)),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             TopBarMain(font, onBackPress = {
                 onBackPress.invoke()
             })
-        }) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter
+                Card(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 40.dp),
+                    border = BorderStroke(1.dp, Color.Gray),
+                    colors = CardDefaults.cardColors(
+                        Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
                 ) {
-                    Card(
+
+                    Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 40.dp),
-                        border = BorderStroke(1.dp, Color.Gray),
-                        colors = CardDefaults.cardColors(
-                            Color.Transparent
-                        ),
-                        shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp)
+                            .padding(top = 8.dp), horizontalArrangement = Arrangement.Center
                     ) {
+                        IconButton(onClick = {
+                            shouldShowSettingsMenu = !shouldShowSettingsMenu
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = null,
+                                modifier = Modifier.size(25.dp)
+                            )
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp)
-                                .padding(top = 8.dp), horizontalArrangement = Arrangement.Center
-                        ) {
-                            IconButton(onClick = {
-                                shouldShowSettingsMenu = !shouldShowSettingsMenu
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Settings,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(25.dp)
-                                )
+                        }
+                        Spacer(modifier = Modifier.weight(1F))
+                        IconButton(onClick = {
+                            shouldShowEditMenu = !shouldShowEditMenu
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = null,
+                                modifier = Modifier.size(25.dp)
+                            )
 
-                            }
-                            Spacer(modifier = Modifier.weight(1F))
-                            IconButton(onClick = {
-                                shouldShowEditMenu = !shouldShowEditMenu
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Edit,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(25.dp)
-                                )
-
-                            }
                         }
                     }
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                }
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    AsyncImage(
+                        model = R.drawable.generated,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Adyatma Prabowo",
+                        fontSize = 18.sp,
+                        fontFamily = font,
+                        fontWeight = FontWeight.Bold,
+                        color = MainYellowColor
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.2F),
+                        shape = RoundedCornerShape(0.dp),
+                        colors = CardDefaults.cardColors(MainYellowColor)
                     ) {
-                        AsyncImage(
-                            model = R.drawable.generated,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "Adyatma Prabowo",
-                            fontSize = 18.sp,
-                            fontFamily = font,
-                            fontWeight = FontWeight.Bold,
-                            color = MainYellowColor
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.2F),
-                            shape = RoundedCornerShape(0.dp),
-                            colors = CardDefaults.cardColors(MainYellowColor)
-                        ) {
-                            Column(Modifier.fillMaxSize()) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp)
-                                        .padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Text(
-                                        text = "Jln. Tawangsari No. 44, Lawang, Kab. Malang",
-                                        fontSize = 12.sp,
-                                        fontFamily = font,
-                                        modifier = Modifier.width(113.dp),
-                                        textAlign = TextAlign.Center,
-                                        lineHeight = 15.sp,
-                                        color = MainBlueColor
-                                    )
-                                    Spacer(modifier = Modifier.weight(1F))
-                                    Text(
-                                        text = "Bogor, 10 Oktober 2000",
-                                        fontSize = 12.sp,
-                                        fontFamily = font,
-                                        modifier = Modifier.width(113.dp),
-                                        textAlign = TextAlign.Center,
-                                        lineHeight = 15.sp,
-                                        color = MainBlueColor
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
+                        Column(Modifier.fillMaxSize()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
                                 Text(
-                                    text = "test@gmail.com",
+                                    text = "Jln. Tawangsari No. 44, Lawang, Kab. Malang",
                                     fontSize = 12.sp,
                                     fontFamily = font,
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.width(113.dp),
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = 15.sp,
+                                    color = MainBlueColor
+                                )
+                                Spacer(modifier = Modifier.weight(1F))
+                                Text(
+                                    text = "Bogor, 10 Oktober 2000",
+                                    fontSize = 12.sp,
+                                    fontFamily = font,
+                                    modifier = Modifier.width(113.dp),
                                     textAlign = TextAlign.Center,
                                     lineHeight = 15.sp,
                                     color = MainBlueColor
                                 )
                             }
-                        }
-                        TabRow(selectedTabIndex = pagerState.currentPage) {
-                            tabNameList.forEachIndexed { index, string ->
-                                Tab(selected = pagerState.currentPage == index, onClick = {
-                                    scope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                }, text = {
-                                    Text(
-                                        text = string,
-                                        fontFamily = font,
-                                        fontWeight = if (pagerState.currentPage == index) FontWeight.Bold
-                                        else FontWeight.Normal
-                                    )
-                                })
-                            }
-                        }
-                        var isUserScrolled by remember {
-                            mutableStateOf(true)
-                        }
-                        HorizontalPager(
-                            count = tabNameList.size,
-                            state = pagerState,
-                            userScrollEnabled = !isUserScrolled
-                        ) { page ->
-                            when (page) {
-                                0 -> StatisticScreen(font) {
-                                    isUserScrolled = it
-                                }
-
-                                1 -> ActivityTab(font = font, type = ActivityType.MYACTIVITY)
-                                2 -> ActivityTab(font = font, type = ActivityType.DISCUSSION)
-                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "test@gmail.com",
+                                fontSize = 12.sp,
+                                fontFamily = font,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                lineHeight = 15.sp,
+                                color = MainBlueColor
+                            )
                         }
                     }
+                    TabRow(selectedTabIndex = pagerState.currentPage) {
+                        tabNameList.forEachIndexed { index, string ->
+                            Tab(selected = pagerState.currentPage == index, onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }, text = {
+                                Text(
+                                    text = string,
+                                    fontFamily = font,
+                                    fontWeight = if (pagerState.currentPage == index) FontWeight.Bold
+                                    else FontWeight.Normal
+                                )
+                            })
+                        }
+                    }
+                    var isUserScrolled by remember {
+                        mutableStateOf(true)
+                    }
+                    HorizontalPager(
+                        count = tabNameList.size,
+                        state = pagerState,
+                        userScrollEnabled = !isUserScrolled
+                    ) { page ->
+                        when (page) {
+                            0 -> StatisticScreen(font) {
+                                isUserScrolled = it
+                            }
 
+                            1 -> ActivityTab(font = font, type = ActivityType.MYACTIVITY)
+                            2 -> ActivityTab(font = font, type = ActivityType.DISCUSSION)
+                        }
+                    }
                 }
-            }
 
+            }
         }
+
         if (shouldShowEditMenu) {
             ProfileEdit(
                 modifier = Modifier.padding(32.dp),
