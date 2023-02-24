@@ -56,11 +56,6 @@ import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-
-/*ExamScreen(
-Modifier
-.fillMaxSize()
-.padding(horizontal = 20.dp))*/
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {

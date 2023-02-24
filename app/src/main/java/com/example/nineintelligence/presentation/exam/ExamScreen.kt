@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -57,7 +58,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -76,10 +80,15 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
     var shouldShowQuestionList by remember {
         mutableStateOf(false)
     }
+    var parentSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    Column(modifier = modifier) {
+    Column(modifier = modifier.onSizeChanged {
+        parentSize = it
+    }) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Spacer(modifier = Modifier.height(12.dp))
             TopBar(onBackPress = {
@@ -139,7 +148,7 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
                     questionAnswerList = listAnswer,
                     onClickedAnswer = { index, answer ->
                         savedAnswer = answer
-                    }, selectedAnswerIndex = savedAnswer ?: ""
+                    }, selectedAnswerIndex = savedAnswer ?: "", parentScreenSize = parentSize
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -197,8 +206,10 @@ private fun QuestionArea(
     questionText: String,
     questionAnswerList: List<String>,
     onClickedAnswer: (Int, String) -> Unit,
-    selectedAnswerIndex: String? = null
+    selectedAnswerIndex: String? = null,
+    parentScreenSize: IntSize
 ) {
+    val density = LocalDensity.current
     Column(modifier = Modifier.padding(horizontal = 8.dp)) {
         Card(elevation = CardDefaults.cardElevation(4.dp)) {
             Card(
@@ -225,53 +236,61 @@ private fun QuestionArea(
         val availableAnswer = remember {
             ('A'..'D').toList()
         }
-        availableAnswer.forEachIndexed { index, out ->
-            Card(colors = CardDefaults.cardColors(
-                if (selectedAnswerIndex == out.toString())
-                    MainBlueColor else Color.Transparent
-            ),
-                border = BorderStroke(1.dp, Color.Black),
-                modifier = Modifier.height(70.dp),
-                onClick = {
-                    onClickedAnswer.invoke(index, out.toString())
-                }) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Card(
-                        shape = CircleShape,
-                        modifier = Modifier.size(30.dp),
-                        colors = CardDefaults.cardColors(
-                            if (selectedAnswerIndex == out.toString())
-                                MainYellowColor else Color.LightGray
-                        )
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CustomText(
-                                text = availableAnswer[index].toString(),
-                                fontWeight = FontWeight.Bold,
-                                color = if (selectedAnswerIndex == out.toString())
-                                    MainBlueColor else Color.Gray
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    CustomText(
-                        text = out.toString(),
-                        color = if (selectedAnswerIndex == out.toString())
-                            MainYellowColor else MainBlueColor
-                    )
-                }
+        LazyColumn(modifier = Modifier.height(
+            with(density) {
+                parentScreenSize.height.toFloat().toDp() / 2.5F
             }
-            Spacer(modifier = Modifier.height(8.dp))
+        )) {
+            itemsIndexed(availableAnswer) { index, out ->
+                Card(colors = CardDefaults.cardColors(
+                    if (selectedAnswerIndex == out.toString())
+                        MainBlueColor else Color.Transparent
+                ),
+                    border = BorderStroke(1.dp, Color.Black),
+                    modifier = Modifier.height(70.dp),
+                    onClick = {
+                        onClickedAnswer.invoke(index, out.toString())
+                    }) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Card(
+                            shape = CircleShape,
+                            modifier = Modifier.size(30.dp),
+                            colors = CardDefaults.cardColors(
+                                if (selectedAnswerIndex == out.toString())
+                                    MainYellowColor else Color.LightGray
+                            )
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CustomText(
+                                    text = availableAnswer[index].toString(),
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (selectedAnswerIndex == out.toString())
+                                        MainBlueColor else Color.Gray
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        CustomText(
+                            text = out.toString(),
+                            color = if (selectedAnswerIndex == out.toString())
+                                MainYellowColor else MainBlueColor
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
+
+
     }
 }
 
