@@ -14,7 +14,8 @@ val listBottomNavigation = listOf(
     BottomBarData(
         1,
         "Bank Soal",
-        R.drawable.hand_with_pen
+        R.drawable.hand_with_pen,
+        route = NavigationHolder.BankSoalScreen.route
     ),
     BottomBarData(2, "Materi", R.drawable.open_book),
     BottomBarData(3, "Try Out", R.drawable.grade),

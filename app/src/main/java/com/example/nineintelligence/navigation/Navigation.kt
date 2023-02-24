@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -37,12 +38,16 @@ fun RootNavigation() {
     val currentStack by controller.currentBackStackEntryAsState()
     LaunchedEffect(key1 = currentStack, block = {
         when (currentStack?.destination?.route) {
-            NavigationHolder.LoginScreen.route -> {
+            NavigationHolder.LoginScreen.route + "/{type}" -> {
                 sysUi.setStatusBarColor(MainBlueColor, darkIcons = false)
             }
 
             NavigationHolder.RegisterScreen.route -> {
                 sysUi.setStatusBarColor(Color.White, darkIcons = true)
+            }
+
+            NavigationHolder.BoardingScreen.route -> {
+                sysUi.setStatusBarColor(MainBlueColor, darkIcons = false)
             }
         }
     })
@@ -53,7 +58,7 @@ fun RootNavigation() {
         authRoute(controller)
         composable(route = NavigationHolder.HomeScreen.route,
             enterTransition = {
-                slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(300))
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(500))
             }) {
             HomeScreen(systemUi = sysUi)
         }
@@ -66,7 +71,7 @@ fun NavGraphBuilder.authRoute(controller: NavController) {
         startDestination = NavigationHolder.BoardingScreen.route,
         route = Graph.AUTH
     ) {
-        composable(route = NavigationHolder.LoginScreen.route+ "/{type}", enterTransition = {
+        composable(route = NavigationHolder.LoginScreen.route + "/{type}", enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentScope.SlideDirection.Left,
                 tween(300)

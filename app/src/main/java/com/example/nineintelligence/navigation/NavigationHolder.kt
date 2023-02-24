@@ -6,11 +6,14 @@ sealed class NavigationHolder(val route: String) {
     object RegisterScreen : NavigationHolder("register_screen")
     object LoginScreen : NavigationHolder("login_screen")
 
-    object HomeScreenChild: NavigationHolder("home_screen_child")
-    object ProfileScreenChild: NavigationHolder("profile_screen_child")
+    object HomeScreenChild : NavigationHolder("home_screen_child")
+    object ProfileScreenChild : NavigationHolder("profile_screen_child")
+    object BankSoalScreen : NavigationHolder("bank_soal_scren")
+
+    object ExamScreen : NavigationHolder("exam_screen")
 }
 
-object Graph{
+object Graph {
     const val ROOT = "root_nav"
     const val BOARDING = "boarding_nav"
     const val AUTH = "auth_nav"

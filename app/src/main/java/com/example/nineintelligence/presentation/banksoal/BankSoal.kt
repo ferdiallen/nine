@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nineintelligence.MainActivity
+import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
@@ -55,10 +56,14 @@ import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+
+/*ExamScreen(
+Modifier
+.fillMaxSize()
+.padding(horizontal = 20.dp))*/
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
-    val context = (LocalContext.current as MainActivity)
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
     BackHandler {
@@ -68,17 +73,18 @@ fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
             }
             return@BackHandler
         }
-        /*controller.popBackStack()*/
-        context.finish()
+        controller.popBackStack()
     }
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Column(modifier = modifier) {
             TopBar(onBackPress = {
                 if (pagerState.currentPage > 0) {
                     scope.launch {
-                        pagerState.animateScrollToPage(0)
+                        pagerState.animateScrollToPage(pagerState.currentPage-1)
                     }
+                    return@TopBar
                 }
+                controller.popBackStack()
             }, font = font)
             Spacer(modifier = Modifier.height(12.dp))
             Column(
@@ -114,33 +120,17 @@ fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
                                 contentPadding = PaddingValues(bottom = 12.dp)
                             ) {
                                 items(6) { each ->
-                                    var animateVisibility by remember {
-                                        mutableStateOf(false)
-                                    }
-                                    LaunchedEffect(key1 = pagerState.isScrollInProgress, block = {
-                                        if(!pagerState.isScrollInProgress){
-                                            delay(300 * each + 1.toLong())
-                                            animateVisibility = true
-                                        }
-                                    })
-                                    AnimatedVisibility(
-                                        visible = animateVisibility,
-                                        enter = slideInHorizontally(
-                                            tween(200), initialOffsetX = {
-                                                550
+                                    BankSoalItemList(
+                                        font = font,
+                                        studyName = "Computer Science", indexOf = each + 1,
+                                        onItemClick = {
+                                            scope.launch {
+                                                pagerState.animateScrollToPage(1)
                                             }
-                                        )
-                                    ) {
-                                        BankSoalItemList(
-                                            font = font,
-                                            studyName = "Computer Science", indexOf = each + 1,
-                                            onItemClick = {
-                                                scope.launch {
-                                                    pagerState.animateScrollToPage(1)
-                                                }
-                                            }, showButton = false
-                                        )
-                                    }
+                                        }, showButton = false, onButtonClick = {
+
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -153,33 +143,15 @@ fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
                                 contentPadding = PaddingValues(bottom = 12.dp)
                             ) {
                                 items(6) { each ->
-                                    var animateVisibility by remember {
-                                        mutableStateOf(false)
-                                    }
-                                    LaunchedEffect(key1 = pagerState.currentPage, block = {
-                                        animateVisibility = if (pagerState.currentPage == 1) {
-                                            delay(300 * each + 1.toLong())
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    })
-                                    AnimatedVisibility(
-                                        visible = animateVisibility,
-                                        enter = slideInHorizontally(
-                                            tween(200), initialOffsetX = {
-                                                550
-                                            }
-                                        )
-                                    ) {
-                                        BankSoalItemList(
-                                            font = font,
-                                            studyName = "Computer Science 2", indexOf = each + 1,
-                                            onItemClick = {
+                                    BankSoalItemList(
+                                        font = font,
+                                        studyName = "Bank Soal ${each+1}", indexOf = each + 1,
+                                        onItemClick = {
 
-                                            }, showButton = true
-                                        )
-                                    }
+                                        }, showButton = true, onButtonClick = {
+                                            controller.navigate(NavigationHolder.ExamScreen.route)
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -208,7 +180,7 @@ private fun TopBar(onBackPress: () -> Unit, font: FontFamily) {
 @Composable
 private fun BankSoalItemList(
     font: FontFamily, studyName: String, indexOf: Int,
-    onItemClick: () -> Unit, showButton: Boolean
+    onItemClick: () -> Unit, showButton: Boolean, onButtonClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -258,8 +230,10 @@ private fun BankSoalItemList(
                     horizontalArrangement = Arrangement.End
                 ) {
                     Button(
-                        onClick = { }, modifier = Modifier
-                            .fillMaxWidth(0.8F)
+                        onClick = {
+                            onButtonClick.invoke()
+                        }, modifier = Modifier
+                            .fillMaxWidth(0.6F)
                             .height(28.dp), colors = ButtonDefaults.buttonColors(MainBlueColor)
                     ) {
                         Text(

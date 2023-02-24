@@ -1,9 +1,11 @@
 package com.example.nineintelligence.presentation.home
 
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -55,6 +57,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.navigation.NavigationHolder
+import com.example.nineintelligence.presentation.banksoal.BankSoal
+import com.example.nineintelligence.presentation.exam.ExamScreen
 import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
@@ -99,15 +103,29 @@ fun HomeScreen(
             NavigationHolder.ProfileScreenChild.route -> systemUi.setStatusBarColor(
                 Color.White, darkIcons = true
             )
+
+            NavigationHolder.BankSoalScreen.route -> {
+                systemUi.setStatusBarColor(Color.White, darkIcons = true)
+            }
         }
     })
     Scaffold(bottomBar = {
-        BottomBarCustom(
-            modifier = Modifier.border(0.1.dp, Color.Black),
-            info = windowInfo,
-            listItem = listBottomNavigation,
-            controller
-        )
+        AnimatedVisibility(
+            visible = currentStack?.destination?.route
+                    == NavigationHolder.HomeScreenChild.route, enter =
+            slideInVertically(tween(500), initialOffsetY = {
+                it / 2
+            }), exit = slideOutVertically(tween(500), targetOffsetY = {
+                it * 1
+            })
+        ) {
+            BottomBarCustom(
+                modifier = Modifier.border(0.1.dp, Color.Black),
+                info = windowInfo,
+                listItem = listBottomNavigation,
+                controller
+            )
+        }
     }, topBar = {
         AnimatedVisibility(
             visible = currentStack?.destination?.route == NavigationHolder.HomeScreenChild.route,
@@ -133,13 +151,15 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(
-                            top = paddingValues.calculateTopPadding(),
-                            bottom = paddingValues
-                                .calculateBottomPadding()
-                                .minus(30.dp)
+                            top = paddingValues.calculateTopPadding()
                         )
                 ) {
-                    MiddleItems(modifier = Modifier.padding(top = 32.dp))
+                    MiddleItems(
+                        modifier = Modifier.padding(
+                            top = 32.dp,
+                            bottom = 64.dp
+                        )
+                    )
                 }
             }
             composable(route = NavigationHolder.ProfileScreenChild.route) {
@@ -149,11 +169,33 @@ fun HomeScreen(
                         .padding(
                             bottom = paddingValues
                                 .calculateBottomPadding()
-                                .minus(30.dp)
                         )
                         .padding(horizontal = 20.dp), onBackPress = {
-                            controller.popBackStack()
+                        controller.popBackStack()
                     }
+                )
+            }
+            composable(route = NavigationHolder.BankSoalScreen.route,
+                enterTransition = {
+                    slideIntoContainer(
+                        AnimatedContentScope.SlideDirection.Right,
+                        tween(500)
+                    )
+                }, exitTransition = {
+                    slideOutOfContainer(
+                        AnimatedContentScope.SlideDirection.Left,
+                        tween(500)
+                    )
+                }) {
+                BankSoal(controller = controller, modifier = Modifier.fillMaxSize())
+            }
+            composable(route = NavigationHolder.ExamScreen.route, enterTransition = {
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(500))
+            }) {
+                ExamScreen(
+                    controller = controller, modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 22.dp)
                 )
             }
         }

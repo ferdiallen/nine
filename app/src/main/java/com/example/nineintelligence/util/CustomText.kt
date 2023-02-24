@@ -21,6 +21,6 @@ fun CustomText(
         modifier,
         fontWeight = fontWeight,
         fontSize = fontSize,
-        fontFamily = Poppins.fonts
+        fontFamily = Poppins.fonts, color = color
     )
 }
