@@ -63,6 +63,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
 import com.example.nineintelligence.ui.theme.MainBlueColor
@@ -90,7 +92,9 @@ val questionAnswerDummyData = mapOf(
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
+fun ExamScreen(
+    modifier: Modifier = Modifier, controller: NavController, vm: ExamViewModel = viewModel()
+) {
     var shouldShowQuestionList by remember {
         mutableStateOf(false)
     }
@@ -103,6 +107,7 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    val savedAnswerViewModel by vm.savedAnswer.collectAsStateWithLifecycle(emptyList())
     Column(modifier = modifier.onSizeChanged {
         parentSize = it
     }) {
@@ -152,24 +157,19 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
         ) {
             Spacer(modifier = Modifier.height(12.dp))
             Spacer(modifier = Modifier.height(8.dp))
-            val savedAnswer = remember {
-                mutableStateListOf<String>()
-            }
             HorizontalPager(
                 count = questionAnswerDummyData.size,
                 state = pagerState,
                 userScrollEnabled = false
-            ) {
+            ) {out->
                 QuestionArea(
-                    questionText = questionAnswerDummyData[it].first,
-                    questionAnswerList = questionAnswerDummyData[it].second,
-                    onClickedAnswer = { index, answer ->
-                        if (savedAnswer.contains(answer)) {
-                            savedAnswer.remove(answer)
-                            return@QuestionArea
-                        }
-                        savedAnswer.add(it -1 , answer)
-                    }, selectedAnswerIndex = if (savedAnswer.isEmpty()) "" else savedAnswer[it],
+                    questionText = questionAnswerDummyData[out].first,
+                    questionAnswerList = questionAnswerDummyData[out].second,
+                    onClickedAnswer = { _, answer ->
+                        vm.saveAnswer(answer, out)
+                    }, selectedAnswerIndex = savedAnswerViewModel?.find {
+                        it.first == out
+                    }?.second,
                     parentScreenSize = parentSize
                 )
             }
