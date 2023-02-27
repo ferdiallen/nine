@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.profile
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -68,12 +69,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -97,8 +100,11 @@ import com.example.nineintelligence.util.ActivityType
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.marosseleng.compose.material3.datetimepickers.date.ui.dialog.DatePickerDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
 
@@ -578,7 +584,7 @@ private fun ActivityList(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun ProfileEdit(
     modifier: Modifier = Modifier,
@@ -589,7 +595,7 @@ private fun ProfileEdit(
         mutableStateOf(0.01F)
     }
     val animateBackground = animateFloatAsState(
-        targetValue = animatedFloat, tween(500)
+        targetValue = animatedFloat, tween(250)
     )
     var shouldExpandGenderList by remember {
         mutableStateOf(false)
@@ -606,8 +612,14 @@ private fun ProfileEdit(
     var phoneNumber by remember {
         mutableStateOf("")
     }
+    var shouldShowDatePicker by remember {
+        mutableStateOf(false)
+    }
+    var birthDate by remember {
+        mutableStateOf("")
+    }
     LaunchedEffect(key1 = Unit, block = {
-        delay(500)
+        delay(250)
         animatedFloat = 0.7F
     })
     LaunchedEffect(key1 = animateBackground.value, block = {
@@ -615,6 +627,14 @@ private fun ProfileEdit(
             onTapExit.invoke()
         }
     })
+    if (shouldShowDatePicker) {
+        DatePickerDialog(onDismissRequest = {
+            shouldShowDatePicker = false
+        }, onDateChange = {
+            birthDate = it.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+            shouldShowDatePicker = false
+        })
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -630,7 +650,7 @@ private fun ProfileEdit(
         AnimatedVisibility(
             visible = animateBackground.value == 0.7F,
             enter = fadeIn(tween(250)),
-            exit = fadeOut(tween(400))
+            exit = fadeOut(tween(200))
         ) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
                 Card(
@@ -816,7 +836,7 @@ private fun ProfileEdit(
                                 color = MainBlueColor
                             )
                             OutlinedTextField(
-                                value = "",
+                                value = birthDate,
                                 onValueChange = {
 
                                 },
@@ -829,7 +849,9 @@ private fun ProfileEdit(
                                         color = Color.LightGray
                                     )
                                 }, trailingIcon = {
-                                    IconButton(onClick = { }) {
+                                    IconButton(onClick = {
+                                        shouldShowDatePicker = !shouldShowDatePicker
+                                    }) {
                                         Icon(
                                             imageVector = Icons.Filled.CalendarMonth,
                                             contentDescription = null
@@ -869,6 +891,7 @@ private fun ProfileEdit(
                                 Button(
                                     onClick = {
                                         onSaved.invoke()
+                                        animatedFloat = 0F
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -907,10 +930,10 @@ private fun SettingsMenu(
         mutableStateOf(0.01F)
     }
     val animateBackground = animateFloatAsState(
-        targetValue = animatedFloat, tween(500)
+        targetValue = animatedFloat, tween(250)
     )
     LaunchedEffect(key1 = Unit, block = {
-        delay(500)
+        delay(250)
         animatedFloat = 0.7F
     })
     LaunchedEffect(key1 = animateBackground.value, block = {

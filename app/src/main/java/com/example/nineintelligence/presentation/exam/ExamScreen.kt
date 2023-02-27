@@ -4,10 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -25,12 +24,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -46,7 +43,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,11 +56,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.example.nineintelligence.R
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.util.CustomText
@@ -74,6 +74,20 @@ import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+
+val questionAnswerDummyData = mapOf(
+    Pair("Ada Berapakah jumlah versi Windows ?", listOf("1", "6", "8", "2")),
+    Pair(
+        "Siapakah Tesla ?",
+        listOf(
+            "Saintis luar biasa penemu coil whine",
+            "Seorang Politikus",
+            "Pembuat Mesin Honda",
+            "Pengrajin Seni"
+        )
+    )
+).toList()
+
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
@@ -82,6 +96,9 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
     }
     var parentSize by remember {
         mutableStateOf(IntSize.Zero)
+    }
+    var shouldShowDialogOver by remember {
+        mutableStateOf(false)
     }
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
@@ -135,20 +152,25 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
         ) {
             Spacer(modifier = Modifier.height(12.dp))
             Spacer(modifier = Modifier.height(8.dp))
-            var savedAnswer by remember {
-                mutableStateOf<String?>(null)
+            val savedAnswer = remember {
+                mutableStateListOf<String>()
             }
-            val listAnswer = remember {
-                listOf("Atreus", "Kratos", "Zeus", "Gaia")
-            }
-
-            HorizontalPager(count = 10, state = pagerState, userScrollEnabled = false) {
+            HorizontalPager(
+                count = questionAnswerDummyData.size,
+                state = pagerState,
+                userScrollEnabled = false
+            ) {
                 QuestionArea(
-                    questionText = "Who is Kratos $it",
-                    questionAnswerList = listAnswer,
+                    questionText = questionAnswerDummyData[it].first,
+                    questionAnswerList = questionAnswerDummyData[it].second,
                     onClickedAnswer = { index, answer ->
-                        savedAnswer = answer
-                    }, selectedAnswerIndex = savedAnswer ?: "", parentScreenSize = parentSize
+                        if (savedAnswer.contains(answer)) {
+                            savedAnswer.remove(answer)
+                            return@QuestionArea
+                        }
+                        savedAnswer.add(it -1 , answer)
+                    }, selectedAnswerIndex = if (savedAnswer.isEmpty()) "" else savedAnswer[it],
+                    parentScreenSize = parentSize
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -190,11 +212,22 @@ fun ExamScreen(modifier: Modifier = Modifier, controller: NavController) {
                 }
             }
 
-            if (shouldShowQuestionList) {
-                ListQuestionHolder(onDismiss = {
-                    shouldShowQuestionList = false
-                })
-            }
+
+        }
+    }
+    if (shouldShowQuestionList) {
+        ListQuestionHolder(onDismiss = {
+            shouldShowQuestionList = false
+        }, questionNumber = pagerState.pageCount, onSubmitClick = {
+            shouldShowDialogOver = !shouldShowDialogOver
+        })
+    }
+
+    if (shouldShowDialogOver) {
+        Dialog(onDismissRequest = { shouldShowDialogOver = false }) {
+            DialogIsOver(onSubmitClick = { shouldShowDialogOver = false }, onCancelClick = {
+                shouldShowDialogOver = false
+            })
         }
     }
 
@@ -241,15 +274,15 @@ private fun QuestionArea(
                 parentScreenSize.height.toFloat().toDp() / 2.5F
             }
         )) {
-            itemsIndexed(availableAnswer) { index, out ->
+            itemsIndexed(questionAnswerList) { index, out ->
                 Card(colors = CardDefaults.cardColors(
-                    if (selectedAnswerIndex == out.toString())
+                    if (selectedAnswerIndex == out)
                         MainBlueColor else Color.Transparent
                 ),
                     border = BorderStroke(1.dp, Color.Black),
                     modifier = Modifier.height(70.dp),
                     onClick = {
-                        onClickedAnswer.invoke(index, out.toString())
+                        onClickedAnswer.invoke(index, out)
                     }) {
                     Row(
                         modifier = Modifier
@@ -262,7 +295,7 @@ private fun QuestionArea(
                             shape = CircleShape,
                             modifier = Modifier.size(30.dp),
                             colors = CardDefaults.cardColors(
-                                if (selectedAnswerIndex == out.toString())
+                                if (selectedAnswerIndex == out)
                                     MainYellowColor else Color.LightGray
                             )
                         ) {
@@ -317,28 +350,44 @@ private fun TopBar(onBackPress: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuestionListSelector() {
+fun QuestionListSelector(
+    questionNumber: Int, onSubmitClick: () -> Unit
+) {
     val selected = remember {
         mutableStateListOf<Int>()
     }
+    var parentSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    val density = LocalDensity.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.55F)
             .padding(12.dp)
+            .onSizeChanged {
+                parentSize = it
+            }
+            .clickable(MutableInteractionSource(), indication = null, enabled = false, onClick = {
+
+            })
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .wrapContentSize()
                 .padding(horizontal = 12.dp)
                 .padding(top = 12.dp)
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(5),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(start = 12.dp)
+                contentPadding = PaddingValues(start = 12.dp), modifier = Modifier.height(
+                    with(density) {
+                        parentSize.height.toFloat().toDp() / 1.5F
+                    }
+                )
             ) {
-                items(20) {
+                items(questionNumber) {
                     Card(
                         border = BorderStroke(1.dp, Color.Black),
                         modifier = Modifier
@@ -375,7 +424,9 @@ fun QuestionListSelector() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(
-                    onClick = { },
+                    onClick = {
+                        onSubmitClick.invoke()
+                    },
                     modifier = Modifier
                         .fillMaxWidth(0.9F)
                         .height(45.dp),
@@ -394,12 +445,16 @@ fun QuestionListSelector() {
 }
 
 @Composable
-private fun ListQuestionHolder(onDismiss: () -> Unit) {
+private fun ListQuestionHolder(
+    onDismiss: () -> Unit,
+    questionNumber: Int,
+    onSubmitClick: () -> Unit
+) {
     var animatedFloat by remember {
         mutableStateOf(0.01F)
     }
     val animateBackground = animateFloatAsState(
-        targetValue = animatedFloat, tween(500)
+        targetValue = animatedFloat, tween(250)
     )
     LaunchedEffect(key1 = Unit, block = {
         delay(250)
@@ -420,14 +475,87 @@ private fun ListQuestionHolder(onDismiss: () -> Unit) {
     ) {
         AnimatedVisibility(
             visible = animateBackground.value == 0.7F, enter = slideInHorizontally(
-                tween(500), initialOffsetX = {
+                tween(250), initialOffsetX = {
                     it * 2
                 }
-            ), exit = slideOutHorizontally(tween(500), targetOffsetX = {
+            ), exit = slideOutHorizontally(tween(250), targetOffsetX = {
                 it - 50 * 2
             })
         ) {
-            QuestionListSelector()
+            QuestionListSelector(
+                questionNumber, onSubmitClick = {
+                    onSubmitClick.invoke()
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun DialogIsOver(onSubmitClick: () -> Unit, onCancelClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.57F)
+    ) {
+        Column(
+            modifier = Modifier
+                .wrapContentSize()
+                .padding(horizontal = 24.dp)
+                .padding(top = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CustomText(
+                text = "Apakah anda sudah yakin dengan semua jawaban?",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                fontWeight = FontWeight.Bold,
+                color = MainBlueColor,
+                fontSize = 16.sp,
+                letterSpacing = 0.5.sp
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Image(painter = painterResource(id = R.drawable.puzzled), contentDescription = null)
+            Box(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(bottom = 12.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
+                    Button(
+                        onClick = {
+                            onCancelClick.invoke()
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            MainBlueColor
+                        )
+                    ) {
+                        CustomText(
+                            text = "Cancel",
+                            fontWeight = FontWeight.Bold,
+                            color = MainYellowColor
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1F))
+                    Button(
+                        onClick = {
+                            onSubmitClick.invoke()
+                        }, shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            MainBlueColor
+                        )
+                    ) {
+                        CustomText(
+                            text = "Submit",
+                            fontWeight = FontWeight.Bold,
+                            color = MainYellowColor
+                        )
+                    }
+
+                }
+            }
         }
     }
 }

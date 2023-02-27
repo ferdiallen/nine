@@ -29,6 +29,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -41,7 +42,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.0"
     }
-    packagingOptions {
+    packaging {
         resources {
             excludes.add("/META-INF/{AL2.0,LGPL2.1}")
         }
@@ -90,4 +91,10 @@ dependencies {
 
     //Coil
     implementation("io.coil-kt:coil-compose:2.2.2")
+
+    val materialDialog = "0.6.2"
+    implementation("com.marosseleng.android:compose-material3-datetime-pickers:$materialDialog")
+
+    //Desugaring
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
 }
