@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    ExamScreen(controller = rememberNavController())
+                    RootNavigation()
                 }
             }
         }

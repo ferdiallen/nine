@@ -107,7 +107,7 @@ fun ExamScreen(
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val savedAnswerViewModel by vm.savedAnswer.collectAsStateWithLifecycle(emptyList())
+    val savedAnswerViewModel by vm.savedAnswerStateFlow.collectAsStateWithLifecycle()
     Column(modifier = modifier.onSizeChanged {
         parentSize = it
     }) {
@@ -161,12 +161,13 @@ fun ExamScreen(
                 count = questionAnswerDummyData.size,
                 state = pagerState,
                 userScrollEnabled = false
-            ) {out->
+            ) { out ->
                 QuestionArea(
                     questionText = questionAnswerDummyData[out].first,
                     questionAnswerList = questionAnswerDummyData[out].second,
                     onClickedAnswer = { _, answer ->
-                        vm.saveAnswer(answer, out)
+                        /*vm.saveAnswer(answer, out)*/
+                        vm.stateFlowMethodSaveAnswer(out, answer)
                     }, selectedAnswerIndex = savedAnswerViewModel?.find {
                         it.first == out
                     }?.second,
@@ -220,7 +221,13 @@ fun ExamScreen(
             shouldShowQuestionList = false
         }, questionNumber = pagerState.pageCount, onSubmitClick = {
             shouldShowDialogOver = !shouldShowDialogOver
-        })
+        }, onNavigateToSelectedIndex = {
+            scope.launch {
+                pagerState.animateScrollToPage(it)
+            }
+        }, isSelected = savedAnswerViewModel?.map {
+            it.first
+        } ?: emptyList())
     }
 
     if (shouldShowDialogOver) {
@@ -306,15 +313,15 @@ private fun QuestionArea(
                                 CustomText(
                                     text = availableAnswer[index].toString(),
                                     fontWeight = FontWeight.Bold,
-                                    color = if (selectedAnswerIndex == out.toString())
+                                    color = if (selectedAnswerIndex == out)
                                         MainBlueColor else Color.Gray
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         CustomText(
-                            text = out.toString(),
-                            color = if (selectedAnswerIndex == out.toString())
+                            text = out,
+                            color = if (selectedAnswerIndex == out)
                                 MainYellowColor else MainBlueColor
                         )
                     }
@@ -351,7 +358,10 @@ private fun TopBar(onBackPress: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuestionListSelector(
-    questionNumber: Int, onSubmitClick: () -> Unit
+    questionNumber: Int,
+    onSubmitClick: () -> Unit,
+    onGoToSelectedIndex: (Int) -> Unit,
+    hasAnswer: List<Int>
 ) {
     val selected = remember {
         mutableStateListOf<Int>()
@@ -394,10 +404,10 @@ fun QuestionListSelector(
                             .height(50.dp)
                             .padding(end = 12.dp),
                         onClick = {
-                            selected.add(it)
+                            onGoToSelectedIndex.invoke(it)
                         },
                         colors = CardDefaults.cardColors(
-                            if (selected.contains(it))
+                            if (hasAnswer.contains(it))
                                 MainBlueColor else Color.Transparent
                         )
                     ) {
@@ -448,13 +458,15 @@ fun QuestionListSelector(
 private fun ListQuestionHolder(
     onDismiss: () -> Unit,
     questionNumber: Int,
-    onSubmitClick: () -> Unit
+    onSubmitClick: () -> Unit,
+    onNavigateToSelectedIndex: (Int) -> Unit,
+    isSelected: List<Int>
 ) {
     var animatedFloat by remember {
         mutableStateOf(0.01F)
     }
     val animateBackground = animateFloatAsState(
-        targetValue = animatedFloat, tween(250)
+        targetValue = animatedFloat, tween(250), label = ""
     )
     LaunchedEffect(key1 = Unit, block = {
         delay(250)
@@ -485,7 +497,10 @@ private fun ListQuestionHolder(
             QuestionListSelector(
                 questionNumber, onSubmitClick = {
                     onSubmitClick.invoke()
-                }
+                }, onGoToSelectedIndex = {
+                    onNavigateToSelectedIndex.invoke(it)
+                    animatedFloat = 0F
+                }, hasAnswer = isSelected
             )
         }
     }
