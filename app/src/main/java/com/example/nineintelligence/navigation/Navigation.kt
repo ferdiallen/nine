@@ -2,25 +2,17 @@ package com.example.nineintelligence.navigation
 
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.example.nineintelligence.R
-import com.example.nineintelligence.presentation.boarding.MainBoardingScreen
 import com.example.nineintelligence.presentation.enter.LoginForm
 import com.example.nineintelligence.presentation.enter.RegisterScreen
 import com.example.nineintelligence.presentation.home.HomeScreen
@@ -45,10 +37,6 @@ fun RootNavigation() {
             NavigationHolder.RegisterScreen.route -> {
                 sysUi.setStatusBarColor(Color.White, darkIcons = true)
             }
-
-            NavigationHolder.BoardingScreen.route -> {
-                sysUi.setStatusBarColor(MainBlueColor, darkIcons = false)
-            }
         }
     })
     AnimatedNavHost(
@@ -68,7 +56,7 @@ fun RootNavigation() {
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.authRoute(controller: NavController) {
     navigation(
-        startDestination = NavigationHolder.BoardingScreen.route,
+        startDestination = NavigationHolder.LoginScreen.route +"/{type}",
         route = Graph.AUTH
     ) {
         composable(route = NavigationHolder.LoginScreen.route + "/{type}", enterTransition = {
@@ -108,9 +96,6 @@ fun NavGraphBuilder.authRoute(controller: NavController) {
                 slideIntoContainer(AnimatedContentScope.SlideDirection.Down, tween(300))
             }) {
             RegisterScreen(controller = controller)
-        }
-        composable(route = NavigationHolder.BoardingScreen.route) {
-            MainBoardingScreen(controller)
         }
     }
 }

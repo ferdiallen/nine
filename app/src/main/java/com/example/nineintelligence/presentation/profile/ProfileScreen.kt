@@ -595,7 +595,7 @@ private fun ProfileEdit(
         mutableStateOf(0.01F)
     }
     val animateBackground = animateFloatAsState(
-        targetValue = animatedFloat, tween(250)
+        targetValue = animatedFloat, tween(250), label = ""
     )
     var shouldExpandGenderList by remember {
         mutableStateOf(false)
@@ -930,7 +930,7 @@ private fun SettingsMenu(
         mutableStateOf(0.01F)
     }
     val animateBackground = animateFloatAsState(
-        targetValue = animatedFloat, tween(250)
+        targetValue = animatedFloat, tween(250), label = ""
     )
     LaunchedEffect(key1 = Unit, block = {
         delay(250)

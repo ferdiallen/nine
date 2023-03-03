@@ -40,6 +40,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,8 +52,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -58,6 +63,7 @@ import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.presentation.banksoal.BankSoal
+import com.example.nineintelligence.presentation.discuss.DiscussionScreen
 import com.example.nineintelligence.presentation.exam.ExamScreen
 import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
@@ -65,6 +71,7 @@ import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
 import com.example.nineintelligence.util.BottomBarData
+import com.example.nineintelligence.util.CustomText
 import com.example.nineintelligence.util.WindowType
 import com.example.nineintelligence.util.listBottomNavigation
 import com.example.nineintelligence.util.rememberWindoInfo
@@ -154,7 +161,7 @@ fun HomeScreen(
                             top = paddingValues.calculateTopPadding()
                         )
                 ) {
-                    MiddleItems(
+                    HomeScreenChild(
                         modifier = Modifier.padding(
                             top = 32.dp,
                             bottom = 64.dp
@@ -189,9 +196,13 @@ fun HomeScreen(
                 slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(500))
             }) {
                 ExamScreen(
-                    controller = controller, modifier = Modifier.fillMaxSize()
+                    controller = controller, modifier = Modifier
+                        .fillMaxSize()
                         .padding(horizontal = 22.dp)
                 )
+            }
+            composable(route = NavigationHolder.DiscussionScreen.route) {
+                DiscussionScreen()
             }
         }
     }
@@ -240,16 +251,18 @@ private fun HeaderRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MiddleItems(modifier: Modifier = Modifier) {
+private fun HomeScreenChild(modifier: Modifier = Modifier) {
+    var shouldShowReminderDialog by remember {
+        mutableStateOf(false)
+    }
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Column(
             Modifier
                 .fillMaxSize()
                 .then(modifier)
         ) {
-            Text(
+            CustomText(
                 text = "Yuk kita lihat jadwal tryout terdekatmu",
-                fontFamily = font,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = MainBlueColor,
@@ -266,9 +279,8 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
                         .wrapContentSize()
                         .padding(top = 4.dp)
                 ) {
-                    Text(
+                    CustomText(
                         text = "Tryout 1 - Senin, 1 Januari 1999",
-                        fontFamily = font,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp)
@@ -367,6 +379,17 @@ private fun MiddleItems(modifier: Modifier = Modifier) {
             }
         }
 
+    }
+    if (shouldShowReminderDialog) {
+        Dialog(onDismissRequest = {
+            shouldShowReminderDialog = false
+        }) {
+            DialogReminder(
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5F)
+            )
+        }
     }
 }
 
@@ -605,3 +628,22 @@ private fun BottomBarCustom(
 
 }
 
+@Composable
+fun DialogReminder(modifier: Modifier = Modifier) {
+    Card(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CustomText(
+                text = "Pengingat agenda selanjutnya telah dibuat," +
+                        " pastikan kamu tidak telat ya !",
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center, letterSpacing = 0.1.sp, color = MainBlueColor
+            )
+        }
+    }
+}

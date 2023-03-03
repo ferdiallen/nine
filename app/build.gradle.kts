@@ -7,6 +7,7 @@ android {
     compileSdk = 33
     namespace = "com.example.nineintelligence"
     defaultConfig {
+        multiDexEnabled = true
         applicationId = "com.example.nineintelligence"
         minSdk = 24
         targetSdk = 33
@@ -26,6 +27,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -42,7 +44,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.0"
     }
-    packaging {
+    packagingOptions {
         resources {
             excludes.add("/META-INF/{AL2.0,LGPL2.1}")
         }
@@ -69,7 +71,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0-beta01")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0-rc01")
     implementation("androidx.compose.material:material-icons-extended")
 
     //Accompanist
@@ -79,10 +81,10 @@ dependencies {
     implementation("com.google.accompanist:accompanist-pager:$accompanistVersion")
 
     //Koin
-    val koinCoreVer = "3.3.2"
+    val koinCoreVer = "3.3.3"
     val koinAndroid = "3.3.2"
-    val koinCompose = "3.4.1"
-    val koinKtor = "3.3.0"
+    val koinCompose = "3.4.2"
+    val koinKtor = "3.3.1"
 
     implementation("io.insert-koin:koin-core:$koinCoreVer")
     implementation("io.insert-koin:koin-android:$koinAndroid")
@@ -96,5 +98,16 @@ dependencies {
     implementation("com.marosseleng.android:compose-material3-datetime-pickers:$materialDialog")
 
     //Desugaring
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.2")
+
+    //Multidex
+    val multidex_version = "2.0.1"
+    implementation("androidx.multidex:multidex:$multidex_version")
+
+    //Media 3
+    val media3_version = "1.0.0-rc01"
+    // For media playback using ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:$media3_version")
+    // For building media playback UIs
+    implementation("androidx.media3:media3-ui:$media3_version")
 }
