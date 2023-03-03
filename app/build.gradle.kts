@@ -82,10 +82,10 @@ dependencies {
 
     //Koin
     val koinCoreVer = "3.3.3"
-    val koinAndroid = "3.3.2"
+    val koinAndroid = "3.3.3"
     val koinCompose = "3.4.2"
     val koinKtor = "3.3.1"
-
+    
     implementation("io.insert-koin:koin-core:$koinCoreVer")
     implementation("io.insert-koin:koin-android:$koinAndroid")
     implementation("io.insert-koin:koin-androidx-compose:$koinCompose")

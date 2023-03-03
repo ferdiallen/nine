@@ -36,7 +36,9 @@ class MainActivity : ComponentActivity() {
                     DiscussionScreen(
                         Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 20.dp)
+                            .padding(horizontal = 20.dp),
+                        subjectName = "Computer Science",
+                        bankSoalOf = 1
                     )
                 }
             }

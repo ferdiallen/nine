@@ -45,10 +45,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -69,25 +71,35 @@ import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
 import com.example.nineintelligence.util.CustomText
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun DiscussionScreen(modifier: Modifier = Modifier, vm: DiscussionViewModel = koinViewModel()) {
+fun DiscussionScreen(
+    modifier: Modifier = Modifier,
+    vm: DiscussionViewModel = koinViewModel(),
+    subjectName: String = "",
+    bankSoalOf: Int? = null
+) {
     var shouldShowPlaylistSelector by remember {
         mutableStateOf(false)
     }
+    val pagerState = rememberPagerState()
     val lifecycleEvent = LocalLifecycleOwner.current
-    /*    DisposableEffect(key1 = lifecycleEvent.lifecycle, effect = {
+    val scope = rememberCoroutineScope()
+    /*DisposableEffect(key1 = lifecycleEvent.lifecycle, effect = {
             val observer = LifecycleEventObserver { _, e ->
                 when (e) {
                     Lifecycle.Event.ON_PAUSE -> {
                         vm.player.pause()
                     }
-    
                     Lifecycle.Event.ON_RESUME -> {
                         vm.player.play()
                     }
-    
                     else -> {
     
                     }
@@ -106,25 +118,38 @@ fun DiscussionScreen(modifier: Modifier = Modifier, vm: DiscussionViewModel = ko
         })
         Spacer(modifier = Modifier.height(12.dp))
         CustomText(
-            text = "Pembahasan Bank Soal 1",
+            text = "Pembahasan Bank Soal $bankSoalOf : $subjectName",
             fontWeight = FontWeight.Bold,
             color = MainBlueColor
         )
         Spacer(modifier = Modifier.height(8.dp))
-        CustomText(
-            text = "Halaman ini menjelaskan tentang soal per " +
-                    "soal dari bank soal 1 biologi yang dijelaskan oleh mentor yang berpengalaman.",
+        HorizontalPager(count = 5, state = pagerState, userScrollEnabled = false) {
 
-            color = MainBlueColor
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        AndroidView(factory = { context ->
-            PlayerView(context).apply {
-                player = vm.player
-                player?.play()
+            Column(
+                modifier = Modifier.padding(
+                    end = if (pagerState.currentPage < 4) 8.dp
+                    else 0.dp
+                )
+            ) {
+                CustomText(
+                    text = "Halaman ini menjelaskan tentang soal per " +
+                            "soal dari bank soal 1 biologi yang " +
+                            "dijelaskan oleh mentor yang berpengalaman.",
+
+                    color = MainBlueColor
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                AndroidView(factory = { context ->
+                    PlayerView(context).apply {
+                        player = vm.player
+                        player?.apply {
+                            play()
+                        }
+                    }
+                }, modifier = Modifier.aspectRatio(16F / 9F))
+                Spacer(modifier = Modifier.height(24.dp))
             }
-        }, modifier = Modifier.aspectRatio(16F / 9F))
-        Spacer(modifier = Modifier.height(24.dp))
+        }
         CustomText(text = "Identitas Mentor", fontWeight = FontWeight.Bold, color = MainBlueColor)
         Spacer(modifier = Modifier.height(12.dp))
         MentorIdentitySection(
@@ -137,7 +162,11 @@ fun DiscussionScreen(modifier: Modifier = Modifier, vm: DiscussionViewModel = ko
     if (shouldShowPlaylistSelector) {
         MenuListDialog(onDismiss = {
             shouldShowPlaylistSelector = false
-        })
+        }, 5, onIndexSelected = {
+            scope.launch {
+                pagerState.animateScrollToPage(it)
+            }
+        }, currentPlay = pagerState.currentPage)
     }
 }
 
@@ -174,7 +203,12 @@ private fun MentorIdentitySection(
     status: String
 ) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        AsyncImage(model = image, contentDescription = null)
+        AsyncImage(
+            model = image,
+            contentDescription = null,
+            modifier = Modifier.size(50.dp),
+            contentScale = ContentScale.Crop
+        )
         Spacer(modifier = Modifier.width(8.dp))
         Column(verticalArrangement = Arrangement.Center) {
             CustomText(text = name, color = MainBlueColor, fontSize = 17.sp)
@@ -184,7 +218,11 @@ private fun MentorIdentitySection(
 }
 
 @Composable
-private fun MenuListDialog(onDismiss: () -> Unit) {
+private fun MenuListDialog(
+    onDismiss: () -> Unit,
+    playlistNumber: Int,
+    onIndexSelected: (Int) -> Unit, currentPlay: Int? = null
+) {
     var valueFloat by remember {
         mutableStateOf(0.01F)
     }
@@ -210,14 +248,13 @@ private fun MenuListDialog(onDismiss: () -> Unit) {
             visible = animatedFloat.value == 0.7F,
             enter = slideInVertically(tween(250)),
             exit = slideOutVertically(tween(250), targetOffsetY = {
-                ( it * -0.9F).toInt()
+                (it * -0.9F).toInt()
             })
         ) {
             MenuListSelector(
-                numOfPlaylist = 2,
-                onSubmitClick = { },
-                onGoToSelectedIndex = {},
-                currentPlaylist = 1
+                numOfPlaylist = playlistNumber,
+                onGoToSelectedIndex = onIndexSelected::invoke,
+                currentPlaylist = currentPlay ?: 0
             )
         }
     }
@@ -227,13 +264,9 @@ private fun MenuListDialog(onDismiss: () -> Unit) {
 @Composable
 private fun MenuListSelector(
     numOfPlaylist: Int,
-    onSubmitClick: () -> Unit,
     onGoToSelectedIndex: (Int) -> Unit,
     currentPlaylist: Int
 ) {
-    val selected = remember {
-        mutableStateListOf<Int>()
-    }
     var parentSize by remember {
         mutableStateOf(IntSize.Zero)
     }

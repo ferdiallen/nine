@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.discuss
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -16,5 +17,14 @@ class DiscussionViewModel(
             )
             prepare()
         }
+    }
+
+    fun playSelectedVideo(item: Uri?) {
+
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        player.release()
     }
 }
