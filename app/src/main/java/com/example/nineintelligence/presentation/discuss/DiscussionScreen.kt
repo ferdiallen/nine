@@ -1,5 +1,7 @@
 package com.example.nineintelligence.presentation.discuss
 
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.widget.RelativeLayout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -7,6 +9,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -24,8 +27,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
@@ -41,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +60,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontFamily
@@ -64,9 +73,16 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleObserver
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.MediaItem
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
+import com.example.nineintelligence.di.appModule
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
@@ -76,8 +92,17 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.context.loadKoinModules
+import org.koin.core.context.unloadKoinModules
+import kotlin.math.abs
+
+val videoList = listOf(
+    "https://dl111.dlmate18.online/?file=M3R4SUNiN3JsOHJ6WWQ2a3NQS1Y5ZGlxVlZIOCtyZ0t1ZWNQOHo5b041Z0hsYXdjNHMrRmFQbHFISk11LzcrTU52OTZ2Z3I5US9HZ0dDYTdpY3R3RW1QUCtzWnAvem5HLzRzZlNjaGxYa3U5eWNDNm1TUmluQVh3TzRyckdLZ0NLQ1ZkOXdVeDlRT3gyTlAxNmpIcHVsS21tQjdWUERSRXZ5dGZlL0xWL3NKaDhTL09kK2Z0d1pVUnBDdWF2OHNmamFmRjRWaWhrZXQ0cXRsellVZDhkcE5XaE11enpPYVJvVVZN",
+    "https://test-videos.co.uk/vids/bigbuckbunny/mp4/av1/1080/Big_Buck_Bunny_1080_10s_5MB.mp4"
+)
 
 @OptIn(ExperimentalPagerApi::class)
+@androidx.media3.common.util.UnstableApi
 @Composable
 fun DiscussionScreen(
     modifier: Modifier = Modifier,
@@ -85,13 +110,16 @@ fun DiscussionScreen(
     subjectName: String = "",
     bankSoalOf: Int? = null
 ) {
-    var shouldShowPlaylistSelector by remember {
-        mutableStateOf(false)
-    }
-    val pagerState = rememberPagerState()
-    val lifecycleEvent = LocalLifecycleOwner.current
-    val scope = rememberCoroutineScope()
-    /*DisposableEffect(key1 = lifecycleEvent.lifecycle, effect = {
+    /*  var shouldShowPlaylistSelector by remember {
+          mutableStateOf(false)
+      }
+      val pagerState = rememberPagerState()
+      val lifecycleEvent = LocalLifecycleOwner.current
+      val scope = rememberCoroutineScope()
+      LaunchedEffect(key1 = pagerState.currentPage, block = {
+
+      })
+      *//*DisposableEffect(key1 = lifecycleEvent.lifecycle, effect = {
             val observer = LifecycleEventObserver { _, e ->
                 when (e) {
                     Lifecycle.Event.ON_PAUSE -> {
@@ -109,7 +137,7 @@ fun DiscussionScreen(
             onDispose {
                 lifecycleEvent.lifecycle.removeObserver(observer)
             }
-        })*/
+        })*//*
     Column(modifier = modifier) {
         TopBarMain(font = Poppins.fonts, onBackPress = {
 
@@ -123,8 +151,7 @@ fun DiscussionScreen(
             color = MainBlueColor
         )
         Spacer(modifier = Modifier.height(8.dp))
-        HorizontalPager(count = 5, state = pagerState, userScrollEnabled = false) {
-
+        HorizontalPager(count = videoList.size, state = pagerState, userScrollEnabled = false) {
             Column(
                 modifier = Modifier.padding(
                     end = if (pagerState.currentPage < 4) 8.dp
@@ -138,18 +165,10 @@ fun DiscussionScreen(
 
                     color = MainBlueColor
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                AndroidView(factory = { context ->
-                    PlayerView(context).apply {
-                        player = vm.player
-                        player?.apply {
-                            play()
-                        }
-                    }
-                }, modifier = Modifier.aspectRatio(16F / 9F))
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
         CustomText(text = "Identitas Mentor", fontWeight = FontWeight.Bold, color = MainBlueColor)
         Spacer(modifier = Modifier.height(12.dp))
         MentorIdentitySection(
@@ -162,11 +181,71 @@ fun DiscussionScreen(
     if (shouldShowPlaylistSelector) {
         MenuListDialog(onDismiss = {
             shouldShowPlaylistSelector = false
-        }, 5, onIndexSelected = {
+        }, videoList.size, onIndexSelected = {
             scope.launch {
                 pagerState.animateScrollToPage(it)
             }
         }, currentPlay = pagerState.currentPage)
+    }*/
+    val context = LocalContext.current
+    val listState = rememberLazyListState()
+    val currentVisibleIndex by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex
+        }
+    }
+    LaunchedEffect(key1 = currentVisibleIndex, block = {
+        unloadKoinModules(appModule)
+        loadKoinModules(appModule)
+    })
+    val exoPlayer = remember(currentVisibleIndex) {
+        ExoPlayer.Builder(context).build().apply {
+            val defaultSourceFactory = DefaultDataSource.Factory(context)
+            val dataSourceFactory = DefaultDataSource.Factory(
+                context, defaultSourceFactory
+            )
+            val source = ProgressiveMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(
+                    MediaItem.fromUri(videoList[currentVisibleIndex])
+                )
+            setMediaSource(source)
+            prepare()
+        }
+    }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize(), state = listState
+    ) {
+        items(videoList.size) {
+            vm.playSelectedVideo(videoList[currentVisibleIndex], context)
+            /*AndroidView(factory = { context ->
+                PlayerView(context).apply {
+                    player = vm.player
+                    player?.apply {
+                        play()
+                    }
+                }
+            }, modifier = Modifier.aspectRatio(16F / 9F))*/
+            Column(
+                modifier = Modifier
+                    .fillParentMaxSize(1F)
+            ) {
+                AndroidView(
+                    factory = { context ->
+                        PlayerView(context).apply {
+                            player = vm.exoPlayer
+                            this.player?.apply {
+                                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT
+                                layoutParams =
+                                    RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                                playWhenReady = true
+                            }
+                        }
+                    }, modifier = Modifier.fillMaxSize()
+                )
+
+            }
+        }
     }
 }
 
