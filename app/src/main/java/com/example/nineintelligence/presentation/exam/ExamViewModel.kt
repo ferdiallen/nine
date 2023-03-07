@@ -4,12 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -47,10 +42,7 @@ class ExamViewModel : ViewModel() {
             return@update if (it == null) {
                 listOf(newArray)
             } else {
-                if (it.contains(newArray)) {
-                    currentArray?.remove(newArray)
-                    currentArray?.toList()
-                } else if (it.contains(it.find { out ->
+                if (it.contains(it.find { out ->
                         out.first == indexQuestion
                     })) {
                     currentArray?.remove(it.find { out ->

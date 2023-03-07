@@ -5,7 +5,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -72,6 +71,7 @@ import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
 import com.example.nineintelligence.util.BottomBarData
 import com.example.nineintelligence.util.CustomText
+import com.example.nineintelligence.util.ExamType
 import com.example.nineintelligence.util.WindowType
 import com.example.nineintelligence.util.listBottomNavigation
 import com.example.nineintelligence.util.rememberWindoInfo
@@ -95,6 +95,7 @@ private val dataBottomBar = mapOf(
 ).toList()
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun HomeScreen(
     controller: NavHostController = rememberAnimatedNavController(), systemUi: SystemUiController
@@ -198,11 +199,26 @@ fun HomeScreen(
                 ExamScreen(
                     controller = controller, modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 22.dp)
+                        .padding(horizontal = 22.dp),
+                    typeOf = ExamType.TAKE_EXAMS
                 )
             }
             composable(route = NavigationHolder.DiscussionScreen.route) {
-                DiscussionScreen()
+                DiscussionScreen(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    subjectName = "Computer Science",
+                    bankSoalOf = 1, typeOf = "Bank Soal", controller = controller
+                )
+            }
+            composable(route = NavigationHolder.QuestionDiscussion.route) {
+                ExamScreen(
+                    controller = controller, modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 22.dp),
+                    typeOf = ExamType.DISCUSSION
+                )
             }
         }
     }

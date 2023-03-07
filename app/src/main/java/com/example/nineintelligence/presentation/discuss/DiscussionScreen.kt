@@ -1,6 +1,8 @@
 package com.example.nineintelligence.presentation.discuss
 
+import android.content.Context
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.RelativeLayout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -9,7 +11,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -27,18 +28,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,9 +42,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -69,36 +62,34 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleObserver
-import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
-import com.example.nineintelligence.di.appModule
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
 import com.example.nineintelligence.util.CustomText
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.context.loadKoinModules
-import org.koin.core.context.unloadKoinModules
-import kotlin.math.abs
 
 val videoList = listOf(
-    "https://dl111.dlmate18.online/?file=M3R4SUNiN3JsOHJ6WWQ2a3NQS1Y5ZGlxVlZIOCtyZ0t1ZWNQOHo5b041Z0hsYXdjNHMrRmFQbHFISk11LzcrTU52OTZ2Z3I5US9HZ0dDYTdpY3R3RW1QUCtzWnAvem5HLzRzZlNjaGxYa3U5eWNDNm1TUmluQVh3TzRyckdLZ0NLQ1ZkOXdVeDlRT3gyTlAxNmpIcHVsS21tQjdWUERSRXZ5dGZlL0xWL3NKaDhTL09kK2Z0d1pVUnBDdWF2OHNmamFmRjRWaWhrZXQ0cXRsellVZDhkcE5XaE11enpPYVJvVVZN",
-    "https://test-videos.co.uk/vids/bigbuckbunny/mp4/av1/1080/Big_Buck_Bunny_1080_10s_5MB.mp4"
+    "https://cdn.videvo.net/videvo_files/video/premium/video0032/large_watermarked/523_523-0006_preview.mp4",
+    "https://cdn.videvo.net/videvo_files/video/premium/video0032/large_watermarked/523_523-0006_preview.mp4",
+    "https://cdn.videvo.net/videvo_files/video/premium/video0032/large_watermarked/523_523-0006_preview.mp4",
+    "https://cdn.videvo.net/videvo_files/video/premium/video0032/large_watermarked/523_523-0006_preview.mp4",
 )
 
 @OptIn(ExperimentalPagerApi::class)
@@ -108,41 +99,51 @@ fun DiscussionScreen(
     modifier: Modifier = Modifier,
     vm: DiscussionViewModel = koinViewModel(),
     subjectName: String = "",
-    bankSoalOf: Int? = null
+    bankSoalOf: Int? = null,
+    typeOf: String,
+    controller : NavController
 ) {
-    /*  var shouldShowPlaylistSelector by remember {
-          mutableStateOf(false)
-      }
-      val pagerState = rememberPagerState()
-      val lifecycleEvent = LocalLifecycleOwner.current
-      val scope = rememberCoroutineScope()
-      LaunchedEffect(key1 = pagerState.currentPage, block = {
+    var shouldShowPlaylistSelector by remember {
+        mutableStateOf(false)
+    }
+    val scope = rememberCoroutineScope()
+    val pagerState = rememberPagerState()
+    MainScreen(
+        pagerState, shouldShowPlaylistSelector = {
+            shouldShowPlaylistSelector = !shouldShowPlaylistSelector
+        }, bankSoalOf = bankSoalOf ?: 0, subjectName = subjectName,
+        modifier = modifier
+    )
 
-      })
-      *//*DisposableEffect(key1 = lifecycleEvent.lifecycle, effect = {
-            val observer = LifecycleEventObserver { _, e ->
-                when (e) {
-                    Lifecycle.Event.ON_PAUSE -> {
-                        vm.player.pause()
-                    }
-                    Lifecycle.Event.ON_RESUME -> {
-                        vm.player.play()
-                    }
-                    else -> {
-    
-                    }
-                }
+    if (shouldShowPlaylistSelector) {
+        MenuListDialog(onDismiss = {
+            shouldShowPlaylistSelector = false
+        }, videoList.size, onIndexSelected = {
+            scope.launch {
+                pagerState.scrollToPage(it)
             }
-            lifecycleEvent.lifecycle.addObserver(observer)
-            onDispose {
-                lifecycleEvent.lifecycle.removeObserver(observer)
-            }
-        })*//*
+        }, currentPlay = pagerState.currentPage)
+    }
+
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+@Composable
+private fun MainScreen(
+    state: PagerState,
+    shouldShowPlaylistSelector: () -> Unit,
+    modifier: Modifier = Modifier,
+    bankSoalOf: Int?,
+    subjectName: String
+) {
+    val context = LocalContext.current
+
     Column(modifier = modifier) {
         TopBarMain(font = Poppins.fonts, onBackPress = {
 
         }, onMenuClick = {
-            shouldShowPlaylistSelector = !shouldShowPlaylistSelector
+            shouldShowPlaylistSelector.invoke()
         })
         Spacer(modifier = Modifier.height(12.dp))
         CustomText(
@@ -151,10 +152,14 @@ fun DiscussionScreen(
             color = MainBlueColor
         )
         Spacer(modifier = Modifier.height(8.dp))
-        HorizontalPager(count = videoList.size, state = pagerState, userScrollEnabled = false) {
+        HorizontalPager(
+            count = videoList.size, state = state,
+            userScrollEnabled = false
+        ) {
+            val playerExo = lifecycleAwareExoPlayer(player = get())
             Column(
                 modifier = Modifier.padding(
-                    end = if (pagerState.currentPage < 4) 8.dp
+                    end = if (state.currentPage < 4) 8.dp
                     else 0.dp
                 )
             ) {
@@ -165,6 +170,29 @@ fun DiscussionScreen(
 
                     color = MainBlueColor
                 )
+                SideEffect {
+                    playSelectedVideo(videoList[it], context, player = playerExo)
+                }
+                DisposableEffect(key1 = true, effect = {
+                    onDispose {
+                        playerExo.release()
+                    }
+                })
+                Spacer(modifier = Modifier.height(8.dp))
+                AndroidView(
+                    factory = { contextOut ->
+                        PlayerView(contextOut).apply {
+                            player = playerExo
+                            this.player?.apply {
+                                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                layoutParams =
+                                    RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                                playWhenReady = true
+                            }
+                        }
+                    }, modifier = Modifier.aspectRatio(16F / 9F)
+                )
+
             }
         }
 
@@ -177,75 +205,6 @@ fun DiscussionScreen(
             Modifier.fillMaxWidth(),
             "Mentor di Nine Intelligence"
         )
-    }
-    if (shouldShowPlaylistSelector) {
-        MenuListDialog(onDismiss = {
-            shouldShowPlaylistSelector = false
-        }, videoList.size, onIndexSelected = {
-            scope.launch {
-                pagerState.animateScrollToPage(it)
-            }
-        }, currentPlay = pagerState.currentPage)
-    }*/
-    val context = LocalContext.current
-    val listState = rememberLazyListState()
-    val currentVisibleIndex by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex
-        }
-    }
-    LaunchedEffect(key1 = currentVisibleIndex, block = {
-        unloadKoinModules(appModule)
-        loadKoinModules(appModule)
-    })
-    val exoPlayer = remember(currentVisibleIndex) {
-        ExoPlayer.Builder(context).build().apply {
-            val defaultSourceFactory = DefaultDataSource.Factory(context)
-            val dataSourceFactory = DefaultDataSource.Factory(
-                context, defaultSourceFactory
-            )
-            val source = ProgressiveMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(
-                    MediaItem.fromUri(videoList[currentVisibleIndex])
-                )
-            setMediaSource(source)
-            prepare()
-        }
-    }
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(), state = listState
-    ) {
-        items(videoList.size) {
-            vm.playSelectedVideo(videoList[currentVisibleIndex], context)
-            /*AndroidView(factory = { context ->
-                PlayerView(context).apply {
-                    player = vm.player
-                    player?.apply {
-                        play()
-                    }
-                }
-            }, modifier = Modifier.aspectRatio(16F / 9F))*/
-            Column(
-                modifier = Modifier
-                    .fillParentMaxSize(1F)
-            ) {
-                AndroidView(
-                    factory = { context ->
-                        PlayerView(context).apply {
-                            player = vm.exoPlayer
-                            this.player?.apply {
-                                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT
-                                layoutParams =
-                                    RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-                                playWhenReady = true
-                            }
-                        }
-                    }, modifier = Modifier.fillMaxSize()
-                )
-
-            }
-        }
     }
 }
 
@@ -408,4 +367,43 @@ private fun MenuListSelector(
             }
         }
     }
+}
+
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+private fun playSelectedVideo(item: String?, context: Context, player: ExoPlayer) {
+    val defaultSourceFactory = DefaultDataSource.Factory(context)
+    val dataSourceFactory = DefaultDataSource.Factory(
+        context, defaultSourceFactory
+    )
+    val source = ProgressiveMediaSource.Factory(dataSourceFactory)
+        .createMediaSource(MediaItem.fromUri(item ?: ""))
+    player.apply {
+        setMediaSource(source)
+        prepare()
+    }
+}
+
+@Composable
+private fun lifecycleAwareExoPlayer(player: ExoPlayer): ExoPlayer {
+    val lifecycle = LocalLifecycleOwner.current
+    DisposableEffect(key1 = lifecycle, effect = {
+        val observer = LifecycleEventObserver { _, e ->
+            when (e) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    player.pause()
+                }
+
+                Lifecycle.Event.ON_RESUME -> {
+                    player.play()
+                }
+
+                else -> {}
+            }
+        }
+        lifecycle.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.lifecycle.removeObserver(observer)
+        }
+    })
+    return player
 }
