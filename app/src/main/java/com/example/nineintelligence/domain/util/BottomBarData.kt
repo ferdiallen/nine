@@ -1,4 +1,4 @@
-package com.example.nineintelligence.util
+package com.example.nineintelligence.domain.util
 
 import com.example.nineintelligence.R
 import com.example.nineintelligence.navigation.NavigationHolder

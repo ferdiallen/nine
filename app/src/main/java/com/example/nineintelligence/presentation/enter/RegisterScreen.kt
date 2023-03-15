@@ -21,9 +21,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -33,20 +37,22 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.nineintelligence.R
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.PlaceholderColor
 import com.example.nineintelligence.ui.theme.Poppins
 import com.example.nineintelligence.ui.theme.RegistrationBlueColor
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     modifier: Modifier = Modifier,
-    viewModel: RegisterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: RegisterViewModel = koinViewModel(),
     controller: NavController
 ) {
-
+    val context = LocalContext.current
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         val annotatedText = remember {
             buildAnnotatedString {
@@ -96,9 +102,13 @@ fun RegisterScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
-                        value = "",
+                        value = viewModel.userFirstName,
                         onValueChange = {
-
+                            viewModel.setDataFor(
+                                it,
+                                context.getString(R.string.userfirstname),
+                                context
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
@@ -119,9 +129,13 @@ fun RegisterScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
-                        value = "",
+                        value = viewModel.userLastName,
                         onValueChange = {
-
+                            viewModel.setDataFor(
+                                it,
+                                context.getString(R.string.userlastname),
+                                context
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
@@ -140,9 +154,13 @@ fun RegisterScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
-                        value = "",
+                        value = viewModel.userEmail,
                         onValueChange = {
-
+                            viewModel.setDataFor(
+                                it,
+                                context.getString(R.string.useremail),
+                                context
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
@@ -163,9 +181,13 @@ fun RegisterScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
-                        value = "",
+                        value = viewModel.userPhoneNumber,
                         onValueChange = {
-
+                            viewModel.setDataFor(
+                                it,
+                                context.getString(R.string.userphonenumber),
+                                context
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
@@ -186,9 +208,13 @@ fun RegisterScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
-                        value = "",
+                        value = viewModel.password,
                         onValueChange = {
-
+                            viewModel.setDataFor(
+                                it,
+                                context.getString(R.string.password),
+                                context
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
@@ -209,9 +235,13 @@ fun RegisterScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
-                        value = "",
+                        value = viewModel.confirmPassword,
                         onValueChange = {
-
+                            viewModel.setDataFor(
+                                it,
+                                context.getString(R.string.confirmpassword),
+                                context
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
@@ -268,7 +298,11 @@ fun RegisterScreen(
                     }
                     Button(
                         onClick = {
-
+                            viewModel.registerUser(
+                                "${viewModel.userFirstName} ${viewModel.userLastName}",
+                                viewModel.userEmail,
+                                viewModel.password
+                            )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -280,14 +314,16 @@ fun RegisterScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        ClickableText(text = annotatedText, onClick = {offset->
+                        ClickableText(text = annotatedText, onClick = { offset ->
                             annotatedText.getStringAnnotations(
                                 start = offset,
                                 end = offset, tag = "Log in"
-                            ).firstOrNull()?.let { out->
+                            ).firstOrNull()?.let { out ->
                                 controller.popBackStack()
                             }
                         })

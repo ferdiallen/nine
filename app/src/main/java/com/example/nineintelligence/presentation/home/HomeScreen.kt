@@ -69,12 +69,12 @@ import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
-import com.example.nineintelligence.util.BottomBarData
-import com.example.nineintelligence.util.CustomText
-import com.example.nineintelligence.util.ExamType
-import com.example.nineintelligence.util.WindowType
-import com.example.nineintelligence.util.listBottomNavigation
-import com.example.nineintelligence.util.rememberWindoInfo
+import com.example.nineintelligence.domain.util.BottomBarData
+import com.example.nineintelligence.core.CustomText
+import com.example.nineintelligence.domain.util.ExamType
+import com.example.nineintelligence.domain.util.WindowType
+import com.example.nineintelligence.domain.util.listBottomNavigation
+import com.example.nineintelligence.domain.util.rememberWindoInfo
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -356,11 +356,11 @@ private fun HomeScreenChild(modifier: Modifier = Modifier) {
                         style = TextStyle(letterSpacing = 0.3.sp),
                         fontSize = 16.sp
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp)) 
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 20.dp),
+                            .padding(bottom = 12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {

@@ -76,7 +76,7 @@ import com.example.nineintelligence.R
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
-import com.example.nineintelligence.util.CustomText
+import com.example.nineintelligence.core.CustomText
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
@@ -101,7 +101,7 @@ fun DiscussionScreen(
     subjectName: String = "",
     bankSoalOf: Int? = null,
     typeOf: String,
-    controller : NavController
+    controller: NavController
 ) {
     var shouldShowPlaylistSelector by remember {
         mutableStateOf(false)
@@ -112,7 +112,9 @@ fun DiscussionScreen(
         pagerState, shouldShowPlaylistSelector = {
             shouldShowPlaylistSelector = !shouldShowPlaylistSelector
         }, bankSoalOf = bankSoalOf ?: 0, subjectName = subjectName,
-        modifier = modifier
+        modifier = modifier, onBackPress = {
+            controller.popBackStack()
+        }
     )
 
     if (shouldShowPlaylistSelector) {
@@ -135,13 +137,13 @@ private fun MainScreen(
     shouldShowPlaylistSelector: () -> Unit,
     modifier: Modifier = Modifier,
     bankSoalOf: Int?,
-    subjectName: String
+    subjectName: String, onBackPress: () -> Unit
 ) {
     val context = LocalContext.current
 
     Column(modifier = modifier) {
         TopBarMain(font = Poppins.fonts, onBackPress = {
-
+            onBackPress.invoke()
         }, onMenuClick = {
             shouldShowPlaylistSelector.invoke()
         })

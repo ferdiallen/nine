@@ -1,4 +1,4 @@
-package com.example.nineintelligence.util
+package com.example.nineintelligence.core
 
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text

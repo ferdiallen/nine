@@ -1,4 +1,4 @@
-package com.example.nineintelligence.data
+package com.example.nineintelligence.domain.models
 
 data class ExamModel(
     val tryoutId: Int,

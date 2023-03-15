@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,12 +59,12 @@ import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.PlaceholderColor
 import com.example.nineintelligence.ui.theme.Poppins
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginForm(
-    type: String,
-    viewModel: EnterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: EnterViewModel = koinViewModel(),
     controller: NavController
 ) {
     val email by viewModel.currentEmail.collectAsStateWithLifecycle()
@@ -73,6 +74,16 @@ fun LoginForm(
     var passwordVisibility by remember {
         mutableStateOf(true)
     }
+    val userData by viewModel.loginState
+    LaunchedEffect(key1 = userData.tokenData, block = {
+        if (userData.tokenData != "") {
+            controller.navigate(NavigationHolder.HomeScreen.route) {
+                popUpTo(NavigationHolder.LoginScreen.route) {
+                    inclusive = true
+                }
+            }
+        }
+    })
     val annotatedText = remember {
         buildAnnotatedString {
             append("Don't Have an account yet ? \n Make a new account")
@@ -108,7 +119,7 @@ fun LoginForm(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Login $type",
+                        text = "Login",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = font
@@ -199,7 +210,7 @@ fun LoginForm(
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
                         onClick = {
-                            controller.navigate(NavigationHolder.HomeScreen.route)
+                            viewModel.loginUser(email, password)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -210,23 +221,15 @@ fun LoginForm(
                         Text(text = "Sign In", fontSize = 16.sp, fontFamily = font)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    when (type) {
-                        stringResource(id = R.string.siswa) -> {
-                            ClickableText(text = annotatedText, onClick = { offset ->
-                                annotatedText.getStringAnnotations(
-                                    tag = context.getString(R.string.signup_tag),
-                                    start = offset,
-                                    end = offset
-                                ).firstOrNull()?.let { _ ->
-                                    controller.navigate(NavigationHolder.RegisterScreen.route)
-                                }
-                            }, style = TextStyle(fontFamily = font, fontSize = 12.sp))
+                    ClickableText(text = annotatedText, onClick = { offset ->
+                        annotatedText.getStringAnnotations(
+                            tag = context.getString(R.string.signup_tag),
+                            start = offset,
+                            end = offset
+                        ).firstOrNull()?.let { _ ->
+                            controller.navigate(NavigationHolder.RegisterScreen.route)
                         }
-
-                        stringResource(id = R.string.mentor) -> {
-
-                        }
-                    }
+                    }, style = TextStyle(fontFamily = font, fontSize = 12.sp))
                 }
             }
         }

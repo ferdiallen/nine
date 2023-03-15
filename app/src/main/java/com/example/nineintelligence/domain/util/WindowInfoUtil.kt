@@ -1,4 +1,4 @@
-package com.example.nineintelligence.util
+package com.example.nineintelligence.domain.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration

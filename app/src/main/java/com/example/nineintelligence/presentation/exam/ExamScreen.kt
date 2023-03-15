@@ -72,12 +72,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
-import com.example.nineintelligence.data.ExamModel
+import com.example.nineintelligence.domain.models.ExamModel
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
-import com.example.nineintelligence.util.CustomText
-import com.example.nineintelligence.util.ExamType
+import com.example.nineintelligence.core.CustomText
+import com.example.nineintelligence.domain.util.ExamType
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState

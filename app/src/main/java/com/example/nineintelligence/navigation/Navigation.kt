@@ -4,9 +4,14 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -21,21 +26,51 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun RootNavigation() {
+fun RootNavigation(
+    viewModel: NavigationViewModel = koinViewModel()
+) {
     val controller = rememberAnimatedNavController()
     val sysUi = rememberSystemUiController()
     val currentStack by controller.currentBackStackEntryAsState()
+    val isLogin by viewModel.hasLoggedIn.collectAsStateWithLifecycle()
+    val lifecycle = LocalLifecycleOwner.current
+    DisposableEffect(key1 = lifecycle, effect = {
+        val observer = LifecycleEventObserver{_,event->
+            when(event){
+                Lifecycle.Event.ON_RESUME->{
+
+                }
+                else->{
+
+                }
+            }
+        }
+        lifecycle.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.lifecycle.removeObserver(observer)
+        }
+    })
     LaunchedEffect(key1 = currentStack, block = {
         when (currentStack?.destination?.route) {
-            NavigationHolder.LoginScreen.route + "/{type}" -> {
+            NavigationHolder.LoginScreen.route -> {
                 sysUi.setStatusBarColor(MainBlueColor, darkIcons = false)
             }
 
             NavigationHolder.RegisterScreen.route -> {
                 sysUi.setStatusBarColor(Color.White, darkIcons = true)
+            }
+        }
+    })
+    LaunchedEffect(key1 = isLogin, block = {
+        if (isLogin) {
+            controller.navigate(NavigationHolder.HomeScreen.route) {
+                popUpTo(NavigationHolder.LoginScreen.route) {
+                    inclusive = true
+                }
             }
         }
     })
@@ -56,10 +91,10 @@ fun RootNavigation() {
 @OptIn(ExperimentalAnimationApi::class)
 fun NavGraphBuilder.authRoute(controller: NavController) {
     navigation(
-        startDestination = NavigationHolder.LoginScreen.route +"/{type}",
+        startDestination = NavigationHolder.LoginScreen.route,
         route = Graph.AUTH
     ) {
-        composable(route = NavigationHolder.LoginScreen.route + "/{type}", enterTransition = {
+        composable(route = NavigationHolder.LoginScreen.route, enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentScope.SlideDirection.Left,
                 tween(300)
@@ -74,13 +109,10 @@ fun NavGraphBuilder.authRoute(controller: NavController) {
             type = NavType.StringType
             defaultValue = ""
         })
-        ) { out ->
-            out.arguments?.let { argument ->
-                LoginForm(
-                    type = argument.getString("type", ""),
-                    controller = controller
-                )
-            }
+        ) {
+            LoginForm(
+                controller = controller
+            )
         }
         composable(route = NavigationHolder.RegisterScreen.route,
             enterTransition = {

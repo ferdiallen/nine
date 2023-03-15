@@ -1,9 +1,13 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     id("com.android.application")
     kotlin("android")
+    kotlin("plugin.serialization") version "1.8.10"
 }
 
 android {
+    val baseUrlKey = gradleLocalProperties(rootDir).getProperty("BASE_URL")
     compileSdk = 33
     namespace = "com.example.nineintelligence"
     defaultConfig {
@@ -13,7 +17,7 @@ android {
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
-
+        buildConfigField("String", "BASE_URL", baseUrlKey)
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -54,7 +58,7 @@ android {
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2023.01.00")
     implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0")
     //noinspection GradleDependency
     implementation("androidx.activity:activity-compose:1.6.1")
     implementation(composeBom)
@@ -71,7 +75,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0-rc01")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0")
     implementation("androidx.compose.material:material-icons-extended")
 
     //Accompanist
@@ -85,7 +89,7 @@ dependencies {
     val koinAndroid = "3.3.3"
     val koinCompose = "3.4.2"
     val koinKtor = "3.3.1"
-    
+
     implementation("io.insert-koin:koin-core:$koinCoreVer")
     implementation("io.insert-koin:koin-android:$koinAndroid")
     implementation("io.insert-koin:koin-androidx-compose:$koinCompose")
@@ -110,4 +114,18 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3_version")
     // For building media playback UIs
     implementation("androidx.media3:media3-ui:$media3_version")
+
+    //Ktor
+    val ktorVersion = "2.2.3"
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-android:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth:$ktorVersion")
+
+    //Kotlinx Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+
+    //Datastore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }

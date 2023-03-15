@@ -1,5 +1,9 @@
 package com.example.nineintelligence.presentation.profile
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -83,6 +87,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
@@ -93,13 +98,14 @@ import com.example.nineintelligence.ui.theme.StrongGreen
 import com.example.nineintelligence.ui.theme.StrongYellow
 import com.example.nineintelligence.ui.theme.WeakGreen
 import com.example.nineintelligence.ui.theme.WeakYellow
-import com.example.nineintelligence.util.ActivityType
+import com.example.nineintelligence.domain.util.ActivityType
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.marosseleng.compose.material3.datetimepickers.date.ui.dialog.DatePickerDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
@@ -109,7 +115,11 @@ private val genderList = listOf("Laki-laki", "Perempuan")
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier, onBackPress: () -> Unit) {
+fun ProfileScreen(
+    modifier: Modifier = Modifier,
+    onBackPress: () -> Unit,
+    viewModel: ProfileViewModel = koinViewModel()
+) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
     var shouldShowEditMenu by remember {
@@ -118,6 +128,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, onBackPress: () -> Unit) {
     var shouldShowSettingsMenu by remember {
         mutableStateOf(false)
     }
+    val userDataInfo by viewModel.userDataInfo.collectAsStateWithLifecycle()
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Column(
             modifier = modifier
@@ -184,7 +195,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, onBackPress: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Adyatma Prabowo",
+                        text = userDataInfo?.userName ?: "",
                         fontSize = 18.sp,
                         fontFamily = font,
                         fontWeight = FontWeight.Bold,
@@ -228,7 +239,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, onBackPress: () -> Unit) {
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "test@gmail.com",
+                                text = userDataInfo?.userEmail ?: "",
                                 fontSize = 12.sp,
                                 fontFamily = font,
                                 modifier = Modifier.fillMaxWidth(),
@@ -293,7 +304,9 @@ fun ProfileScreen(modifier: Modifier = Modifier, onBackPress: () -> Unit) {
                 enableOnDismiss = true, modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(0.5F)
-                    .padding(24.dp)
+                    .padding(24.dp), onTapLogout = {
+                    viewModel.clearData()
+                }
             )
         }
     }
@@ -587,6 +600,14 @@ private fun ProfileEdit(
     onSaved: () -> Unit, font: FontFamily,
     onTapExit: () -> Unit, enableOnDismiss: Boolean
 ) {
+    var temporaryUserProfile: Uri? by remember {
+        mutableStateOf(null)
+    }
+    val photoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(), onResult = {
+            temporaryUserProfile = it
+        }
+    )
     var animatedFloat by remember {
         mutableStateOf(0.01F)
     }
@@ -682,18 +703,22 @@ private fun ProfileEdit(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 AsyncImage(
-                                    model = R.drawable.generated,
+                                    model = temporaryUserProfile,
                                     contentDescription = null,
                                     modifier = Modifier
                                         .size(60.dp)
-                                        .clip(CircleShape)
+                                        .clip(CircleShape), contentScale = ContentScale.Crop
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Card(
                                     modifier = Modifier
                                         .size(140.dp, 50.dp),
                                     border = BorderStroke(1.dp, Color.Black), onClick = {
-
+                                        photoPicker.launch(
+                                            PickVisualMediaRequest(
+                                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                                            )
+                                        )
                                     }
                                 ) {
                                     Row(
@@ -920,7 +945,8 @@ private fun SettingsMenu(
     modifier: Modifier = Modifier,
     font: FontFamily,
     onTapExit: () -> Unit,
-    enableOnDismiss: Boolean
+    enableOnDismiss: Boolean,
+    onTapLogout: () -> Unit
 ) {
     var animatedFloat by remember {
         mutableStateOf(0.01F)
@@ -967,6 +993,7 @@ private fun SettingsMenu(
                 ) {
                     LazyColumn(
                         modifier = Modifier
+                            .fillMaxWidth()
                             .wrapContentHeight()
                             .statusBarsPadding()
                             .navigationBarsPadding()
@@ -983,8 +1010,15 @@ private fun SettingsMenu(
                             )
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(
-                                text = "Logout", color = MainBlueColor,
-                                fontFamily = font, fontSize = 17.sp
+                                text = "Logout",
+                                color = MainBlueColor,
+                                fontFamily = font,
+                                fontSize = 17.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onTapLogout.invoke()
+                                    }
                             )
                         }
                     }

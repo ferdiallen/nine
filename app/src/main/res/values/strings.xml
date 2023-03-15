@@ -5,4 +5,10 @@
     <string name="mentor">Mentor</string>
     <string name="start">Mulai</string>
     <string name="discussion">Pembahasan</string>
+    <string name="userfirstname">userFirstName</string>
+    <string name="userlastname">userLastName</string>
+    <string name="useremail">userEmail</string>
+    <string name="userphonenumber">userPhoneNumber</string>
+    <string name="password">password</string>
+    <string name="confirmpassword">confirmPassword</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.example.nineintelligence.util
+package com.example.nineintelligence.domain.util
 
 enum class ActivityType {
     MYACTIVITY,
