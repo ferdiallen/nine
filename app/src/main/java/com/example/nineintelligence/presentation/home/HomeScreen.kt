@@ -75,6 +75,8 @@ import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.domain.util.WindowType
 import com.example.nineintelligence.domain.util.listBottomNavigation
 import com.example.nineintelligence.domain.util.rememberWindoInfo
+import com.example.nineintelligence.presentation.packagescreen.PackageScreen
+import com.example.nineintelligence.presentation.subject.SubjectScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -115,6 +117,14 @@ fun HomeScreen(
             NavigationHolder.BankSoalScreen.route -> {
                 systemUi.setStatusBarColor(Color.White, darkIcons = true)
             }
+
+            NavigationHolder.SubjectScreen.route -> {
+                systemUi.setStatusBarColor(Color.White, darkIcons = true)
+            }
+
+            NavigationHolder.PackageScreen.route -> {
+                systemUi.setStatusBarColor(Color.White,darkIcons = true)
+            }
         }
     })
     Scaffold(bottomBar = {
@@ -145,8 +155,7 @@ fun HomeScreen(
             HeaderRow(
                 username = "Ferdialif",
                 image = R.drawable.generated,
-                modifier = Modifier.padding(horizontal = 8.dp),
-                info = windowInfo
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
         }
 
@@ -154,7 +163,11 @@ fun HomeScreen(
         AnimatedNavHost(
             navController = controller, startDestination = NavigationHolder.HomeScreenChild.route
         ) {
-            composable(route = NavigationHolder.HomeScreenChild.route) {
+            composable(route = NavigationHolder.HomeScreenChild.route, enterTransition = {
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Left)
+            }, exitTransition = {
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Left)
+            }) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -170,7 +183,11 @@ fun HomeScreen(
                     )
                 }
             }
-            composable(route = NavigationHolder.ProfileScreenChild.route) {
+            composable(route = NavigationHolder.ProfileScreenChild.route, enterTransition = {
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Left)
+            }, exitTransition = {
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, tween(400))
+            }) {
                 ProfileScreen(
                     Modifier
                         .fillMaxSize()
@@ -220,13 +237,29 @@ fun HomeScreen(
                     typeOf = ExamType.DISCUSSION
                 )
             }
+            composable(route = NavigationHolder.SubjectScreen.route) {
+                SubjectScreen(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    controller = controller
+                )
+            }
+            composable(route = NavigationHolder.PackageScreen.route, enterTransition = {
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(400))
+            }) {
+                PackageScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 14.dp),
+                    controller
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun HeaderRow(
-    modifier: Modifier = Modifier, username: String, image: Any?, info: WindowType
+    modifier: Modifier = Modifier, username: String, image: Any?
 ) {
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Card(
@@ -356,7 +389,7 @@ private fun HomeScreenChild(modifier: Modifier = Modifier) {
                         style = TextStyle(letterSpacing = 0.3.sp),
                         fontSize = 16.sp
                     )
-                    Spacer(modifier = Modifier.height(12.dp)) 
+                    Spacer(modifier = Modifier.height(12.dp))
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()

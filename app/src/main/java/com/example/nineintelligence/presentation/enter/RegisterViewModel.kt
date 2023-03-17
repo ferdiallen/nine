@@ -8,12 +8,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.R
 import com.example.nineintelligence.data.network.apiservice.RegisterUser
+import com.example.nineintelligence.domain.models.UserModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
     private val user: RegisterUser
 ) : ViewModel() {
+    private val _registerState = MutableStateFlow<UserModel?>(null)
+    val registerState = _registerState.asStateFlow()
     var userFirstName by mutableStateOf("")
         private set
     var userLastName by mutableStateOf("")
@@ -58,8 +64,10 @@ class RegisterViewModel(
     fun registerUser(name: String, email: String, password: String) =
         viewModelScope.launch(Dispatchers.IO) {
             val register = user.registerUser(name, email, password)
-            register?.let {
-                println(it.userName)
+            register?.let { out ->
+                _registerState.update {
+                    out
+                }
             }
         }
 }

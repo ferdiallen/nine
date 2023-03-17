@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.subject
 
+import android.provider.MediaStore.Audio.Radio
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,16 +20,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,15 +44,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.domain.models.SubjectModel
+import com.example.nineintelligence.domain.util.SubjectType
 import com.example.nineintelligence.presentation.home.CustomPercentage
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
-import com.example.nineintelligence.core.CustomText
-import com.example.nineintelligence.domain.util.SubjectType
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -74,7 +80,8 @@ private val subSubjectListExample = listOf(
 @Composable
 fun SubjectScreen(
     modifier: Modifier = Modifier,
-    vm: SubjectViewModel = koinViewModel()
+    vm: SubjectViewModel = koinViewModel(),
+    controller: NavController
 ) {
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
@@ -83,12 +90,14 @@ fun SubjectScreen(
             pagerState.currentPage
         }
     }
-    if (currentPage > 0) {
-        BackHandler {
+    BackHandler {
+        if (currentPage > 0) {
             scope.launch {
                 pagerState.animateScrollToPage(currentPage - 1)
             }
+            return@BackHandler
         }
+        controller.popBackStack()
     }
     Column(modifier) {
         TopBarMain(font = Poppins.fonts, onBackPress = {
@@ -96,7 +105,9 @@ fun SubjectScreen(
                 scope.launch {
                     pagerState.animateScrollToPage(currentPage - 1)
                 }
+                return@TopBarMain
             }
+            controller.popBackStack()
         })
         Spacer(modifier = Modifier.height(12.dp))
         HorizontalPager(count = 2, state = pagerState) {
@@ -300,79 +311,5 @@ private fun ProgressCard(
     }
 }
 
-val paymentOptions = listOf(
-    "QRIS", "OVO", "Cash", "Gopay", "Brimo"
-)
 
-@Composable
-fun PaymentDialog(modifier: Modifier = Modifier) {
-    var selectedPayment by remember{
-        mutableStateOf("")
-    }
-    Card(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(16.dp)
-        ) {
-            CustomText(
-                text = "Detail Pembayaran",
-                fontWeight = FontWeight.Bold,
-                color = MainBlueColor
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                CustomText(text = "Harga", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.weight(1F))
-                CustomText(text = "Rp.0", color = MainBlueColor)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                CustomText(text = "Harga Diskon", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.weight(1F))
-                CustomText(text = "Rp.0", color = MainBlueColor)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                CustomText(text = "Pajak (PPN)", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.weight(1F))
-                CustomText(text = "Rp.0", color = MainBlueColor)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                CustomText(text = "Total Bayar", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.weight(1F))
-                CustomText(text = "Rp.0", color = MainBlueColor)
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            CustomText(
-                text = "Metode Pembayaran",
-                fontWeight = FontWeight.Bold,
-                color = MainBlueColor
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                items(paymentOptions) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = selectedPayment == it, onClick = {
-                            selectedPayment = it
-                        })
-                        CustomText(text = it)
-                    }
-                }
-                item {
-                    Button(
-                        onClick = { }, modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(4.dp),
-                        colors = ButtonDefaults.buttonColors(MainBlueColor)
-                    ) {
-                        CustomText(text = "Bayar", color = MainYellowColor)
-                    }
-                }
-            }
-        }
-    }
-}
+

@@ -37,23 +37,6 @@ fun RootNavigation(
     val sysUi = rememberSystemUiController()
     val currentStack by controller.currentBackStackEntryAsState()
     val isLogin by viewModel.hasLoggedIn.collectAsStateWithLifecycle()
-    val lifecycle = LocalLifecycleOwner.current
-    DisposableEffect(key1 = lifecycle, effect = {
-        val observer = LifecycleEventObserver{_,event->
-            when(event){
-                Lifecycle.Event.ON_RESUME->{
-
-                }
-                else->{
-
-                }
-            }
-        }
-        lifecycle.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycle.lifecycle.removeObserver(observer)
-        }
-    })
     LaunchedEffect(key1 = currentStack, block = {
         when (currentStack?.destination?.route) {
             NavigationHolder.LoginScreen.route -> {

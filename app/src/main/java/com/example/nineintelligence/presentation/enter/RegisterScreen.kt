@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
@@ -52,7 +54,13 @@ fun RegisterScreen(
     viewModel: RegisterViewModel = koinViewModel(),
     controller: NavController
 ) {
+    val registerState by viewModel.registerState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    LaunchedEffect(key1 = registerState, block = {
+        if (registerState?.userName != null) {
+            controller.popBackStack()
+        }
+    })
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         val annotatedText = remember {
             buildAnnotatedString {
