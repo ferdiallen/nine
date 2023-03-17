@@ -100,7 +100,8 @@ private val dataBottomBar = mapOf(
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun HomeScreen(
-    controller: NavHostController = rememberAnimatedNavController(), systemUi: SystemUiController
+    controller: NavHostController = rememberAnimatedNavController(),
+    systemUi: SystemUiController,rootController: NavController
 ) {
     val windowInfo = rememberWindoInfo()
     val currentStack by controller.currentBackStackEntryAsState()
@@ -123,7 +124,7 @@ fun HomeScreen(
             }
 
             NavigationHolder.PackageScreen.route -> {
-                systemUi.setStatusBarColor(Color.White,darkIcons = true)
+                systemUi.setStatusBarColor(Color.White, darkIcons = true)
             }
         }
     })
@@ -193,6 +194,12 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(horizontal = 20.dp), onBackPress = {
                         controller.popBackStack()
+                    }, onLogoutAction = {
+                        rootController.navigate(NavigationHolder.LoginScreen.route){
+                            popUpTo(NavigationHolder.HomeScreen.route){
+                                inclusive = true
+                            }
+                        }
                     }
                 )
             }

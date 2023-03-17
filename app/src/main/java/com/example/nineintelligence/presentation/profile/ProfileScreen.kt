@@ -118,7 +118,8 @@ private val genderList = listOf("Laki-laki", "Perempuan")
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     onBackPress: () -> Unit,
-    viewModel: ProfileViewModel = koinViewModel()
+    viewModel: ProfileViewModel = koinViewModel(),
+    onLogoutAction: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
@@ -306,6 +307,7 @@ fun ProfileScreen(
                     .fillMaxHeight(0.5F)
                     .padding(24.dp), onTapLogout = {
                     viewModel.clearData()
+                    onLogoutAction.invoke()
                 }
             )
         }
