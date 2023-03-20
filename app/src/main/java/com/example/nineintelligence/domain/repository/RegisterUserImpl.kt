@@ -14,14 +14,20 @@ import io.ktor.http.contentType
 import java.io.IOException
 
 class RegisterUserImpl(private val client: HttpClient) : RegisterUser {
-    override suspend fun registerUser(name: String, email: String, password: String): UserModel? {
+    override suspend fun registerUser(
+        name: String,
+        email: String,
+        password: String,
+        phoneNumber: String
+    ): UserModel? {
         return try {
             client.post("${BuildConfig.BASE_URL}users/register") {
                 parameter("user_name", name)
                 parameter("user_email", email)
                 parameter("password", password)
+                parameter("phone", phoneNumber)
                 contentType(ContentType.Application.Json)
-                setBody(UserModel(name, email, password))
+                setBody(UserModel(name, email, password, phoneNumber))
             }.body()
         } catch (e: Exception) {
             println(e.message)

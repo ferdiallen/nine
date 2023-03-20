@@ -5,3 +5,8 @@ data class SubjectModel(
     val subjectName: String,
     val progress: Float
 )
+
+data class SubjectReadingModel(
+    val title: String,
+    val content: String
+)

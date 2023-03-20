@@ -11,4 +11,8 @@
     <string name="userphonenumber">userPhoneNumber</string>
     <string name="password">password</string>
     <string name="confirmpassword">confirmPassword</string>
+    <string name="download_btn_title">Download</string>
+    <string name="start_btn_subject">Mulai</string>
+    <string name="tryout_screen_title">Jadwal Tryout</string>
+    <string name="tryout_screen_desc">Halaman tryout berisi list terkait tanggal tryout yang akan dilaksanakan dan kalian bisa mendaftarkan diri pada tryout tersebut. Tryout akan dilaksanakan tiap seminggu sekali. Semangat!</string>
 </resources>

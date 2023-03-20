@@ -3,6 +3,7 @@ package com.example.nineintelligence.presentation.home
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -77,6 +78,7 @@ import com.example.nineintelligence.domain.util.listBottomNavigation
 import com.example.nineintelligence.domain.util.rememberWindoInfo
 import com.example.nineintelligence.presentation.packagescreen.PackageScreen
 import com.example.nineintelligence.presentation.subject.SubjectScreen
+import com.example.nineintelligence.presentation.tryout.TryoutScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -101,7 +103,7 @@ private val dataBottomBar = mapOf(
 @Composable
 fun HomeScreen(
     controller: NavHostController = rememberAnimatedNavController(),
-    systemUi: SystemUiController,rootController: NavController
+    systemUi: SystemUiController, rootController: NavController
 ) {
     val windowInfo = rememberWindoInfo()
     val currentStack by controller.currentBackStackEntryAsState()
@@ -195,8 +197,8 @@ fun HomeScreen(
                         .padding(horizontal = 20.dp), onBackPress = {
                         controller.popBackStack()
                     }, onLogoutAction = {
-                        rootController.navigate(NavigationHolder.LoginScreen.route){
-                            popUpTo(NavigationHolder.HomeScreen.route){
+                        rootController.navigate(NavigationHolder.LoginScreen.route) {
+                            popUpTo(NavigationHolder.HomeScreen.route) {
                                 inclusive = true
                             }
                         }
@@ -258,6 +260,13 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(horizontal = 14.dp),
                     controller
+                )
+            }
+            composable(route = NavigationHolder.TryoutScreen.route) {
+                TryoutScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp)
                 )
             }
         }
@@ -405,8 +414,21 @@ private fun HomeScreenChild(modifier: Modifier = Modifier) {
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(5) {
+                            var currentPercentage by remember {
+                                mutableStateOf(0F)
+                            }
+                            LaunchedEffect(key1 = Unit, block = {
+                                currentPercentage = 0.5F
+                            })
+                            val animateProgress by animateFloatAsState(
+                                targetValue = currentPercentage,
+                                tween(400, 100), label = ""
+                            )
                             ProgressCard(
-                                font = font, studyName = "Biologi", percentage = 0.5F, indexOf = it
+                                font = font,
+                                studyName = "Biologi",
+                                percentage = animateProgress,
+                                indexOf = it
                             )
                         }
                         item {
@@ -657,7 +679,12 @@ private fun BottomBarCustom(
                         }
                     ),
                     onClick = {
+                        controller.navigate(listBottomNavigation[2].route ?: "") {
+                            launchSingleTop = true
+                            popUpTo(NavigationHolder.HomeScreenChild.route){
 
+                            }
+                        }
                     },
                     colors = CardDefaults.cardColors(Color.White),
                     border = BorderStroke(0.1.dp, color = Color.Black),

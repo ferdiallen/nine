@@ -10,14 +10,15 @@ import kotlinx.coroutines.launch
 
 class NavigationViewModel(
     private val store: AuthPrefs
-    ) : ViewModel() {
+) : ViewModel() {
     private val _hasLoggedIn = MutableStateFlow(false)
     val hasLoggedIn = _hasLoggedIn.asStateFlow()
 
     init {
         viewModelScope.launch {
             val logInAuthKey = store.readToken()
-            if (logInAuthKey != null) {
+            if (logInAuthKey != "") {
+                println(logInAuthKey)
                 _hasLoggedIn.update {
                     true
                 }

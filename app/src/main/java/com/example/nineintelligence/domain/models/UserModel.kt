@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class UserModel(
     @SerialName("user_name") val userName: String,
     @SerialName("user_email") val userEmail: String,
-    @SerialName("password") val password: String
+    @SerialName("password") val password: String,
+    @SerialName("phone") val phoneNumber: String
 )
 
 @Serializable

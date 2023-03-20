@@ -441,9 +441,6 @@ private fun StatisticScreen(
                         .fillMaxWidth()
                         .aspectRatio(16F / 9F)
                 ) {
-                    var animateInt by remember {
-                        mutableStateOf(0)
-                    }
                     LazyRow(
                         modifier = Modifier.fillMaxSize(),
                         horizontalArrangement = Arrangement.Center,
@@ -452,12 +449,15 @@ private fun StatisticScreen(
                         state = scrollState
                     ) {
                         items(20) {
+                            var animateInt by remember {
+                                mutableStateOf(0)
+                            }
                             LaunchedEffect(key1 = Unit, block = {
                                 animateInt = Random.nextInt(10, 100)
                             })
                             val animatedValue = animateIntAsState(
                                 targetValue = animateInt,
-                                tween(450)
+                                tween(450), label = ""
                             )
                             ItemsChart(
                                 animatedValue.value
@@ -512,7 +512,6 @@ private fun ActivityTab(font: FontFamily, type: ActivityType) {
                     font = font,
                     tryOutName = "Try out 1",
                     startDate = "1 Januari 1111",
-                    indexOf = it,
                     onClick = {
 
                     },
@@ -528,7 +527,6 @@ private fun ActivityList(
     font: FontFamily,
     tryOutName: String,
     startDate: String,
-    indexOf: Int,
     activityType: ActivityType,
     onClick: (Int) -> Unit
 ) {
@@ -545,26 +543,9 @@ private fun ActivityList(
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Card(
-                shape = CircleShape,
-                modifier = Modifier.size(30.dp),
-                colors = CardDefaults.cardColors(MainBlueColor)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = indexOf.toString(),
-                        fontSize = 12.sp,
-                        fontFamily = font,
-                        fontWeight = FontWeight.Bold,
-                        color = MainYellowColor
-                    )
-                }
-            }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = tryOutName, fontFamily = font, fontSize = 12.sp, fontWeight = FontWeight.Bold
+                text = tryOutName, fontFamily = font, fontSize = 14.sp, fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.weight(1F))
             Column(

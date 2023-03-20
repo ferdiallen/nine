@@ -6,6 +6,7 @@ interface RegisterUser {
     suspend fun registerUser(
         name: String,
         email: String,
-        password: String
+        password: String,
+        phoneNumber: String
     ): UserModel?
 }

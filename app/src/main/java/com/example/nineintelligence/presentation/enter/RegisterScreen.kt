@@ -309,7 +309,8 @@ fun RegisterScreen(
                             viewModel.registerUser(
                                 "${viewModel.userFirstName} ${viewModel.userLastName}",
                                 viewModel.userEmail,
-                                viewModel.password
+                                viewModel.password,
+                                viewModel.userPhoneNumber
                             )
                         },
                         modifier = Modifier

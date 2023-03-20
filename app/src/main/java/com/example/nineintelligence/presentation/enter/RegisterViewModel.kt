@@ -61,9 +61,9 @@ class RegisterViewModel(
         }
     }
 
-    fun registerUser(name: String, email: String, password: String) =
+    fun registerUser(name: String, email: String, password: String, phoneNumber: String) =
         viewModelScope.launch(Dispatchers.IO) {
-            val register = user.registerUser(name, email, password)
+            val register = user.registerUser(name, email, password, phoneNumber)
             register?.let { out ->
                 _registerState.update {
                     out
