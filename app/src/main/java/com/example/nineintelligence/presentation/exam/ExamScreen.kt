@@ -244,7 +244,7 @@ fun ExamScreen(
                     visible = currentPage < questionAnswerDummyData.size - 1,
                     enter = fadeIn(tween(200)),
                     exit = fadeOut(tween(200))
-                    ) {
+                ) {
                     Button(
                         onClick = {
                             scope.launch {
@@ -299,7 +299,7 @@ fun ExamScreen(
                         },
                         hasAnswer = savedAnswerViewModel?.map {
                             it.first
-                        } ?: emptyList()
+                        } ?: emptyList(), currentSelected = currentPage
                     )
                 }
             }
@@ -463,7 +463,8 @@ fun QuestionListSelector(
     questionNumber: Int,
     onSubmitClick: () -> Unit,
     onGoToSelectedIndex: (Int) -> Unit,
-    hasAnswer: List<Int>
+    hasAnswer: List<Int>,
+    currentSelected: Int? = null
 ) {
     var parentSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -684,7 +685,7 @@ fun QuestionDiscussionListSelector(
     var finalResult by remember {
         mutableStateOf(0)
     }
-    LaunchedEffect(key1 = Unit ) {
+    LaunchedEffect(key1 = Unit) {
         questionData.forEach {
             if (allAnswer.contains(it.correctAnswer)) countRightAnswer++ else countWrongAnswer++
         }

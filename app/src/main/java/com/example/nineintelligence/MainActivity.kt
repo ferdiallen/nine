@@ -9,7 +9,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.navigation.RootNavigation
+import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.presentation.tryout.TryoutScreen
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
 
@@ -30,7 +32,16 @@ class MainActivity : ComponentActivity() {
                     /*MainReadingSubject(
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )*/
-                    RootNavigation()
+                    /*RootNavigation()*/
+                    ProfileScreen(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp), onBackPress = {
+
+                        }, onLogoutAction = {
+
+                        }
+                    )
                 }
             }
         }

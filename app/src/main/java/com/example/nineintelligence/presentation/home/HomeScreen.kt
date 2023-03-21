@@ -363,16 +363,18 @@ private fun HomeScreenChild(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.End
             ) {
                 BadgedBox(badge = {
-                    Badge(modifier = Modifier.offset(x = with(LocalDensity.current) {
-                        -(14).toDp()
-                    })) {
+                    Badge(modifier = Modifier.offset((-15).dp,)) {
                         Text(
                             text = "8", fontSize = 12.sp, modifier = Modifier.padding(4.dp)
                         )
                     }
                 }) {
                     Card(
-                        shape = CircleShape, colors = CardDefaults.cardColors(MainYellowColor)
+                        shape = CircleShape,
+                        colors = CardDefaults.cardColors(MainYellowColor),
+                        onClick = {
+                            shouldShowReminderDialog = !shouldShowReminderDialog
+                        }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.doorbell),
@@ -596,7 +598,7 @@ private fun BottomBarCustom(
                             .fillMaxHeight(0.09F)
                             .then(modifier),
                         shape = RoundedCornerShape(0.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = MainYellowColor)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxSize(),
@@ -681,12 +683,12 @@ private fun BottomBarCustom(
                     onClick = {
                         controller.navigate(listBottomNavigation[2].route ?: "") {
                             launchSingleTop = true
-                            popUpTo(NavigationHolder.HomeScreenChild.route){
+                            popUpTo(NavigationHolder.HomeScreenChild.route) {
 
                             }
                         }
                     },
-                    colors = CardDefaults.cardColors(Color.White),
+                    colors = CardDefaults.cardColors(MainYellowColor),
                     border = BorderStroke(0.1.dp, color = Color.Black),
                     elevation = CardDefaults.cardElevation(8.dp)
                 ) {
@@ -712,7 +714,7 @@ private fun BottomBarCustom(
 }
 
 @Composable
-fun DialogReminder(modifier: Modifier = Modifier) {
+private fun DialogReminder(modifier: Modifier = Modifier) {
     Card(modifier = modifier) {
         Column(
             modifier = Modifier

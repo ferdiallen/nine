@@ -56,7 +56,7 @@ class ExamViewModel : ViewModel() {
             }
         }
         _savedAnswerStateFlow.value?.forEach {
-            println(it.second)
+
         }
     }
 

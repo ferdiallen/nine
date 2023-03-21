@@ -90,6 +90,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
+import com.example.nineintelligence.domain.models.UpdateProfileModel
+import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
@@ -291,7 +293,12 @@ fun ProfileScreen(
         if (shouldShowEditMenu) {
             ProfileEdit(
                 modifier = Modifier.padding(32.dp),
-                onSaved = { },
+                onSaved = {
+                    viewModel.updateData(
+                        it.userName, userDataInfo?.userEmail ?: "", "", it.phone,
+                        it.address ?: "","",it.gender
+                    )
+                },
                 font = font,
                 onTapExit = {
                     shouldShowEditMenu = false
@@ -580,7 +587,7 @@ private fun ActivityList(
 @Composable
 private fun ProfileEdit(
     modifier: Modifier = Modifier,
-    onSaved: () -> Unit, font: FontFamily,
+    onSaved: (UpdateProfileModel) -> Unit, font: FontFamily,
     onTapExit: () -> Unit, enableOnDismiss: Boolean
 ) {
     var temporaryUserProfile: Uri? by remember {
@@ -894,7 +901,13 @@ private fun ProfileEdit(
                             ) {
                                 Button(
                                     onClick = {
-                                        onSaved.invoke()
+                                        val savedUserData = UpdateProfileModel(
+                                            userName, "", "", phoneNumber, address,
+                                            "", selectedGender
+                                        )
+                                        onSaved.invoke(
+                                            savedUserData
+                                        )
                                         animatedFloat = 0F
                                     },
                                     modifier = Modifier

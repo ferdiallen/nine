@@ -14,9 +14,12 @@ import com.example.nineintelligence.domain.repository.LoginUserImpl
 import com.example.nineintelligence.data.network.apiservice.RegisterUser
 import com.example.nineintelligence.domain.repository.RegisterUserImpl
 import com.example.nineintelligence.data.network.apiservice.LoginUser
+import com.example.nineintelligence.data.network.apiservice.UpdateProfile
 import com.example.nineintelligence.domain.repository.DetailUserImpl
+import com.example.nineintelligence.domain.repository.UpdateProfileImpl
 import com.example.nineintelligence.domain.use_case.login_use_case.LoginUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
+import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
 import com.example.nineintelligence.navigation.NavigationViewModel
 import com.example.nineintelligence.presentation.discuss.DiscussionViewModel
 import com.example.nineintelligence.presentation.enter.EnterViewModel
@@ -70,6 +73,12 @@ val appModule = module {
     single {
         DetailProfileUseCase(get())
     }
+    single<UpdateProfile> {
+        UpdateProfileImpl(get(),get())
+    }
+    single {
+        UpdateProfileUseCase(get())
+    }
     viewModel {
         EnterViewModel(get(), get())
     }
@@ -77,7 +86,7 @@ val appModule = module {
         NavigationViewModel(get())
     }
     viewModel {
-        ProfileViewModel(get(), get())
+        ProfileViewModel(get(), get(), get())
     }
     single {
         HttpClient(Android) {
