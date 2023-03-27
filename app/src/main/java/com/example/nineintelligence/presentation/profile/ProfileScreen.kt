@@ -6,8 +6,11 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.TwoWayConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.animateValueAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -38,6 +41,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +50,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.TaskAlt
@@ -54,14 +59,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -87,14 +90,16 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.domain.models.UpdateProfileModel
 import com.example.nineintelligence.domain.models.UserProfileModel
+import com.example.nineintelligence.domain.util.ActivityType
+import com.example.nineintelligence.domain.util.SettingsModel
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
@@ -103,7 +108,6 @@ import com.example.nineintelligence.ui.theme.StrongGreen
 import com.example.nineintelligence.ui.theme.StrongYellow
 import com.example.nineintelligence.ui.theme.WeakGreen
 import com.example.nineintelligence.ui.theme.WeakYellow
-import com.example.nineintelligence.domain.util.ActivityType
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -112,11 +116,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter
+import java.util.function.BooleanSupplier
 import kotlin.random.Random
 
 
 private val tabNameList = listOf("Statistik", "Kegiatanku", "History")
 private val genderList = listOf("Laki-laki", "Perempuan")
+private val settingsList = listOf(
+    SettingsModel("Edit Profile", Icons.Filled.Edit),
+    SettingsModel("Log Out", Icons.Filled.Logout)
+)
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -165,22 +174,12 @@ fun ProfileScreen(
                             .padding(horizontal = 4.dp)
                             .padding(top = 8.dp), horizontalArrangement = Arrangement.Center
                     ) {
+                        Spacer(modifier = Modifier.weight(1F))
                         IconButton(onClick = {
                             shouldShowSettingsMenu = !shouldShowSettingsMenu
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Settings,
-                                contentDescription = null,
-                                modifier = Modifier.size(25.dp)
-                            )
-
-                        }
-                        Spacer(modifier = Modifier.weight(1F))
-                        IconButton(onClick = {
-                            shouldShowEditMenu = !shouldShowEditMenu
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Edit,
                                 contentDescription = null,
                                 modifier = Modifier.size(25.dp)
                             )
@@ -293,7 +292,29 @@ fun ProfileScreen(
 
             }
         }
+        if (shouldShowSettingsMenu) {
+            SettingsMenu(
+                font = font,
+                onTapExit = { shouldShowSettingsMenu = false },
+                enableOnDismiss = true, modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5F)
+                    .padding(24.dp), onSelected = {
+                    when (it) {
+                        "Log Out" -> {
+                            viewModel.clearData()
+                            onLogoutAction.invoke()
+                        }
 
+                        "Edit Profile" -> {
+                            shouldShowEditMenu = !shouldShowEditMenu
+                        }
+                    }
+                    viewModel.clearData()
+                    onLogoutAction.invoke()
+                }
+            )
+        }
         if (shouldShowEditMenu) {
             ProfileEdit(
                 modifier = Modifier.padding(32.dp),
@@ -309,24 +330,11 @@ fun ProfileScreen(
                 }, true, currentUserData = userDataInfo
             )
         }
-        if (shouldShowSettingsMenu) {
-            SettingsMenu(
-                font = font,
-                onTapExit = { shouldShowSettingsMenu = false },
-                enableOnDismiss = true, modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.5F)
-                    .padding(24.dp), onTapLogout = {
-                    viewModel.clearData()
-                    onLogoutAction.invoke()
-                }
-            )
-        }
-        if(showLoadingProgress){
+        /*if(showLoadingProgress){
             Dialog(onDismissRequest = { }) {
                 CircularProgressIndicator()
             }
-        }
+        }*/
     }
 }
 
@@ -607,15 +615,13 @@ private fun ProfileEdit(
             temporaryUserProfile = it
         }
     )
-    var animatedFloat by remember {
-        mutableStateOf(0.01F)
+    var animatedExit by remember {
+        mutableStateOf(false)
     }
-    val animateBackground = animateFloatAsState(
-        targetValue = animatedFloat, tween(250), label = ""
-    )
     var shouldExpandGenderList by remember {
         mutableStateOf(false)
     }
+
     var selectedGender by remember {
         mutableStateOf("")
     }
@@ -642,10 +648,9 @@ private fun ProfileEdit(
     })
     LaunchedEffect(key1 = Unit, block = {
         delay(250)
-        animatedFloat = 0.7F
     })
-    LaunchedEffect(key1 = animateBackground.value, block = {
-        if (animateBackground.value == 0F && enableOnDismiss) {
+    LaunchedEffect(key1 = animatedExit, block = {
+        if (!animatedExit) {
             onTapExit.invoke()
         }
     })
@@ -660,17 +665,16 @@ private fun ProfileEdit(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(animateBackground.value))
             .clickable(interactionSource = MutableInteractionSource(),
                 indication = null, onClick = {
                     if (enableOnDismiss) {
-                        animatedFloat = 0F
+                        animatedExit = false
                     }
                 }
             )
     ) {
         AnimatedVisibility(
-            visible = animateBackground.value == 0.7F,
+            visible = animatedExit,
             enter = fadeIn(tween(250)),
             exit = fadeOut(tween(200))
         ) {
@@ -923,7 +927,6 @@ private fun ProfileEdit(
                                         onSaved.invoke(
                                             savedUserData
                                         )
-                                        animatedFloat = 0F
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -957,7 +960,7 @@ private fun SettingsMenu(
     font: FontFamily,
     onTapExit: () -> Unit,
     enableOnDismiss: Boolean,
-    onTapLogout: () -> Unit
+    onSelected: (String) -> Unit
 ) {
     var animatedFloat by remember {
         mutableStateOf(0.01F)
@@ -1020,17 +1023,29 @@ private fun SettingsMenu(
                                 fontWeight = FontWeight.Bold, fontSize = 20.sp
                             )
                             Spacer(modifier = Modifier.height(20.dp))
-                            Text(
-                                text = "Logout",
-                                color = MainBlueColor,
-                                fontFamily = font,
-                                fontSize = 17.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onTapLogout.invoke()
-                                    }
-                            )
+                        }
+                        items(settingsList) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(imageVector = it.iconMenu, contentDescription = null)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = it.name,
+                                    color = MainBlueColor,
+                                    fontFamily = font,
+                                    fontSize = 17.sp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onSelected.invoke(
+                                                it.name
+                                            )
+                                        }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 }

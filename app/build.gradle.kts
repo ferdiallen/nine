@@ -83,7 +83,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-navigation-animation:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-pager:$accompanistVersion")
-    implementation ("com.google.accompanist:accompanist-permissions:$accompanistVersion")
+    implementation("com.google.accompanist:accompanist-permissions:$accompanistVersion")
 
     //Koin
     val koinCoreVer = "3.3.3"
@@ -95,6 +95,7 @@ dependencies {
     implementation("io.insert-koin:koin-android:$koinAndroid")
     implementation("io.insert-koin:koin-androidx-compose:$koinCompose")
     implementation("io.insert-koin:koin-ktor:$koinKtor")
+    implementation("io.insert-koin:koin-androidx-workmanager:$koinAndroid")
 
     //Coil
     implementation("io.coil-kt:coil-compose:2.2.2")
@@ -129,4 +130,11 @@ dependencies {
 
     //Datastore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    //Workmanager
+    val work_version = "2.8.1"
+    implementation("androidx.work:work-runtime-ktx:$work_version")
+
+    //Livedata
+    implementation("androidx.compose.runtime:runtime-livedata:1.4.0")
 }

@@ -3,6 +3,7 @@ package com.example.nineintelligence
 import android.app.Application
 import com.example.nineintelligence.di.appModule
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.component.KoinComponent
 import org.koin.core.context.startKoin
 
@@ -11,6 +12,7 @@ class BaseApp : Application(), KoinComponent {
         super.onCreate()
         startKoin {
             androidContext(this@BaseApp)
+            workManagerFactory()
             modules(appModule)
         }
     }

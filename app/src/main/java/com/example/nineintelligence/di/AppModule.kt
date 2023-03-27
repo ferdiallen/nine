@@ -11,8 +11,10 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.work.WorkManager
 import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.core.Notification
+import com.example.nineintelligence.core.WorkerTimer
 import com.example.nineintelligence.data.network.apiservice.DetailUser
 import com.example.nineintelligence.data.network.apiservice.GetListTryout
 import com.example.nineintelligence.domain.repository.LoginUserImpl
@@ -45,6 +47,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.androidx.workmanager.dsl.worker
 import org.koin.dsl.module
 
 val appModule = module {
@@ -89,7 +92,7 @@ val appModule = module {
         EnterViewModel(get(), get())
     }
     viewModel {
-        NavigationViewModel(get())
+        NavigationViewModel(get(), get())
     }
     viewModel {
         ProfileViewModel(get(), get(), get())
@@ -140,5 +143,11 @@ val appModule = module {
     }
     viewModel {
         TryoutViewModel(get())
+    }
+    worker {
+        WorkerTimer(androidContext(), get(), get())
+    }
+    single {
+        WorkManager.getInstance(androidContext())
     }
 }
