@@ -30,8 +30,11 @@ class UpdateProfileUseCase(
             )
             Resource.Success(data)
         } catch (e: Exception) {
+            println(e.message)
+            println(e.localizedMessage)
             Resource.Error(e.message)
         } catch (e: IOException) {
+            println(e.message)
             Resource.Error(e.message)
         }
     }

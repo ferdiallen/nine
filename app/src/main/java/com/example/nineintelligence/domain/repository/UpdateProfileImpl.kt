@@ -7,8 +7,13 @@ import com.example.nineintelligence.domain.models.UpdateProfileModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
 import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
 
 class UpdateProfileImpl(
     private val client: HttpClient,
@@ -24,13 +29,12 @@ class UpdateProfileImpl(
         gender: String
     ): UpdateProfileModel? {
         return client.put("${BuildConfig.BASE_URL}users/profile/edit") {
-            parameter("user_name", userName)
-            parameter("user_email", userEmail)
-            parameter("password", password)
-            parameter("phone", phone)
-            parameter("address", address)
-            parameter("pp_link", profilePic)
-            parameter("gender", gender)
+            contentType(ContentType.Application.Json)
+            setBody(
+                UpdateProfileModel(
+                    userName, userEmail, password, phone, address, profilePic, gender
+                )
+            )
             bearerAuth(prefs.readToken() ?: "")
         }.body()
     }

@@ -54,12 +54,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -87,6 +89,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
@@ -132,6 +135,7 @@ fun ProfileScreen(
         mutableStateOf(false)
     }
     val userDataInfo by viewModel.userDataInfo.collectAsStateWithLifecycle()
+    val showLoadingProgress by viewModel.shouldShowLoadingScreen.collectAsStateWithLifecycle()
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Column(
             modifier = modifier
@@ -295,14 +299,14 @@ fun ProfileScreen(
                 modifier = Modifier.padding(32.dp),
                 onSaved = {
                     viewModel.updateData(
-                        it.userName, userDataInfo?.userEmail ?: "", "", it.phone,
-                        it.address ?: "","",it.gender
+                        it.userName ?: "", userDataInfo?.userEmail ?: "", "", it.phone ?: "",
+                        it.address ?: "", "", it.gender ?: ""
                     )
                 },
                 font = font,
                 onTapExit = {
                     shouldShowEditMenu = false
-                }, true
+                }, true, currentUserData = userDataInfo
             )
         }
         if (shouldShowSettingsMenu) {
@@ -317,6 +321,11 @@ fun ProfileScreen(
                     onLogoutAction.invoke()
                 }
             )
+        }
+        if(showLoadingProgress){
+            Dialog(onDismissRequest = { }) {
+                CircularProgressIndicator()
+            }
         }
     }
 }
@@ -588,7 +597,7 @@ private fun ActivityList(
 private fun ProfileEdit(
     modifier: Modifier = Modifier,
     onSaved: (UpdateProfileModel) -> Unit, font: FontFamily,
-    onTapExit: () -> Unit, enableOnDismiss: Boolean
+    onTapExit: () -> Unit, enableOnDismiss: Boolean, currentUserData: UserProfileModel? = null
 ) {
     var temporaryUserProfile: Uri? by remember {
         mutableStateOf(null)
@@ -625,6 +634,12 @@ private fun ProfileEdit(
     var birthDate by remember {
         mutableStateOf("")
     }
+    LaunchedEffect(key1 = Unit, block = {
+        currentUserData.let {
+            userName = it?.userName ?: ""
+
+        }
+    })
     LaunchedEffect(key1 = Unit, block = {
         delay(250)
         animatedFloat = 0.7F

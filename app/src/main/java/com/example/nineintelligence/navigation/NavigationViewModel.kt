@@ -17,8 +17,7 @@ class NavigationViewModel(
     init {
         viewModelScope.launch {
             val logInAuthKey = store.readToken()
-            if (logInAuthKey != "") {
-                println(logInAuthKey)
+            if (logInAuthKey != "" && logInAuthKey!=null) {
                 _hasLoggedIn.update {
                     true
                 }

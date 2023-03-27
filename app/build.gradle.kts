@@ -58,9 +58,9 @@ android {
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2023.01.00")
     implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     //noinspection GradleDependency
-    implementation("androidx.activity:activity-compose:1.6.1")
+    implementation("androidx.activity:activity-compose:1.7.0")
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -75,7 +75,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
     implementation("androidx.compose.material:material-icons-extended")
 
     //Accompanist
@@ -83,6 +83,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-navigation-animation:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-pager:$accompanistVersion")
+    implementation ("com.google.accompanist:accompanist-permissions:$accompanistVersion")
 
     //Koin
     val koinCoreVer = "3.3.3"
@@ -109,7 +110,7 @@ dependencies {
     implementation("androidx.multidex:multidex:$multidex_version")
 
     //Media 3
-    val media3_version = "1.0.0-rc01"
+    val media3_version = "1.0.0"
     // For media playback using ExoPlayer
     implementation("androidx.media3:media3-exoplayer:$media3_version")
     // For building media playback UIs

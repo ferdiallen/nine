@@ -340,17 +340,16 @@ private fun MenuListSelector(
             ) {
                 items(numOfPlaylist) {
                     Card(
-                        border = BorderStroke(1.dp, Color.Black),
+                        border = if (currentPlaylist == it) BorderStroke(
+                            2.dp,
+                            MainBlueColor
+                        ) else BorderStroke(1.dp, Color.Black),
                         modifier = Modifier
                             .height(50.dp)
                             .padding(end = 12.dp),
                         onClick = {
                             onGoToSelectedIndex.invoke(it)
-                        },
-                        colors = CardDefaults.cardColors(
-                            if (currentPlaylist == it)
-                                MainBlueColor else Color.Transparent
-                        )
+                        }
                     ) {
                         Column(
                             modifier = Modifier.fillMaxSize(),
@@ -360,7 +359,8 @@ private fun MenuListSelector(
                             CustomText(
                                 text = (it + 1).toString(),
                                 fontWeight = FontWeight.Bold,
-                                color = MainYellowColor, fontSize = 20.sp
+                                color = if (currentPlaylist == it) MainBlueColor else MainYellowColor,
+                                fontSize = 20.sp
                             )
                         }
                     }

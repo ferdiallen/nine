@@ -5,18 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.core.AuthPrefs
-import com.example.nineintelligence.data.network.apiservice.LoginUser
-import com.example.nineintelligence.domain.models.LoginModel
-import com.example.nineintelligence.domain.models.UserModel
 import com.example.nineintelligence.domain.use_case.login_use_case.LoginUseCase
 import com.example.nineintelligence.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 class EnterViewModel(
     private val login: LoginUseCase,
@@ -39,7 +34,7 @@ class EnterViewModel(
         login.getUserAuth(username, password).let { out ->
             when (out) {
                 is Resource.Success -> {
-                    store.saveToken(out.data?.token ?: "")
+                    store.saveToken(out.data?.token ?: "",0)
                     _loginState.value = LoginState(false, out.data?.token, "")
                 }
 

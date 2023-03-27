@@ -20,34 +20,39 @@ class ProfileViewModel(
 ) : ViewModel() {
     private val _userDataInfo = MutableStateFlow<UserProfileModel?>(null)
     val userDataInfo = _userDataInfo.asStateFlow()
+    private val _shouldShowLoadingScreen = MutableStateFlow(false)
+    val shouldShowLoadingScreen = _shouldShowLoadingScreen.asStateFlow()
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            store.saveToken(
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYzdlYWU2YTktN" +
-                        "jA5MC00MDI2LWI3YmMtOTdjOGNmZjQ0ZWIwIiwiZXhwIjoxNjc5MzAxNjUwfQ.zQptXXK89Tl-N4pFqlO3yOPSfQA_jiqlZyYFedkcE3M"
-            )
+        viewModelScope.launch {
+            getUserInfo()
         }
-        viewModelScope.launch(Dispatchers.IO) {
-            val res = useCase.getDetailUser()
-            when (res) {
-                is Resource.Success -> {
-                    _userDataInfo.update {
-                        res.data
-                    }
+    }
+
+    private fun getUserInfo() = viewModelScope.launch(Dispatchers.IO) {
+        _shouldShowLoadingScreen.update {
+            true
+        }
+        when (val res = useCase.getDetailUser()) {
+            is Resource.Success -> {
+                _userDataInfo.update {
+                    res.data
                 }
-
-                is Resource.Loading -> {
-
+                _shouldShowLoadingScreen.update {
+                    false
                 }
+            }
 
-                is Resource.Error -> {
-                    println(res.errorMessages)
-                }
+            is Resource.Loading -> {
 
-                else -> {
+            }
 
-                }
+            is Resource.Error -> {
+
+            }
+
+            else -> {
+
             }
         }
     }
@@ -77,14 +82,15 @@ class ProfileViewModel(
             ).let {
                 when (it) {
                     is Resource.Success -> {
-                        println("Success")
+                        getUserInfo()
                     }
 
                     is Resource.Error -> {
-                        println("Failed")
+                        println(it.errorMessages)
                     }
 
                     else -> {
+
                     }
                 }
             }

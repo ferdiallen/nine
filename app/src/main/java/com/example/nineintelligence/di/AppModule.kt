@@ -1,5 +1,8 @@
 package com.example.nineintelligence.di
 
+import android.app.AlarmManager
+import android.app.NotificationManager
+import android.content.Context
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -9,28 +12,31 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.nineintelligence.core.AuthPrefs
+import com.example.nineintelligence.core.Notification
 import com.example.nineintelligence.data.network.apiservice.DetailUser
+import com.example.nineintelligence.data.network.apiservice.GetListTryout
 import com.example.nineintelligence.domain.repository.LoginUserImpl
 import com.example.nineintelligence.data.network.apiservice.RegisterUser
 import com.example.nineintelligence.domain.repository.RegisterUserImpl
 import com.example.nineintelligence.data.network.apiservice.LoginUser
 import com.example.nineintelligence.data.network.apiservice.UpdateProfile
 import com.example.nineintelligence.domain.repository.DetailUserImpl
+import com.example.nineintelligence.domain.repository.ListTryOutImpl
 import com.example.nineintelligence.domain.repository.UpdateProfileImpl
 import com.example.nineintelligence.domain.use_case.login_use_case.LoginUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
+import com.example.nineintelligence.domain.use_case.tryout_use_case.TryoutUseCase
 import com.example.nineintelligence.navigation.NavigationViewModel
 import com.example.nineintelligence.presentation.discuss.DiscussionViewModel
 import com.example.nineintelligence.presentation.enter.EnterViewModel
 import com.example.nineintelligence.presentation.enter.RegisterViewModel
 import com.example.nineintelligence.presentation.profile.ProfileViewModel
 import com.example.nineintelligence.presentation.subject.SubjectViewModel
+import com.example.nineintelligence.presentation.tryout.TryoutViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BearerTokens
-import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
@@ -74,7 +80,7 @@ val appModule = module {
         DetailProfileUseCase(get())
     }
     single<UpdateProfile> {
-        UpdateProfileImpl(get(),get())
+        UpdateProfileImpl(get(), get())
     }
     single {
         UpdateProfileUseCase(get())
@@ -116,5 +122,23 @@ val appModule = module {
     }
     single {
         AuthPrefs(get())
+    }
+    single {
+        androidContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+    single {
+        Notification(get())
+    }
+    single {
+        androidContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    }
+    single<GetListTryout> {
+        ListTryOutImpl(get())
+    }
+    single {
+        TryoutUseCase(get())
+    }
+    viewModel {
+        TryoutViewModel(get())
     }
 }

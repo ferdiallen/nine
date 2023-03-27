@@ -266,7 +266,7 @@ fun HomeScreen(
                 TryoutScreen(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 12.dp)
+                        .padding(horizontal = 4.dp), controller = controller
                 )
             }
         }
@@ -363,7 +363,7 @@ private fun HomeScreenChild(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.End
             ) {
                 BadgedBox(badge = {
-                    Badge(modifier = Modifier.offset((-15).dp,)) {
+                    Badge(modifier = Modifier.offset((-15).dp)) {
                         Text(
                             text = "8", fontSize = 12.sp, modifier = Modifier.padding(4.dp)
                         )
