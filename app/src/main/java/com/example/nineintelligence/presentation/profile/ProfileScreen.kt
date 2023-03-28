@@ -59,6 +59,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,9 +94,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
+import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.domain.models.UpdateProfileModel
 import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.domain.util.ActivityType
@@ -110,6 +113,7 @@ import com.example.nineintelligence.ui.theme.WeakGreen
 import com.example.nineintelligence.ui.theme.WeakYellow
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.marosseleng.compose.material3.datetimepickers.date.ui.dialog.DatePickerDialog
 import kotlinx.coroutines.delay
@@ -146,195 +150,222 @@ fun ProfileScreen(
     val userDataInfo by viewModel.userDataInfo.collectAsStateWithLifecycle()
     val showLoadingProgress by viewModel.shouldShowLoadingScreen.collectAsStateWithLifecycle()
     DeliverCustomFonts(font = Poppins.fonts) { font ->
-        Column(
-            modifier = modifier
-                .animateContentSize(tween(100)),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            TopBarMain(font, onBackPress = {
-                onBackPress.invoke()
-            })
-            Box(
-                modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter
-            ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 40.dp),
-                    border = BorderStroke(1.dp, Color.Gray),
-                    colors = CardDefaults.cardColors(
-                        Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
-                ) {
+        ChildProfileScreen(
+            modifier,
+            font = font,
+            onBackPress = { onBackPress.invoke() },
+            shouldShowSettingsMenu = {
+                shouldShowSettingsMenu = !shouldShowSettingsMenu
+            },
+            userDataInfo = userDataInfo,
+            pagerState = pagerState
+        )
+    }
+    if (shouldShowSettingsMenu) {
+        SettingsMenu(
+            font = Poppins.fonts,
+            onTapExit = { shouldShowSettingsMenu = false },
+            enableOnDismiss = true, modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.5F)
+                .padding(24.dp), onSelected = {
+                when (it) {
+                    "Log Out" -> {
+                        viewModel.clearData()
+                        onLogoutAction.invoke()
+                    }
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp)
-                            .padding(top = 8.dp), horizontalArrangement = Arrangement.Center
-                    ) {
-                        Spacer(modifier = Modifier.weight(1F))
-                        IconButton(onClick = {
-                            shouldShowSettingsMenu = !shouldShowSettingsMenu
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Settings,
-                                contentDescription = null,
-                                modifier = Modifier.size(25.dp)
-                            )
-
-                        }
+                    "Edit Profile" -> {
+                        shouldShowEditMenu = !shouldShowEditMenu
                     }
                 }
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            }
+        )
+    }
+    if (shouldShowEditMenu) {
+        ProfileEdit(
+            modifier = Modifier.padding(32.dp),
+            onSaved = {
+                viewModel.updateData(
+                    userDataInfo?.userId.toString(),
+                    it.userName.toString(),
+                    userDataInfo?.userEmail.toString(),
+                    it.phone.toString(),
+                    it.address.toString(),
+                    "p",
+                    it.gender.toString()
+                )
+                shouldShowEditMenu = false
+            },
+            font = Poppins.fonts,
+            onTapExit = {
+                shouldShowSettingsMenu = false
+            }, true,currentData = userDataInfo
+        )
+    }
+    if (showLoadingProgress) {
+        Dialog(onDismissRequest = { }) {
+            CircularProgressIndicator()
+        }
+    }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+private fun ChildProfileScreen(
+    modifier: Modifier = Modifier,
+    font: FontFamily,
+    onBackPress: () -> Unit,
+    shouldShowSettingsMenu: () -> Unit,
+    userDataInfo: UserProfileModel?,
+    pagerState: PagerState,
+
+    ) {
+    val scope = rememberCoroutineScope()
+    Column(
+        modifier = modifier
+            .animateContentSize(tween(100)),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        TopBarMain(font, onBackPress = {
+            onBackPress.invoke()
+        })
+        Box(
+            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 40.dp),
+                border = BorderStroke(1.dp, Color.Gray),
+                colors = CardDefaults.cardColors(
+                    Color.Transparent
+                ),
+                shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                        .padding(top = 8.dp), horizontalArrangement = Arrangement.Center
                 ) {
-                    AsyncImage(
-                        model = R.drawable.generated,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = userDataInfo?.userName ?: "",
-                        fontSize = 18.sp,
-                        fontFamily = font,
-                        fontWeight = FontWeight.Bold,
-                        color = MainYellowColor
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(0.2F),
-                        shape = RoundedCornerShape(0.dp),
-                        colors = CardDefaults.cardColors(MainYellowColor)
-                    ) {
-                        Column(Modifier.fillMaxSize()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = "Jln. Tawangsari No. 44, Lawang, Kab. Malang",
-                                    fontSize = 12.sp,
-                                    fontFamily = font,
-                                    modifier = Modifier.width(113.dp),
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = 15.sp,
-                                    color = MainBlueColor
-                                )
-                                Spacer(modifier = Modifier.weight(1F))
-                                Text(
-                                    text = "Bogor, 10 Oktober 2000",
-                                    fontSize = 12.sp,
-                                    fontFamily = font,
-                                    modifier = Modifier.width(113.dp),
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = 15.sp,
-                                    color = MainBlueColor
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.weight(1F))
+                    IconButton(onClick = {
+                        shouldShowSettingsMenu.invoke()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(25.dp)
+                        )
+
+                    }
+                }
+            }
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AsyncImage(
+                    model = R.drawable.generated,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = userDataInfo?.userName ?: "",
+                    fontSize = 18.sp,
+                    fontFamily = font,
+                    fontWeight = FontWeight.Bold,
+                    color = MainYellowColor
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.2F),
+                    shape = RoundedCornerShape(0.dp),
+                    colors = CardDefaults.cardColors(MainYellowColor)
+                ) {
+                    Column(Modifier.fillMaxSize()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
                             Text(
-                                text = userDataInfo?.userEmail ?: "",
+                                text = "Jln. Tawangsari No. 44, Lawang, Kab. Malang",
                                 fontSize = 12.sp,
                                 fontFamily = font,
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.width(113.dp),
+                                textAlign = TextAlign.Center,
+                                lineHeight = 15.sp,
+                                color = MainBlueColor
+                            )
+                            Spacer(modifier = Modifier.weight(1F))
+                            Text(
+                                text = "Bogor, 10 Oktober 2000",
+                                fontSize = 12.sp,
+                                fontFamily = font,
+                                modifier = Modifier.width(113.dp),
                                 textAlign = TextAlign.Center,
                                 lineHeight = 15.sp,
                                 color = MainBlueColor
                             )
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = userDataInfo?.userEmail ?: "",
+                            fontSize = 12.sp,
+                            fontFamily = font,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            lineHeight = 15.sp,
+                            color = MainBlueColor
+                        )
                     }
-                    TabRow(selectedTabIndex = pagerState.currentPage) {
-                        tabNameList.forEachIndexed { index, string ->
-                            Tab(selected = pagerState.currentPage == index, onClick = {
-                                scope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            }, text = {
-                                Text(
-                                    text = string,
-                                    fontFamily = font,
-                                    fontWeight = if (pagerState.currentPage == index) FontWeight.Bold
-                                    else FontWeight.Normal
-                                )
-                            })
-                        }
-                    }
-                    var isUserScrolled by remember {
-                        mutableStateOf(true)
-                    }
-                    HorizontalPager(
-                        count = tabNameList.size,
-                        state = pagerState,
-                        userScrollEnabled = !isUserScrolled
-                    ) { page ->
-                        when (page) {
-                            0 -> StatisticScreen(font) {
-                                isUserScrolled = it
+                }
+                TabRow(selectedTabIndex = pagerState.currentPage) {
+                    tabNameList.forEachIndexed { index, string ->
+                        Tab(selected = pagerState.currentPage == index, onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(index)
                             }
-
-                            1 -> ActivityTab(font = font, type = ActivityType.MYACTIVITY)
-                            2 -> ActivityTab(font = font, type = ActivityType.DISCUSSION)
-                        }
+                        }, text = {
+                            Text(
+                                text = string,
+                                fontFamily = font,
+                                fontWeight = if (pagerState.currentPage == index) FontWeight.Bold
+                                else FontWeight.Normal
+                            )
+                        })
                     }
                 }
-
-            }
-        }
-        if (shouldShowSettingsMenu) {
-            SettingsMenu(
-                font = font,
-                onTapExit = { shouldShowSettingsMenu = false },
-                enableOnDismiss = true, modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.5F)
-                    .padding(24.dp), onSelected = {
-                    when (it) {
-                        "Log Out" -> {
-                            viewModel.clearData()
-                            onLogoutAction.invoke()
-                        }
-
-                        "Edit Profile" -> {
-                            shouldShowEditMenu = !shouldShowEditMenu
-                        }
-                    }
-                    viewModel.clearData()
-                    onLogoutAction.invoke()
+                var isUserScrolled by remember {
+                    mutableStateOf(true)
                 }
-            )
-        }
-        if (shouldShowEditMenu) {
-            ProfileEdit(
-                modifier = Modifier.padding(32.dp),
-                onSaved = {
-                    viewModel.updateData(
-                        it.userName ?: "", userDataInfo?.userEmail ?: "", "", it.phone ?: "",
-                        it.address ?: "", "", it.gender ?: ""
-                    )
-                },
-                font = font,
-                onTapExit = {
-                    shouldShowEditMenu = false
-                }, true, currentUserData = userDataInfo
-            )
-        }
-        /*if(showLoadingProgress){
-            Dialog(onDismissRequest = { }) {
-                CircularProgressIndicator()
+                HorizontalPager(
+                    count = tabNameList.size,
+                    state = pagerState,
+                    userScrollEnabled = !isUserScrolled
+                ) { page ->
+                    when (page) {
+                        0 -> StatisticScreen(font) {
+                            isUserScrolled = it
+                        }
+
+                        1 -> ActivityTab(font = font, type = ActivityType.MYACTIVITY)
+                        2 -> ActivityTab(font = font, type = ActivityType.DISCUSSION)
+                    }
+                }
             }
-        }*/
+
+        }
     }
 }
 
@@ -605,7 +636,7 @@ private fun ActivityList(
 private fun ProfileEdit(
     modifier: Modifier = Modifier,
     onSaved: (UpdateProfileModel) -> Unit, font: FontFamily,
-    onTapExit: () -> Unit, enableOnDismiss: Boolean, currentUserData: UserProfileModel? = null
+    onTapExit: () -> Unit, enableOnDismiss: Boolean, currentData: UserProfileModel?
 ) {
     var temporaryUserProfile: Uri? by remember {
         mutableStateOf(null)
@@ -616,8 +647,12 @@ private fun ProfileEdit(
         }
     )
     var animatedExit by remember {
-        mutableStateOf(false)
+        mutableStateOf(0.1F)
     }
+    val animatedState =
+        animateFloatAsState(
+            targetValue = animatedExit, label = ""
+        )
     var shouldExpandGenderList by remember {
         mutableStateOf(false)
     }
@@ -641,16 +676,15 @@ private fun ProfileEdit(
         mutableStateOf("")
     }
     LaunchedEffect(key1 = Unit, block = {
-        currentUserData.let {
-            userName = it?.userName ?: ""
-
+        currentData?.let {
+            userName = it.userName
         }
     })
     LaunchedEffect(key1 = Unit, block = {
-        delay(250)
+        animatedExit = 1F
     })
-    LaunchedEffect(key1 = animatedExit, block = {
-        if (!animatedExit) {
+    LaunchedEffect(key1 = animatedState.value, block = {
+        if (animatedState.value < 0.1F) {
             onTapExit.invoke()
         }
     })
@@ -668,14 +702,14 @@ private fun ProfileEdit(
             .clickable(interactionSource = MutableInteractionSource(),
                 indication = null, onClick = {
                     if (enableOnDismiss) {
-                        animatedExit = false
+                        animatedExit = 0F
                     }
                 }
             )
     ) {
         AnimatedVisibility(
-            visible = animatedExit,
-            enter = fadeIn(tween(250)),
+            visible = animatedState.value == 1F,
+            enter = fadeIn(tween(200)),
             exit = fadeOut(tween(200))
         ) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
@@ -920,12 +954,16 @@ private fun ProfileEdit(
                             ) {
                                 Button(
                                     onClick = {
-                                        val savedUserData = UpdateProfileModel(
-                                            userName, "", "", phoneNumber, address,
-                                            "", selectedGender
-                                        )
                                         onSaved.invoke(
-                                            savedUserData
+                                            UpdateProfileModel(
+                                                "",
+                                                userName,
+                                                "",
+                                                phoneNumber,
+                                                address,
+                                                "l",
+                                                selectedGender
+                                            )
                                         )
                                     },
                                     modifier = Modifier
@@ -1029,7 +1067,10 @@ private fun SettingsMenu(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(imageVector = it.iconMenu, contentDescription = null)
+                                Icon(
+                                    imageVector = it.iconMenu, contentDescription = null,
+                                    tint = MainBlueColor
+                                )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = it.name,

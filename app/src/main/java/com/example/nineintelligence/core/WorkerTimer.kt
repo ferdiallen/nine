@@ -14,12 +14,6 @@ class WorkerTimer(
 ) : CoroutineWorker(context, worker) {
     override suspend fun doWork(): Result {
         return withContext(Dispatchers.IO) {
-            println("Started")
-            val currentTimeMillis = Calendar.getInstance()
-            val targetTimeMillis = Calendar.getInstance()
-            do {
-                println("Retrying")
-            } while (currentTimeMillis.time < targetTimeMillis.time)
             Result.success()
         }
     }

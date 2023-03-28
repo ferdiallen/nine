@@ -9,20 +9,20 @@ class UpdateProfileUseCase(
     private val updateProfile: UpdateProfile
 ) {
     suspend fun updateProfile(
+        userId: String,
         username: String,
         userEmail: String,
-        password: String,
         phone: String,
         address: String,
         profilePic: String,
         gender: String
-    ): Resource<UpdateProfileModel> {
+    ): Resource<String> {
         return try {
             Resource.Loading(null)
             val data = updateProfile.updateProfile(
+                userId,
                 username,
                 userEmail,
-                password,
                 phone,
                 address,
                 profilePic,
@@ -31,10 +31,8 @@ class UpdateProfileUseCase(
             Resource.Success(data)
         } catch (e: Exception) {
             println(e.message)
-            println(e.localizedMessage)
             Resource.Error(e.message)
         } catch (e: IOException) {
-            println(e.message)
             Resource.Error(e.message)
         }
     }

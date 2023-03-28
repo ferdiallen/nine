@@ -20,22 +20,23 @@ class UpdateProfileImpl(
     private val prefs: AuthPrefs
 ) : UpdateProfile {
     override suspend fun updateProfile(
+        userId: String,
         userName: String,
         userEmail: String,
-        password: String,
         phone: String,
         address: String,
         profilePic: String,
         gender: String
-    ): UpdateProfileModel? {
+    ): String {
         return client.put("${BuildConfig.BASE_URL}users/profile/edit") {
             contentType(ContentType.Application.Json)
             setBody(
                 UpdateProfileModel(
-                    userName, userEmail, password, phone, address, profilePic, gender
+                    userId,
+                    userName, userEmail, phone, address, profilePic, gender
                 )
             )
-            bearerAuth(prefs.readToken() ?: "")
+            bearerAuth(prefs.readToken() ?: return@put)
         }.body()
     }
 }

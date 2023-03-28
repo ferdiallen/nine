@@ -44,12 +44,14 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.workmanager.dsl.worker
 import org.koin.dsl.module
 
+@OptIn(ExperimentalSerializationApi::class)
 val appModule = module {
     factory {
         val audioAttributes = AudioAttributes.Builder().setUsage(C.USAGE_MEDIA)
@@ -97,14 +99,12 @@ val appModule = module {
     viewModel {
         ProfileViewModel(get(), get(), get())
     }
-    single {
+    factory {
         HttpClient(Android) {
-            engine {
-                this.connectTimeout = 5000
-            }
             install(ContentNegotiation) {
                 json(Json {
                     ignoreUnknownKeys = true
+                    explicitNulls = false
                 })
             }
             install(Auth) {

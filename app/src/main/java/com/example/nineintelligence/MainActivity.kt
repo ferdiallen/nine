@@ -9,7 +9,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import androidx.navigation.compose.rememberNavController
+import com.example.nineintelligence.navigation.RootNavigation
 import com.example.nineintelligence.presentation.profile.ProfileScreen
+import com.example.nineintelligence.presentation.tryout.TryoutInformation
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
 
 @UnstableApi
@@ -29,8 +32,8 @@ class MainActivity : ComponentActivity() {
                     /*MainReadingSubject(
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )*/
-                    /*RootNavigation()*/
-                    ProfileScreen(
+                    RootNavigation()
+                    /*ProfileScreen(
                         Modifier
                             .fillMaxSize()
                             .padding(horizontal = 20.dp), onBackPress = {
@@ -38,19 +41,15 @@ class MainActivity : ComponentActivity() {
                         }, onLogoutAction = {
 
                         }
-                    )
+                    )*/
                     /*NotificationTestScreen(
                         modifier = Modifier.fillMaxSize()
                     )*/
                     /*TryoutScreen()*/
                     /*ExamScreen(controller = rememberNavController(), typeOf = ExamType.TAKE_EXAMS)*/
-
-                    /*DiscussionScreen(
-                        Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 20.dp),
-                        subjectName = "Computer Science",
-                        bankSoalOf = 1, typeOf = "Bank Soal", controller = rememberNavController()
+                    /*TryoutInformation(
+                        controller = rememberNavController(),
+                        modifier = Modifier.padding(horizontal = 12.dp)
                     )*/
                 }
             }

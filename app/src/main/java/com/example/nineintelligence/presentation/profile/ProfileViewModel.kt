@@ -8,6 +8,7 @@ import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfi
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
 import com.example.nineintelligence.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -29,6 +30,7 @@ class ProfileViewModel(
         }
     }
 
+
     private fun getUserInfo() = viewModelScope.launch(Dispatchers.IO) {
         _shouldShowLoadingScreen.update {
             true
@@ -44,15 +46,15 @@ class ProfileViewModel(
             }
 
             is Resource.Loading -> {
-
+                println("Loading")
             }
 
             is Resource.Error -> {
-
+                println(res.errorMessages)
             }
 
             else -> {
-
+                println("failed")
             }
         }
     }
@@ -62,44 +64,36 @@ class ProfileViewModel(
     }
 
     fun updateData(
+        userId: String,
         username: String,
         userEmail: String,
-        password: String,
         phone: String,
         address: String,
         profilePic: String,
         gender: String
-    ) =
-        viewModelScope.launch(Dispatchers.IO) {
-            updateUseCase.updateProfile(
-                username,
-                userEmail,
-                password,
-                phone,
-                address,
-                profilePic,
-                gender
-            ).let {
-                when (it) {
-                    is Resource.Success -> {
-                        getUserInfo()
-                    }
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        updateUseCase.updateProfile(
+            userId,
+            username,
+            userEmail,
+            phone,
+            address,
+            profilePic,
+            gender
+        ).run {
+            when (this) {
+                is Resource.Success -> {
+                    getUserInfo()
+                }
 
-                    is Resource.Error -> {
-                        println(it.errorMessages)
-                    }
+                is Resource.Error -> {
+                    println(errorMessages)
+                }
 
-                    else -> {
-
-                    }
+                else -> {
+                    println("Failed")
                 }
             }
-        }
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelScope.launch {
-            store.clearData()
         }
     }
 }
