@@ -99,6 +99,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
+import com.example.nineintelligence.core.toPreferrableFormatDate
+import com.example.nineintelligence.domain.models.TakenTryOutModel
+import com.example.nineintelligence.domain.models.TryoutDataModel
 import com.example.nineintelligence.domain.models.UpdateProfileModel
 import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.domain.util.ActivityType
@@ -139,7 +142,6 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = koinViewModel(),
     onLogoutAction: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
     var shouldShowEditMenu by remember {
         mutableStateOf(false)
@@ -149,6 +151,7 @@ fun ProfileScreen(
     }
     val userDataInfo by viewModel.userDataInfo.collectAsStateWithLifecycle()
     val showLoadingProgress by viewModel.shouldShowLoadingScreen.collectAsStateWithLifecycle()
+    val takenTryOutData by viewModel.listTakenTryOutModel.collectAsStateWithLifecycle()
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         ChildProfileScreen(
             modifier,
@@ -158,7 +161,7 @@ fun ProfileScreen(
                 shouldShowSettingsMenu = !shouldShowSettingsMenu
             },
             userDataInfo = userDataInfo,
-            pagerState = pagerState
+            pagerState = pagerState, takenTryOutData
         )
     }
     if (shouldShowSettingsMenu) {
@@ -200,7 +203,7 @@ fun ProfileScreen(
             font = Poppins.fonts,
             onTapExit = {
                 shouldShowSettingsMenu = false
-            }, true,currentData = userDataInfo
+            }, true, currentData = userDataInfo
         )
     }
     if (showLoadingProgress) {
@@ -219,8 +222,8 @@ private fun ChildProfileScreen(
     shouldShowSettingsMenu: () -> Unit,
     userDataInfo: UserProfileModel?,
     pagerState: PagerState,
-
-    ) {
+    takenTryOut: List<TakenTryOutModel>
+) {
     val scope = rememberCoroutineScope()
     Column(
         modifier = modifier
@@ -359,8 +362,12 @@ private fun ChildProfileScreen(
                             isUserScrolled = it
                         }
 
-                        1 -> ActivityTab(font = font, type = ActivityType.MYACTIVITY)
-                        2 -> ActivityTab(font = font, type = ActivityType.DISCUSSION)
+                        1 -> ActivityTab(font = font, type = ActivityType.MYACTIVITY, takenTryOut)
+                        2 -> ActivityTab(
+                            font = font,
+                            type = ActivityType.DISCUSSION,
+                            listOf<String>()
+                        )
                     }
                 }
             }
@@ -554,25 +561,67 @@ private fun ItemsChart(result: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ActivityTab(font: FontFamily, type: ActivityType) {
+private fun <T> ActivityTab(font: FontFamily, type: ActivityType, data: List<T>) {
     Column(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 12.dp)
-        ) {
-            items(5) {
-                ActivityList(
-                    font = font,
-                    tryOutName = "Try out 1",
-                    startDate = "1 Januari 1111",
-                    onClick = {
+        if (type == ActivityType.MYACTIVITY) {
+            LazyColumn(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp)
+            ) {
+                item {
+                    CustomText(
+                        text = "Ongoing",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = MainBlueColor,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 30.dp),
+                        textAlign = TextAlign.Start
+                    )
+                }
+                items(2) {
+                    ActivityList(
+                        font = font,
+                        tryOutName = "Try out 1",
+                        startDate = "1 Januari 1111",
+                        onClick = {
 
-                    },
-                    activityType = type
-                )
+                        },
+                        activityType = type, buttonEnabled = true
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                item {
+                    CustomText(
+                        text = "Upcoming",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = MainBlueColor,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 30.dp),
+                        textAlign = TextAlign.Start
+                    )
+                }
+                items(data.filterIsInstance<TakenTryOutModel>()) {
+                    ActivityList(
+                        font = font,
+                        tryOutName = it.tryoutDetails?.tryOutTitle.toString(),
+                        startDate = it.tryoutDetails?.startsAt?.toPreferrableFormatDate()
+                            .toString(),
+                        onClick = {
+
+                        },
+                        activityType = type, buttonEnabled = false
+                    )
+                }
             }
+
         }
     }
 }
@@ -583,47 +632,60 @@ private fun ActivityList(
     tryOutName: String,
     startDate: String,
     activityType: ActivityType,
-    onClick: (Int) -> Unit
+    onClick: (Int) -> Unit,
+    buttonEnabled: Boolean = false
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth(0.85F)
-            .height(90.dp), colors = CardDefaults.cardColors(
+            .wrapContentHeight(), colors = CardDefaults.cardColors(
             MainYellowColor
         ), elevation = CardDefaults.cardElevation(8.dp), shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp),
+                .wrapContentHeight()
+                .padding(horizontal = 12.dp)
+                .padding(vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = tryOutName, fontFamily = font, fontSize = 14.sp, fontWeight = FontWeight.Bold
+                text = tryOutName,
+                fontFamily = font,
+                fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1F)
             )
-            Spacer(modifier = Modifier.weight(1F))
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .weight(3F),
+                    .weight(1F),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = startDate, fontFamily = font, fontSize = 12.sp)
+                Text(
+                    text = startDate,
+                    fontFamily = font,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = { },
                     modifier = Modifier
                         .wrapContentWidth()
-                        .fillMaxHeight(0.5F),
-                    colors = ButtonDefaults.buttonColors(MainBlueColor)
+                        .height(32.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        if (buttonEnabled) MainBlueColor else Color.LightGray
+                    )
                 ) {
                     Text(
                         text = when (activityType) {
                             ActivityType.MYACTIVITY -> stringResource(id = R.string.start)
                             ActivityType.DISCUSSION -> stringResource(id = R.string.discussion)
-                        }, fontFamily = font, fontSize = 12.sp, color = MainYellowColor
+                        },
+                        fontFamily = font,
+                        fontSize = 11.sp,
+                        color = if (buttonEnabled) MainYellowColor else Color.Gray
                     )
                 }
             }

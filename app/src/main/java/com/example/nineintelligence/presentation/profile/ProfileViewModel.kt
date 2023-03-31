@@ -3,9 +3,11 @@ package com.example.nineintelligence.presentation.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.core.AuthPrefs
+import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
+import com.example.nineintelligence.domain.use_case.tryout_use_case.TakenTryOutUseCase
 import com.example.nineintelligence.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -17,21 +19,26 @@ import kotlinx.coroutines.launch
 class ProfileViewModel(
     private val store: AuthPrefs,
     private val useCase: DetailProfileUseCase,
-    private val updateUseCase: UpdateProfileUseCase
+    private val updateUseCase: UpdateProfileUseCase,
+    private val listTakenTryOut: TakenTryOutUseCase
 ) : ViewModel() {
     private val _userDataInfo = MutableStateFlow<UserProfileModel?>(null)
     val userDataInfo = _userDataInfo.asStateFlow()
     private val _shouldShowLoadingScreen = MutableStateFlow(false)
     val shouldShowLoadingScreen = _shouldShowLoadingScreen.asStateFlow()
 
+    private val _listTakenTryOut = MutableStateFlow<List<TakenTryOutModel>>(emptyList())
+    val listTakenTryOutModel = _listTakenTryOut.asStateFlow()
+
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             getUserInfo()
+            getTakenTryOut()
         }
     }
 
 
-    private fun getUserInfo() = viewModelScope.launch(Dispatchers.IO) {
+    private suspend fun getUserInfo()  {
         _shouldShowLoadingScreen.update {
             true
         }
@@ -46,21 +53,46 @@ class ProfileViewModel(
             }
 
             is Resource.Loading -> {
-                println("Loading")
+
             }
 
             is Resource.Error -> {
+                _shouldShowLoadingScreen.update {
+                    false
+                }
                 println(res.errorMessages)
             }
 
             else -> {
-                println("failed")
+
             }
         }
     }
 
     fun clearData() = viewModelScope.launch {
         store.clearData()
+    }
+
+    private suspend fun getTakenTryOut() {
+        when (val res = listTakenTryOut.getListTakenTryOut()) {
+            is Resource.Success -> {
+                _listTakenTryOut.update {
+                    res.data ?: emptyList()
+                }
+            }
+
+            is Resource.Error -> {
+
+            }
+
+            is Resource.Loading -> {
+
+            }
+
+            is Resource.Empty -> {
+
+            }
+        }
     }
 
     fun updateData(

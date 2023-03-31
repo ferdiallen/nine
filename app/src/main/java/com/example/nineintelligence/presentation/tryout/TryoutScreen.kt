@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,7 +55,6 @@ import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TryoutScreen(
     modifier: Modifier = Modifier,
@@ -62,9 +62,7 @@ fun TryoutScreen(
     controller: NavController
 ) {
     val tryoutData by viewModel.tryoutState.collectAsStateWithLifecycle()
-    val selected = remember {
-        mutableStateListOf<Int?>()
-    }
+    val takenTryOut by viewModel.hasTakenTryOut.collectAsStateWithLifecycle()
     Column(modifier) {
         TopBarMain {
             controller.popBackStack()
@@ -93,23 +91,17 @@ fun TryoutScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
-                itemsIndexed(tryoutData) { index, it ->
-                    TryOutItem(data = it, onSignClick = {
-                        selected.add(index)
-                    }, hasIndex = selected.contains(index))
+                if (tryoutData.isEmpty()) {
+                    item {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    itemsIndexed(tryoutData) { index, it ->
+                        TryOutItem(data = it, onSignClick = {
+                            viewModel.signTryOut(it.slugName)
+                        }, hasIndex = takenTryOut.contains(it.slugName))
+                    }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = { }, colors = ButtonDefaults.buttonColors(MainYellowColor),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                CustomText(
-                    text = "Daftar",
-                    color = MainBlueColor,
-                    modifier = Modifier.padding(horizontal = 20.dp), fontWeight = FontWeight.Bold
-                )
             }
         }
     }
@@ -203,7 +195,7 @@ private fun TryOutItem(
                 }
                 Button(
                     onClick = {
-                              onSignClick.invoke()
+                        onSignClick.invoke()
                     },
                     enabled = !hasIndex,
                     colors = ButtonDefaults.buttonColors(

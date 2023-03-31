@@ -11,11 +11,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -26,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -34,6 +39,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
@@ -49,7 +55,9 @@ fun TryoutInformation(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight(), colors = CardDefaults.cardColors(MainBlueColor)
+                .wrapContentHeight(),
+            colors = CardDefaults.cardColors(MainBlueColor),
+            elevation = CardDefaults.cardElevation(10.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -59,7 +67,7 @@ fun TryoutInformation(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CustomText(
-                    text = "Detail Tryout",
+                    text = stringResource(R.string.detail_tryout_title),
                     color = MainYellowColor,
                     fontWeight = FontWeight.Bold, fontSize = 17.sp
                 )
@@ -87,12 +95,15 @@ fun TryoutInformation(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     CustomText(
-                        text = "TO Dimulai", color = Color.White,
+                        text = stringResource(R.string.to_dimulai_title), color = Color.White,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.weight(1F))
                     CustomText(
-                        text = "0 Hari, 0 Jam, 0 Menit", color = Color.White,
+                        text = stringResource(
+                            R.string.start_at_to_title,
+                            1, 12, 10
+                        ), color = Color.White,
                         fontSize = 13.sp
                     )
                 }
@@ -137,11 +148,30 @@ fun TryoutInformation(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        QuestionSection(
-            Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-        )
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            item {
+                QuestionSection(
+                    Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = { },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(
+                        MainYellowColor
+                    )
+                ) {
+                    CustomText(
+                        text = "Mulai",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = MainBlueColor
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -163,15 +193,18 @@ private fun QuestionSection(
                     horizontal = 14.dp
                 )
         ) {
-            CustomText(text = "TPS", fontWeight = FontWeight.Bold, color = MainYellowColor)
+            CustomText(
+                text = stringResource(R.string.tps_title),
+                fontWeight = FontWeight.Bold, color = MainYellowColor
+            )
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CustomText(
-                    text = "Kemampuan Penalaran Umum",
-                    fontWeight = FontWeight.Bold,
+                    text = stringResource(R.string.penalaran_umum_title),
+                    fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
                 )
                 Spacer(modifier = Modifier.weight(1F))
@@ -193,9 +226,8 @@ private fun QuestionSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CustomText(
-                    text = "Pengetahuan dan Pemahaman\n" +
-                            "Umum",
-                    fontWeight = FontWeight.Bold,
+                    text = stringResource(R.string.pengetahuan_dan_pemahaman_umum_title),
+                    fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
                 )
                 Spacer(modifier = Modifier.weight(1F))
@@ -217,9 +249,8 @@ private fun QuestionSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CustomText(
-                    text = "Kemampuan Memahami Bacaan\n" +
-                            "dan Menulis",
-                    fontWeight = FontWeight.Bold,
+                    text = stringResource(R.string.kemampuan_memahami_bacaan_dan_menulis_title),
+                    fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
                 )
                 Spacer(modifier = Modifier.weight(1F))
@@ -235,6 +266,105 @@ private fun QuestionSection(
                 )
             }
             Divider()
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CustomText(
+                    text = stringResource(R.string.pengetahuan_kuantitatif_title),
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
+                )
+                Spacer(modifier = Modifier.weight(1F))
+                Icon(
+                    imageVector = Icons.Filled.EditCalendar,
+                    contentDescription = null,
+                    modifier = Modifier.size(17.dp), tint = MainYellowColor
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                CustomText(
+                    text = "0 Soal",
+                    letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
+                )
+            }
+            Divider()
+            Spacer(modifier = Modifier.height(12.dp))
+            CustomText(
+                text = stringResource(R.string.tes_literasi_title),
+                fontWeight = FontWeight.Bold, color = MainYellowColor,
+                letterSpacing = 0.1.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CustomText(
+                    text = stringResource(R.string.literasi_dalam_bahasa_indonesia_title),
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
+                )
+                Spacer(modifier = Modifier.weight(1F))
+                Icon(
+                    imageVector = Icons.Filled.EditCalendar,
+                    contentDescription = null,
+                    modifier = Modifier.size(17.dp), tint = MainYellowColor
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                CustomText(
+                    text = "0 Soal",
+                    letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
+                )
+            }
+            Divider()
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CustomText(
+                    text = stringResource(R.string.literasi_dalam_bahasa_inggris_title),
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
+                )
+                Spacer(modifier = Modifier.weight(1F))
+                Icon(
+                    imageVector = Icons.Filled.EditCalendar,
+                    contentDescription = null,
+                    modifier = Modifier.size(17.dp), tint = MainYellowColor
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                CustomText(
+                    text = "0 Soal",
+                    letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
+                )
+            }
+            Divider()
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CustomText(
+                    text = stringResource(R.string.penalaran_matematika_title),
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
+                )
+                Spacer(modifier = Modifier.weight(1F))
+                Icon(
+                    imageVector = Icons.Filled.EditCalendar,
+                    contentDescription = null,
+                    modifier = Modifier.size(17.dp), tint = MainYellowColor
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                CustomText(
+                    text = "0 Soal",
+                    letterSpacing = 0.1.sp, fontSize = 13.sp, color = MainBlueColor
+                )
+            }
+            Divider()
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }

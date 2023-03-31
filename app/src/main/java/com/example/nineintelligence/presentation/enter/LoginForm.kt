@@ -76,7 +76,7 @@ fun LoginForm(
     }
     val userData by viewModel.loginState
     LaunchedEffect(key1 = userData.tokenData, block = {
-        if (userData.tokenData != "") {
+        if (userData.tokenData != "" && userData.tokenData != null) {
             controller.navigate(NavigationHolder.HomeScreen.route) {
                 popUpTo(NavigationHolder.LoginScreen.route) {
                     inclusive = true

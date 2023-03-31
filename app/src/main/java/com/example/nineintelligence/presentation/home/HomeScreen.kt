@@ -32,6 +32,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -83,6 +84,7 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.SystemUiController
+import org.koin.androidx.compose.koinViewModel
 
 val offerListItem = mapOf(
     Pair("Bank Soal", R.drawable.amico),
@@ -103,7 +105,8 @@ private val dataBottomBar = mapOf(
 @Composable
 fun HomeScreen(
     controller: NavHostController = rememberAnimatedNavController(),
-    systemUi: SystemUiController, rootController: NavController
+    systemUi: SystemUiController, rootController: NavController,
+    viewModel: HomeViewModel = koinViewModel()
 ) {
     val windowInfo = rememberWindoInfo()
     val currentStack by controller.currentBackStackEntryAsState()
@@ -113,21 +116,7 @@ fun HomeScreen(
                 MainBlueColor, darkIcons = false
             )
 
-            NavigationHolder.ProfileScreenChild.route -> systemUi.setStatusBarColor(
-                Color.White, darkIcons = true
-            )
-
-            NavigationHolder.BankSoalScreen.route -> {
-                systemUi.setStatusBarColor(Color.White, darkIcons = true)
-            }
-
-            NavigationHolder.SubjectScreen.route -> {
-                systemUi.setStatusBarColor(Color.White, darkIcons = true)
-            }
-
-            NavigationHolder.PackageScreen.route -> {
-                systemUi.setStatusBarColor(Color.White, darkIcons = true)
-            }
+            else -> systemUi.setStatusBarColor(Color.White, true)
         }
     })
     Scaffold(bottomBar = {
@@ -156,7 +145,7 @@ fun HomeScreen(
             enter = slideInVertically(tween(500))
         ) {
             HeaderRow(
-                username = "Ferdialif",
+                username = viewModel.userName,
                 image = R.drawable.generated,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
@@ -300,13 +289,21 @@ private fun HeaderRow(
                         .clip(CircleShape)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Hello $username",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
-                    fontFamily = font,
-                    color = MainYellowColor
-                )
+                if (username == "") {
+                    CircularProgressIndicator(
+                        color = MainYellowColor,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+                AnimatedVisibility(visible = username != "") {
+                    Text(
+                        text = "Hello $username",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        fontFamily = font,
+                        color = MainYellowColor
+                    )
+                }
             }
         }
 
@@ -316,7 +313,9 @@ private fun HeaderRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeScreenChild(modifier: Modifier = Modifier) {
+private fun HomeScreenChild(
+    modifier: Modifier = Modifier
+) {
     var shouldShowReminderDialog by remember {
         mutableStateOf(false)
     }

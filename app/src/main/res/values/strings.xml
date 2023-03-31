@@ -15,4 +15,16 @@
     <string name="start_btn_subject">Mulai</string>
     <string name="tryout_screen_title">Jadwal Tryout</string>
     <string name="tryout_screen_desc">Halaman tryout berisi list terkait tanggal tryout yang akan dilaksanakan dan kalian bisa mendaftarkan diri pada tryout tersebut. Tryout akan dilaksanakan tiap seminggu sekali. Semangat!</string>
+    <string name="tps_title">TPS</string>
+    <string name="penalaran_umum_title">Kemampuan Penalaran Umum</string>
+    <string name="pengetahuan_dan_pemahaman_umum_title">Pengetahuan dan Pemahaman\nUmum</string>
+    <string name="kemampuan_memahami_bacaan_dan_menulis_title">Kemampuan Memahami Bacaan\ndan Menulis</string>
+    <string name="pengetahuan_kuantitatif_title">Pengetahuan Kuantitatif</string>
+    <string name="tes_literasi_title">Tes Literasi</string>
+    <string name="literasi_dalam_bahasa_indonesia_title">Literasi dalam bahasa Indonesia</string>
+    <string name="literasi_dalam_bahasa_inggris_title">Literasi dalam bahasa Inggris</string>
+    <string name="penalaran_matematika_title">Penalaran Matematika</string>
+    <string name="detail_tryout_title">Detail Tryout</string>
+    <string name="to_dimulai_title">TO Dimulai</string>
+    <string name="start_at_to_title">%1$d Hari, %2$d Jam, %3$d Menit</string>
 </resources>

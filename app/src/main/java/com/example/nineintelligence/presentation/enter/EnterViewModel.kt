@@ -34,8 +34,8 @@ class EnterViewModel(
         login.getUserAuth(username, password).let { out ->
             when (out) {
                 is Resource.Success -> {
-                    store.saveToken(out.data?.token ?: "",0)
-                    _loginState.value = LoginState(false, out.data?.token, "")
+                    store.saveToken(out.data?.token ?: return@launch, "")
+                    _loginState.value = LoginState(false, out.data.token, "")
                 }
 
                 is Resource.Error -> {

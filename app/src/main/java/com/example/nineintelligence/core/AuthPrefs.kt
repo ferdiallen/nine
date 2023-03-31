@@ -3,6 +3,7 @@ package com.example.nineintelligence.core
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.first
@@ -17,10 +18,10 @@ class AuthPrefs(
         const val AUTH_KEY = "auth_token"
         const val TIMER_KEY = "token_time"
         val AUTH_KEY_PREF = stringPreferencesKey(AUTH_KEY)
-        val TIMER_KEY_PREF = longPreferencesKey(TIMER_KEY)
+        val TIMER_KEY_PREF = stringPreferencesKey(TIMER_KEY)
     }
 
-    suspend fun saveToken(key: String, definedTime: Long) {
+    suspend fun saveToken(key: String, definedTime: String) {
         store.edit { authKey ->
             authKey[AUTH_KEY_PREF] = key
             authKey[TIMER_KEY_PREF] = definedTime
@@ -33,7 +34,7 @@ class AuthPrefs(
         }.first()
     }
 
-    suspend fun readTime(): Long? {
+    suspend fun readTime(): String? {
         return store.data.map {
             it[TIMER_KEY_PREF]
         }.first()
