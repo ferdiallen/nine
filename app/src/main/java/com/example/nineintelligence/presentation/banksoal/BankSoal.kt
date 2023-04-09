@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,34 +23,43 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.nineintelligence.navigation.NavigationHolder
+import com.example.nineintelligence.R
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.Poppins
 import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
+fun BankSoal(
+    controller: NavController,
+    modifier: Modifier = Modifier,
+    viewModel: BankSoalViewModel = koinViewModel()
+) {
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
+    val bankSoalList by viewModel.bankSoalList.collectAsStateWithLifecycle()
     BackHandler {
         if (pagerState.currentPage > 0) {
             scope.launch {
@@ -64,7 +74,7 @@ fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
             TopBar(onBackPress = {
                 if (pagerState.currentPage > 0) {
                     scope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage-1)
+                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
                     }
                     return@TopBar
                 }
@@ -91,54 +101,38 @@ fun BankSoal(controller: NavController, modifier: Modifier = Modifier) {
                     color = MainBlueColor, fontSize = 14.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalPager(
-                    count = 2, state = pagerState,
-                    userScrollEnabled = false
-                ) { out ->
-                    when (out) {
-                        0 -> {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                                contentPadding = PaddingValues(bottom = 12.dp)
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 12.dp)
+                ) {
+                    if (bankSoalList.isEmpty()) {
+                        item {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                items(6) { each ->
-                                    BankSoalItemList(
-                                        font = font,
-                                        studyName = "Computer Science", indexOf = each + 1,
-                                        onItemClick = {
-                                            scope.launch {
-                                                pagerState.animateScrollToPage(1)
-                                            }
-                                        }, showButton = false, onButtonClick = {
-
-                                        }
-                                    )
-                                }
+                                CircularProgressIndicator(
+                                    color = MainYellowColor
+                                )
                             }
                         }
-
-                        1 -> {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                                contentPadding = PaddingValues(bottom = 12.dp)
-                            ) {
-                                items(6) { each ->
-                                    BankSoalItemList(
-                                        font = font,
-                                        studyName = "Bank Soal ${each+1}", indexOf = each + 1,
-                                        onItemClick = {
-
-                                        }, showButton = true, onButtonClick = {
-                                            controller.navigate(NavigationHolder.ExamScreen.route)
-                                        }
-                                    )
+                        return@LazyColumn
+                    }
+                    itemsIndexed(bankSoalList) { index, data ->
+                        BankSoalItemList(
+                            font = font,
+                            studyName = data.bankSoalTitle ?: "", indexOf = index + 1,
+                            onItemClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(1)
                                 }
+                            }, onButtonClick = {
+
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -164,7 +158,7 @@ private fun TopBar(onBackPress: () -> Unit, font: FontFamily) {
 @Composable
 private fun BankSoalItemList(
     font: FontFamily, studyName: String, indexOf: Int,
-    onItemClick: () -> Unit, showButton: Boolean, onButtonClick: () -> Unit
+    onItemClick: () -> Unit, onButtonClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -206,29 +200,31 @@ private fun BankSoalItemList(
                 text = studyName,
                 fontFamily = font,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold, modifier = Modifier.weight(1F)
             )
-            if (showButton) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1.5F),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = {
+                        onButtonClick.invoke()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(0.6F)
+                        .height(28.dp),
+                    colors = ButtonDefaults.buttonColors(MainBlueColor)
                 ) {
-                    Button(
-                        onClick = {
-                            onButtonClick.invoke()
-                        }, modifier = Modifier
-                            .fillMaxWidth(0.6F)
-                            .height(28.dp), colors = ButtonDefaults.buttonColors(MainBlueColor)
-                    ) {
-                        Text(
-                            text = "Mulai", fontFamily = font,
-                            fontSize = 10.sp, color = MainYellowColor
-                        )
-                    }
-
+                    Text(
+                        text = stringResource(R.string.sign), fontFamily = font,
+                        fontSize = 10.sp, color = MainYellowColor
+                    )
                 }
 
             }
+
         }
     }
 }

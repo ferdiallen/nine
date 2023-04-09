@@ -12,10 +12,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val profile: DetailProfileUseCase
+    private val profile: DetailProfileUseCase,
+    private val prefs: AuthPrefs
 ) : ViewModel() {
 
     var userName by mutableStateOf("")
+        private set
+    var shouldNavigateToLoginScreen by mutableStateOf(false)
         private set
 
     init {
@@ -32,6 +35,8 @@ class HomeViewModel(
                 }
 
                 is Resource.Error -> {
+                    prefs.clearData()
+                    shouldNavigateToLoginScreen = true
                     userName = "Unknown"
                 }
 

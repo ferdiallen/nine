@@ -16,7 +16,9 @@ import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.core.Notification
 import com.example.nineintelligence.core.WorkerTimer
 import com.example.nineintelligence.data.network.apiservice.DetailUser
+import com.example.nineintelligence.data.network.apiservice.GetBankSoalList
 import com.example.nineintelligence.data.network.apiservice.GetListTryout
+import com.example.nineintelligence.data.network.apiservice.GetSoal
 import com.example.nineintelligence.domain.repository.LoginUserImpl
 import com.example.nineintelligence.data.network.apiservice.RegisterUser
 import com.example.nineintelligence.domain.repository.RegisterUserImpl
@@ -25,11 +27,15 @@ import com.example.nineintelligence.data.network.apiservice.TakeTryout
 import com.example.nineintelligence.data.network.apiservice.TakenTryOut
 import com.example.nineintelligence.data.network.apiservice.UpdateProfile
 import com.example.nineintelligence.domain.models.TakeTryOutModel
+import com.example.nineintelligence.domain.repository.BankSoalListImpl
 import com.example.nineintelligence.domain.repository.DetailUserImpl
+import com.example.nineintelligence.domain.repository.GetSoalImpl
 import com.example.nineintelligence.domain.repository.ListTryOutImpl
 import com.example.nineintelligence.domain.repository.TakeTryoutImpl
 import com.example.nineintelligence.domain.repository.TakenTryOutImpl
 import com.example.nineintelligence.domain.repository.UpdateProfileImpl
+import com.example.nineintelligence.domain.use_case.bank_soal_use_case.GetListBankSoalUseCase
+import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
 import com.example.nineintelligence.domain.use_case.login_use_case.LoginUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
@@ -37,13 +43,16 @@ import com.example.nineintelligence.domain.use_case.tryout_use_case.TakeTryOutUs
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakenTryOutUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TryoutUseCase
 import com.example.nineintelligence.navigation.NavigationViewModel
+import com.example.nineintelligence.presentation.banksoal.BankSoalViewModel
 import com.example.nineintelligence.presentation.discuss.DiscussionViewModel
 import com.example.nineintelligence.presentation.dummy.DateTimeFormatViewModel
 import com.example.nineintelligence.presentation.enter.EnterViewModel
 import com.example.nineintelligence.presentation.enter.RegisterViewModel
+import com.example.nineintelligence.presentation.exam.ExamViewModel
 import com.example.nineintelligence.presentation.home.HomeViewModel
 import com.example.nineintelligence.presentation.profile.ProfileViewModel
 import com.example.nineintelligence.presentation.subject.SubjectViewModel
+import com.example.nineintelligence.presentation.tryout.TryOutInformationViewModel
 import com.example.nineintelligence.presentation.tryout.TryoutViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -111,11 +120,26 @@ val appModule = module {
         ProfileViewModel(get(), get(), get(), get())
     }
     viewModel {
-        HomeViewModel(get())
+        HomeViewModel(get(), get())
     }
 
     viewModel {
-        DateTimeFormatViewModel(get(),get())
+        DateTimeFormatViewModel(get(), get())
+    }
+
+    viewModel {
+        TryOutInformationViewModel(get(),get())
+    }
+
+    single<GetBankSoalList> {
+        BankSoalListImpl(get())
+    }
+
+    single {
+        GetListBankSoalUseCase(get())
+    }
+    viewModel {
+        BankSoalViewModel(get())
     }
 
     single {
@@ -178,5 +202,14 @@ val appModule = module {
     }
     single {
         WorkManager.getInstance(androidContext())
+    }
+    single<GetSoal> {
+        GetSoalImpl(get())
+    }
+    single {
+        GetSoalUseCase(get())
+    }
+    viewModel {
+        ExamViewModel(get())
     }
 }

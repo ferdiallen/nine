@@ -1,6 +1,7 @@
 package com.example.nineintelligence.core
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
@@ -18,16 +19,17 @@ class WorkerTimer(
     override suspend fun doWork(): Result {
         return withContext(Dispatchers.IO) {
             val expectedTimeout = authPrefs.readTime() ?: return@withContext Result.failure()
-            println("Expected Timeout : $expectedTimeout")
             do {
                 delay(1000L)
                 val currentTime = ZonedDateTime.now()
-                val formattedCurrentTime = DateTimeFormatter.ofPattern("HH:mm").format(currentTime)
-                println("CurrentTime : $formattedCurrentTime")
-            } while (formattedCurrentTime.removePrefix(":")
-                    .toInt() < expectedTimeout.removePrefix(":").toInt()
+                val formattedCurrentTime = DateTimeFormatter.ofPattern("HH:mm")
+                    .format(currentTime)
+                Log.d("TAG", "CurrentTime : $formattedCurrentTime")
+                Log.d("TAG", "expiredTime : $expectedTimeout")
+            } while (formattedCurrentTime.replace(":", "")
+                    .toInt() < expectedTimeout.replace(":", "").toInt()
             )
-            println("Expired")
+            Log.d("TAG", "Expired")
             return@withContext Result.success()
         }
     }

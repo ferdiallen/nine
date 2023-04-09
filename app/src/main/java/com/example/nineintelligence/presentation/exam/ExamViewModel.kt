@@ -3,36 +3,73 @@ package com.example.nineintelligence.presentation.exam
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nineintelligence.domain.models.GetSoalModel
+import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
+import com.example.nineintelligence.domain.util.Resource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
-class ExamViewModel : ViewModel() {
+class ExamViewModel(
+    private val getSoal: GetSoalUseCase
+) : ViewModel() {
     private var savedAnswer = mutableStateListOf<Pair<Int, String>>()
-
+    private var _listQuestion = MutableStateFlow<List<GetSoalModel>>(emptyList())
+    val listQuestion = _listQuestion.asStateFlow()
     private var _savedAnswerStateFlow = MutableStateFlow<List<Pair<Int, String>>?>(null)
     val savedAnswerStateFlow = _savedAnswerStateFlow.asStateFlow()
 
-    fun saveAnswer(answer: String, indexQuestion: Int) {
-        if (savedAnswer.contains(Pair(indexQuestion, answer))) {
-            savedAnswer.remove(Pair(indexQuestion, answer))
-            return
-        } else if (savedAnswer.isNotEmpty()) {
-            val find = savedAnswer.find {
-                it.first == indexQuestion
+    private val _savedTime = MutableStateFlow(0.seconds)
+    val savedTime = _savedTime.asStateFlow()
+
+    suspend fun retrieveSoalList(slugName: String) {
+        when (val res = getSoal.getSoal(slugName)) {
+            is Resource.Success -> {
+                _listQuestion.update {
+                    res.data ?: emptyList()
+                }
             }
-            if (find != null) {
-                savedAnswer.remove(find)
-                savedAnswer.add(Pair(indexQuestion, answer))
-            } else {
-                savedAnswer.add(Pair(indexQuestion, answer))
+
+            is Resource.Error -> {
+
             }
-            return
+
+            is Resource.Loading -> {
+
+            }
+
+            is Resource.Empty -> {
+
+            }
         }
-        savedAnswer.add(
-            Pair(indexQuestion, answer)
-        )
+    }
+
+    fun setLengthTime(time: Int) {
+        _savedTime.update {
+            time.minutes
+        }
+        runTimer()
+    }
+    private fun runTimer() = viewModelScope.launch(Dispatchers.IO) {
+            _savedTime.collectLatest {
+                while (it != 0.seconds) {
+                    countDownTime()
+                }
+            }
+    }
+
+    private suspend fun countDownTime() {
+        _savedTime.update {
+            delay(1000L)
+            it - 1.seconds
+        }
     }
 
     fun stateFlowMethodSaveAnswer(indexQuestion: Int, answer: String) = viewModelScope.launch {

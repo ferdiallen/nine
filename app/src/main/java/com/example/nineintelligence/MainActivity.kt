@@ -13,8 +13,11 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.rememberNavController
 import com.example.nineintelligence.core.AuthPrefs
+import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.RootNavigation
+import com.example.nineintelligence.presentation.banksoal.BankSoal
 import com.example.nineintelligence.presentation.dummy.DateTimeFormatExample
+import com.example.nineintelligence.presentation.exam.ExamScreen
 import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.presentation.tryout.TryoutInformation
 import com.example.nineintelligence.presentation.tryout.TryoutScreen
@@ -39,16 +42,16 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )*/
                     /*RootNavigation()*/
-                    DateTimeFormatExample()
-                    /*ProfileScreen(
+                    /* DateTimeFormatExample()*/
+                    ProfileScreen(
                         Modifier
                             .fillMaxSize()
                             .padding(horizontal = 20.dp), onBackPress = {
 
                         }, onLogoutAction = {
 
-                        }
-                    )*/
+                        }, controller = rememberNavController()
+                    )
                     /*NotificationTestScreen(
                         modifier = Modifier.fillMaxSize()
                     )*/
@@ -58,8 +61,16 @@ class MainActivity : ComponentActivity() {
                     /*ExamScreen(controller = rememberNavController(), typeOf = ExamType.TAKE_EXAMS)*/
                     /*TryoutInformation(
                         controller = rememberNavController(),
-                        modifier = Modifier.padding(horizontal = 12.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        slugname = "testing-broww"
                     )*/
+                    /*ExamScreen(
+                        controller = rememberNavController(), modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 22.dp),
+                        typeOf = ExamType.TAKE_EXAMS, slugName = "brush-teeth",time = 0
+                    )*/
+                    /*BankSoal(controller = rememberNavController(), modifier = Modifier.fillMaxSize())*/
                 }
             }
         }

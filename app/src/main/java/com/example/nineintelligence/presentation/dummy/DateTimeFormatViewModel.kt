@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.dummy
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -29,16 +30,18 @@ class DateTimeFormatViewModel(
     }
 
     private fun simulateAuthTimer(timer: Int) = viewModelScope.launch {
-       async {
-           prefs.clearData()
-           val time = ZonedDateTime.now().plusMinutes(timer.toLong())
-           expectedTimeOut = DateTimeFormatter.ofPattern("HH:mm").format(time)
-           prefs.saveToken("Lmaooo", expectedTimeOut)
-       }.onAwait
+        async {
+            prefs.clearData()
+            Log.d("TAG","Wait a minute")
+            val time = ZonedDateTime.now().plusMinutes(timer.toLong())
+            expectedTimeOut = DateTimeFormatter.ofPattern("HH:mm").format(time)
+            prefs.saveToken("Lmaooo", expectedTimeOut)
+        }.await()
+        Log.d("TAG","Service Started")
         workerTimer.beginUniqueWork(
             "timerAuth", ExistingWorkPolicy.KEEP,
             workerTimerCoroutine
         )
-            .enqueue() 
+            .enqueue()
     }
 }

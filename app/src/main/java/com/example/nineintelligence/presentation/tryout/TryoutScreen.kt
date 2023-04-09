@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.tryout
 
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -63,11 +65,19 @@ fun TryoutScreen(
 ) {
     val tryoutData by viewModel.tryoutState.collectAsStateWithLifecycle()
     val takenTryOut by viewModel.hasTakenTryOut.collectAsStateWithLifecycle()
+    val tryOutInformation = viewModel.tryOutWarning
+    val context = LocalContext.current
     Column(modifier) {
         TopBarMain {
             controller.popBackStack()
         }
         Spacer(modifier = Modifier.height(12.dp))
+        LaunchedEffect(key1 = tryOutInformation, block = {
+            if (tryOutInformation != "") {
+                Toast.makeText(context, tryOutInformation, Toast.LENGTH_SHORT).show()
+                viewModel.nullifyText()
+            }
+        })
         Column(
             modifier = Modifier
                 .fillMaxSize()

@@ -96,6 +96,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.Navigation
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
@@ -106,6 +108,7 @@ import com.example.nineintelligence.domain.models.UpdateProfileModel
 import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.domain.util.ActivityType
 import com.example.nineintelligence.domain.util.SettingsModel
+import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
@@ -140,7 +143,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     onBackPress: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
-    onLogoutAction: () -> Unit
+    onLogoutAction: () -> Unit, controller: NavController
 ) {
     val pagerState = rememberPagerState()
     var shouldShowEditMenu by remember {
@@ -161,7 +164,7 @@ fun ProfileScreen(
                 shouldShowSettingsMenu = !shouldShowSettingsMenu
             },
             userDataInfo = userDataInfo,
-            pagerState = pagerState, takenTryOutData
+            pagerState = pagerState, takenTryOutData, controller = controller
         )
     }
     if (shouldShowSettingsMenu) {
@@ -202,7 +205,7 @@ fun ProfileScreen(
             },
             font = Poppins.fonts,
             onTapExit = {
-                shouldShowSettingsMenu = false
+                shouldShowEditMenu = false
             }, true, currentData = userDataInfo
         )
     }
@@ -222,7 +225,7 @@ private fun ChildProfileScreen(
     shouldShowSettingsMenu: () -> Unit,
     userDataInfo: UserProfileModel?,
     pagerState: PagerState,
-    takenTryOut: List<TakenTryOutModel>
+    takenTryOut: List<TakenTryOutModel>, controller: NavController
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -274,7 +277,9 @@ private fun ChildProfileScreen(
                     contentDescription = null,
                     modifier = Modifier
                         .size(120.dp)
-                        .clip(CircleShape),
+                        .clip(CircleShape).clickable {
+
+                        },
                     contentScale = ContentScale.Crop
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -362,11 +367,23 @@ private fun ChildProfileScreen(
                             isUserScrolled = it
                         }
 
-                        1 -> ActivityTab(font = font, type = ActivityType.MYACTIVITY, takenTryOut)
+                        1 -> ActivityTab(
+                            font = font,
+                            type = ActivityType.MYACTIVITY,
+                            takenTryOut,
+                            navigateToTryOutInformation = {
+                                controller.navigate(
+                                    NavigationHolder.TryoutInformation.route
+                                            + "/$it"
+                                )
+                            })
+
                         2 -> ActivityTab(
                             font = font,
                             type = ActivityType.DISCUSSION,
-                            listOf<String>()
+                            listOf<String>(), navigateToTryOutInformation = {
+
+                            }
                         )
                     }
                 }
@@ -561,7 +578,12 @@ private fun ItemsChart(result: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun <T> ActivityTab(font: FontFamily, type: ActivityType, data: List<T>) {
+private fun <T> ActivityTab(
+    font: FontFamily,
+    type: ActivityType,
+    data: List<T>,
+    navigateToTryOutInformation: (String) -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         if (type == ActivityType.MYACTIVITY) {
             LazyColumn(
@@ -582,15 +604,21 @@ private fun <T> ActivityTab(font: FontFamily, type: ActivityType, data: List<T>)
                         textAlign = TextAlign.Start
                     )
                 }
-                items(2) {
+                items(data.filterIsInstance<TakenTryOutModel>().filter {
+                    it.details == "Ongoing"
+                }) {
                     ActivityList(
                         font = font,
-                        tryOutName = "Try out 1",
-                        startDate = "1 Januari 1111",
+                        tryOutName = it.tryoutDetails?.tryOutTitle ?: "",
+                        startDate = it.tryoutDetails?.startsAt?.toPreferrableFormatDate() ?: "",
                         onClick = {
-
+                            navigateToTryOutInformation.invoke(
+                                it.tryoutDetails?.tryOutSlug ?: return@ActivityList
+                            )
                         },
-                        activityType = type, buttonEnabled = true
+                        activityType = type, buttonEnabled = true, onCardClick = {
+
+                        }
                     )
                 }
                 item {
@@ -608,7 +636,9 @@ private fun <T> ActivityTab(font: FontFamily, type: ActivityType, data: List<T>)
                         textAlign = TextAlign.Start
                     )
                 }
-                items(data.filterIsInstance<TakenTryOutModel>()) {
+                items(data.filterIsInstance<TakenTryOutModel>().filter {
+                    it.details == "Upcoming"
+                }) {
                     ActivityList(
                         font = font,
                         tryOutName = it.tryoutDetails?.tryOutTitle.toString(),
@@ -617,7 +647,11 @@ private fun <T> ActivityTab(font: FontFamily, type: ActivityType, data: List<T>)
                         onClick = {
 
                         },
-                        activityType = type, buttonEnabled = false
+                        activityType = type, buttonEnabled = false, onCardClick = {
+                            navigateToTryOutInformation.invoke(
+                                it.tryoutDetails?.tryOutSlug ?: return@ActivityList
+                            )
+                        }
                     )
                 }
             }
@@ -626,21 +660,29 @@ private fun <T> ActivityTab(font: FontFamily, type: ActivityType, data: List<T>)
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ActivityList(
     font: FontFamily,
     tryOutName: String,
     startDate: String,
     activityType: ActivityType,
-    onClick: (Int) -> Unit,
-    buttonEnabled: Boolean = false
+    onClick: () -> Unit,
+    buttonEnabled: Boolean = false,
+    onCardClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth(0.85F)
-            .wrapContentHeight(), colors = CardDefaults.cardColors(
+            .wrapContentHeight(),
+        colors = CardDefaults.cardColors(
             MainYellowColor
-        ), elevation = CardDefaults.cardElevation(8.dp), shape = RoundedCornerShape(12.dp)
+        ),
+        elevation = CardDefaults.cardElevation(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        onClick = {
+            onCardClick.invoke()
+        }
     ) {
         Row(
             modifier = Modifier
@@ -670,7 +712,9 @@ private fun ActivityList(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
-                    onClick = { },
+                    onClick = {
+                        onClick.invoke()
+                    },
                     modifier = Modifier
                         .wrapContentWidth()
                         .height(32.dp),

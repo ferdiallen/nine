@@ -15,6 +15,7 @@ sealed class NavigationHolder(val route: String) {
     object SubjectScreen : NavigationHolder("subject_screen")
     object PackageScreen : NavigationHolder("package_screen")
     object TryoutScreen : NavigationHolder("tryout_screen")
+    object TryoutInformation : NavigationHolder("tryout_information")
 }
 
 object Graph {

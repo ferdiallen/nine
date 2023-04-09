@@ -59,7 +59,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.navigation.NavigationHolder
@@ -79,6 +81,7 @@ import com.example.nineintelligence.domain.util.listBottomNavigation
 import com.example.nineintelligence.domain.util.rememberWindoInfo
 import com.example.nineintelligence.presentation.packagescreen.PackageScreen
 import com.example.nineintelligence.presentation.subject.SubjectScreen
+import com.example.nineintelligence.presentation.tryout.TryoutInformation
 import com.example.nineintelligence.presentation.tryout.TryoutScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -117,6 +120,15 @@ fun HomeScreen(
             )
 
             else -> systemUi.setStatusBarColor(Color.White, true)
+        }
+    })
+    LaunchedEffect(key1 = viewModel.shouldNavigateToLoginScreen, block = {
+        if (viewModel.shouldNavigateToLoginScreen) {
+            rootController.navigate(NavigationHolder.LoginScreen.route){
+                popUpTo(NavigationHolder.HomeScreen.route){
+                    inclusive = true
+                }
+            }
         }
     })
     Scaffold(bottomBar = {
@@ -180,7 +192,8 @@ fun HomeScreen(
             }, exitTransition = {
                 slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, tween(400))
             }) {
-                ProfileScreen(
+                ProfileScreen(controller = controller,
+                    modifier =
                     Modifier
                         .fillMaxSize()
                         .padding(horizontal = 20.dp), onBackPress = {
@@ -208,14 +221,32 @@ fun HomeScreen(
                 }) {
                 BankSoal(controller = controller, modifier = Modifier.fillMaxSize())
             }
-            composable(route = NavigationHolder.ExamScreen.route, enterTransition = {
-                slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(500))
-            }) {
+            composable(
+                route = NavigationHolder.ExamScreen.route + "/{slugName}/{time}",
+                enterTransition = {
+                    slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(500))
+                }, arguments = listOf(
+                    navArgument(
+                        "slugName"
+                    ) {
+                        type = NavType.StringType
+                        nullable = false
+                    },
+                    navArgument(
+                        "time"
+                    ){
+                        type = NavType.IntType
+                        nullable = false
+                    }
+                )
+            ) {
+                val getSlug = it.arguments?.getString("slugName")
+                val getTime = it.arguments?.getInt("time")
                 ExamScreen(
                     controller = controller, modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 22.dp),
-                    typeOf = ExamType.TAKE_EXAMS
+                    typeOf = ExamType.TAKE_EXAMS, slugName = getSlug ?: "",time = getTime ?: 0
                 )
             }
             composable(route = NavigationHolder.DiscussionScreen.route) {
@@ -232,7 +263,7 @@ fun HomeScreen(
                     controller = controller, modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 22.dp),
-                    typeOf = ExamType.DISCUSSION
+                    typeOf = ExamType.DISCUSSION,time = 0
                 )
             }
             composable(route = NavigationHolder.SubjectScreen.route) {
@@ -256,6 +287,22 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 4.dp), controller = controller
+                )
+            }
+            composable(
+                route = NavigationHolder.TryoutInformation.route + "/{slugName}",
+                arguments = listOf(
+                    navArgument("slugName") {
+                        type = NavType.StringType
+                        nullable = false
+                    }
+                )
+            ) {
+                val getSlugName = it.arguments?.getString("slugName") ?: ""
+                TryoutInformation(
+                    controller = controller,
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    slugname = getSlugName
                 )
             }
         }

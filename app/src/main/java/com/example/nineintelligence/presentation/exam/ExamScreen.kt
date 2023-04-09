@@ -58,6 +58,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -69,64 +70,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
+import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.domain.models.ExamModel
+import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
-import com.example.nineintelligence.core.CustomText
-import com.example.nineintelligence.domain.util.ExamType
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
+import kotlin.time.Duration.Companion.hours
 
 
-val questionAnswerDummyData = listOf(
-    ExamModel(
-        1, 1, 1, "Siapakah Pencipta Playstation", listOf(
-            "Sony",
-            "Microsoft",
-            "LG",
-            "Viewsonic",
-        ), "Sony"
-    ),
-    ExamModel(
-        1, 1, 1, "Snapdragon Menggunakan Arsitektur CPU apa?", listOf(
-            "x86",
-            "Arm",
-            "Risc-V",
-            "PPC",
-        ), "Arm"
-    ),
-    ExamModel(
-        1, 1, 1, "Apa sebutan Cache Besar milik AMD", listOf(
-            "3D-Vcache",
-            "Ultra Cache",
-            "AMD-V",
-            "TSX",
-        ), "3D-Vcache"
-    ),
-    ExamModel(
-        1, 1, 1, "RTX Nvidia Terbaru memiliki kode nama", listOf(
-            "Ada Lovelace",
-            "Fenrir",
-            "TileGX",
-            "fermi",
-        ), "Ada Lovelace"
-    ),
-)
-
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ExamScreen(
     modifier: Modifier = Modifier,
     controller: NavController,
-    vm: ExamViewModel = viewModel(),
-    typeOf: ExamType
+    vm: ExamViewModel = koinViewModel(),
+    typeOf: ExamType,
+    slugName: String = "",
+    time: Int
 ) {
     var shouldShowQuestionList by remember {
         mutableStateOf(false)
@@ -137,15 +106,35 @@ fun ExamScreen(
     var shouldShowDialogOver by remember {
         mutableStateOf(false)
     }
+    LaunchedEffect(key1 = Unit, block = {
+        vm.retrieveSoalList(slugName)
+        if (time > 0) {
+            vm.setLengthTime(time)
+        }
+    })
+    val currentTime by vm.savedTime.collectAsStateWithLifecycle()
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
     val savedAnswerViewModel by vm.savedAnswerStateFlow.collectAsStateWithLifecycle()
+    val retrievedSoal by vm.listQuestion.collectAsStateWithLifecycle()
+    var formattedCurrentTime: String? by remember {
+        mutableStateOf(null)
+    }
     val currentPage by remember {
         derivedStateOf {
             pagerState.currentPage
         }
     }
+    LaunchedEffect(key1 = currentTime, block = {
+        currentTime.toComponents { hours, minutes, seconds, _ ->
+            if (hours == 0L && minutes == 0 && seconds == 0) {
+                return@toComponents
+            }
+            formattedCurrentTime =
+                (if (hours.hours.inWholeHours > 0) "${hours.hours.inWholeHours}:" else "") +
+                        "$minutes:$seconds${if (seconds < 10) 0 else ""}"
+        }
+    })
     Column(modifier = modifier.onSizeChanged {
         parentSize = it
     }) {
@@ -157,23 +146,24 @@ fun ExamScreen(
         }
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
             ) {
                 CustomText(
                     text = "Soal (${pagerState.currentPage + 1}/${pagerState.pageCount})",
                     fontWeight = FontWeight.Bold,
-                    color = MainBlueColor
+                    color = MainBlueColor,
+                    modifier = Modifier.weight(1F)
                 )
 
-                Spacer(modifier = Modifier.weight(1F))
                 IconButton(onClick = {
                     shouldShowQuestionList = !shouldShowQuestionList
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Menu,
                         contentDescription = null,
-                        modifier = Modifier.size(30.dp),
+                        modifier = Modifier
+                            .size(30.dp)
+                            .weight(1F),
                         tint = MainBlueColor
                     )
                 }
@@ -185,83 +175,109 @@ fun ExamScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                CustomText(text = "--:--", fontWeight = FontWeight.Bold, color = MainBlueColor)
+                CustomText(
+                    text = formattedCurrentTime ?: "--:--",
+                    fontWeight = FontWeight.Bold,
+                    color = MainBlueColor,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
             }
         }
         Column(
             modifier = Modifier
-                .verticalScroll(state = scrollState)
                 .padding(bottom = 12.dp)
         ) {
             Spacer(modifier = Modifier.height(12.dp))
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalPager(
-                count = questionAnswerDummyData.size,
-                state = pagerState,
-                userScrollEnabled = false
+                count = retrievedSoal.size, state = pagerState, userScrollEnabled = false
             ) { out ->
                 QuestionArea(
-                    questionText = questionAnswerDummyData[out].soalText,
+                    questionText = retrievedSoal[out].content ?: "",
                     userAnswer = savedAnswerViewModel?.find {
                         it.first == out
                     }?.second ?: "",
-                    questionAnswerList = questionAnswerDummyData[out].answer,
+                    questionAnswerList = retrievedSoal[out].answers as? List<String> ?: emptyList(),
                     onClickedAnswer = { _, answer ->
                         vm.stateFlowMethodSaveAnswer(out, answer)
-                    }, selectedAnswerIndex = savedAnswerViewModel?.find {
+                    },
+                    selectedAnswerIndex = savedAnswerViewModel?.find {
                         it.first == out
                     }?.second,
                     parentScreenSize = parentSize,
                     isClickable = typeOf == ExamType.TAKE_EXAMS,
                     showRightWrongAnswer = typeOf == ExamType.DISCUSSION,
-                    rightAnswer = questionAnswerDummyData[out].correctAnswer
+                    rightAnswer = ""
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = {
-                        if (pagerState.currentPage == 0) {
-                            return@Button
-                        }
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                        }
-                    }, modifier = Modifier
-                        .fillMaxWidth(0.3F)
-                        .height(35.dp),
-                    shape = RoundedCornerShape(4.dp), colors = ButtonDefaults.buttonColors(
-                        MainBlueColor
-                    )
-                ) {
-                    CustomText(text = "Previous", fontSize = 12.sp, color = MainYellowColor)
-                }
-                Spacer(modifier = Modifier.weight(1F))
-                AnimatedVisibility(
-                    visible = currentPage < questionAnswerDummyData.size - 1,
-                    enter = fadeIn(tween(200)),
-                    exit = fadeOut(tween(200))
-                ) {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
-                        }, modifier = Modifier
-                            .fillMaxWidth(0.4F)
-                            .height(35.dp),
-                        shape = RoundedCornerShape(4.dp), colors = ButtonDefaults.buttonColors(
-                            MainBlueColor
-                        )
-                    ) {
-                        CustomText(text = "Next", fontSize = 12.sp, color = MainYellowColor)
+
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 20.dp)
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+        ) {
+            Card(
+                modifier = Modifier.size(50.dp),
+                shape = CircleShape,
+                colors = CardDefaults.cardColors(Color.Gray), onClick = {
+                    if (pagerState.currentPage == 0) {
+                        return@Card
+                    }
+                    scope.launch {
+                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
                     }
                 }
-
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBackIosNew,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
             }
+            Spacer(modifier = Modifier.weight(1F))
+            AnimatedVisibility(
+                visible = currentPage < retrievedSoal.size - 1,
+                enter = fadeIn(tween(200)),
+                exit = fadeOut(tween(200))
+            ) {
+                Card(
+                    modifier = Modifier.size(50.dp),
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(Color.Gray), onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    }
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBackIosNew,
+                            contentDescription = null,
+                            tint = Color.White, modifier = Modifier.rotate(180F)
+                        )
+                    }
+                }
+            }
+
         }
     }
     if (shouldShowQuestionList) {
@@ -270,37 +286,27 @@ fun ExamScreen(
         }) {
             when (typeOf) {
                 ExamType.DISCUSSION -> {
-                    QuestionDiscussionListSelector(
-                        questionData = questionAnswerDummyData,
-                        onSubmitClick = {
-                            controller.navigate(NavigationHolder.DiscussionScreen.route)
-                        },
-                        onGoToSelectedIndex = {
-                            scope.launch {
-                                pagerState.scrollToPage(it)
-                            }
-                        },
-                        allAnswer = savedAnswerViewModel?.map {
-                            it.second
-                        } ?: emptyList()
-                    )
+                    QuestionDiscussionListSelector(questionData = emptyList(), onSubmitClick = {
+                        controller.navigate(NavigationHolder.DiscussionScreen.route)
+                    }, onGoToSelectedIndex = {
+                        scope.launch {
+                            pagerState.scrollToPage(it)
+                        }
+                    }, allAnswer = savedAnswerViewModel?.map {
+                        it.second
+                    } ?: emptyList())
                 }
 
                 ExamType.TAKE_EXAMS -> {
-                    QuestionListSelector(
-                        questionNumber = questionAnswerDummyData.size,
-                        onSubmitClick = {
-                            shouldShowDialogOver = !shouldShowDialogOver
-                        },
-                        onGoToSelectedIndex = {
-                            scope.launch {
-                                pagerState.scrollToPage(it)
-                            }
-                        },
-                        hasAnswer = savedAnswerViewModel?.map {
-                            it.first
-                        } ?: emptyList(), currentSelected = currentPage
-                    )
+                    QuestionListSelector(questionNumber = retrievedSoal.size, onSubmitClick = {
+                        shouldShowDialogOver = !shouldShowDialogOver
+                    }, onGoToSelectedIndex = {
+                        scope.launch {
+                            pagerState.scrollToPage(it)
+                        }
+                    }, hasAnswer = savedAnswerViewModel?.map {
+                        it.first
+                    } ?: emptyList(), currentSelected = currentPage)
                 }
             }
         }
@@ -329,48 +335,45 @@ private fun QuestionArea(
     questionAnswerList: List<String>,
     onClickedAnswer: (Int, String) -> Unit,
     selectedAnswerIndex: String? = null,
-    parentScreenSize: IntSize, isClickable: Boolean,
+    parentScreenSize: IntSize,
+    isClickable: Boolean,
     showRightWrongAnswer: Boolean = false,
     rightAnswer: String
 ) {
     val density = LocalDensity.current
     Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-        Card(elevation = CardDefaults.cardElevation(4.dp)) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp),
-                colors = CardDefaults.cardColors(MainYellowColor.copy(0.4F))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CustomText(
-                        text = questionText,
-                        color = MainBlueColor
-                    )
-                }
-            }
-
-        }
-        Spacer(modifier = Modifier.height(20.dp))
         val availableAnswer = remember {
-            ('A'..'D').toList()
+            ('A'..'E').toList()
         }
-        LazyColumn(modifier = Modifier.height(
-            with(density) {
-                parentScreenSize.height.toFloat().toDp() / 2.5F
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            item {
+                Card(elevation = CardDefaults.cardElevation(4.dp)) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp),
+                        colors = CardDefaults.cardColors(MainYellowColor.copy(0.4F))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CustomText(
+                                text = questionText, color = MainBlueColor
+                            )
+                        }
+                    }
+
+                }
+                Spacer(modifier = Modifier.height(20.dp))
             }
-        )) {
             itemsIndexed(questionAnswerList) { index, out ->
                 Card(colors = when (showRightWrongAnswer) {
                     true -> {
                         CardDefaults.cardColors(
-                            if (rightAnswer == userAnswer && out == rightAnswer)
-                                Color.Green
+                            if (rightAnswer == userAnswer && out == rightAnswer) Color.Green
                             else if (out == rightAnswer) Color.Green
                             else if (userAnswer == out) Color.Red
                             else Color.Transparent
@@ -379,8 +382,7 @@ private fun QuestionArea(
 
                     false -> {
                         CardDefaults.cardColors(
-                            if (selectedAnswerIndex == out)
-                                MainBlueColor else Color.Transparent
+                            if (selectedAnswerIndex == out) MainBlueColor else Color.Transparent
                         )
                     }
                 },
@@ -404,8 +406,7 @@ private fun QuestionArea(
                             shape = CircleShape,
                             modifier = Modifier.size(30.dp),
                             colors = CardDefaults.cardColors(
-                                if (selectedAnswerIndex == out)
-                                    MainYellowColor else Color.LightGray
+                                if (selectedAnswerIndex == out) MainYellowColor else Color.LightGray
                             )
                         ) {
                             Box(
@@ -415,16 +416,14 @@ private fun QuestionArea(
                                 CustomText(
                                     text = availableAnswer[index].toString(),
                                     fontWeight = FontWeight.Bold,
-                                    color = if (selectedAnswerIndex == out)
-                                        MainBlueColor else Color.Gray
+                                    color = if (selectedAnswerIndex == out) MainBlueColor else Color.Gray
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         CustomText(
                             text = out,
-                            color = if (selectedAnswerIndex == out)
-                                MainYellowColor else MainBlueColor
+                            color = if (selectedAnswerIndex == out) MainYellowColor else MainBlueColor
                         )
                     }
                 }
@@ -470,17 +469,16 @@ fun QuestionListSelector(
         mutableStateOf(IntSize.Zero)
     }
     val density = LocalDensity.current
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.55F)
-            .padding(12.dp)
-            .onSizeChanged {
-                parentSize = it
-            }
-            .clickable(MutableInteractionSource(), indication = null, enabled = false, onClick = {
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .fillMaxHeight(0.55F)
+        .padding(12.dp)
+        .onSizeChanged {
+            parentSize = it
+        }
+        .clickable(MutableInteractionSource(), indication = null, enabled = false, onClick = {
 
-            })
+        })
     ) {
         Column(
             modifier = Modifier
@@ -491,17 +489,15 @@ fun QuestionListSelector(
             LazyVerticalGrid(
                 columns = GridCells.Fixed(5),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(start = 12.dp), modifier = Modifier.height(
-                    with(density) {
-                        parentSize.height.toFloat().toDp() / 1.5F
-                    }
-                )
+                contentPadding = PaddingValues(start = 12.dp),
+                modifier = Modifier.height(with(density) {
+                    parentSize.height.toFloat().toDp() / 1.5F
+                })
             ) {
                 items(questionNumber) {
                     Card(
                         border = if (currentSelected == it) BorderStroke(
-                            2.dp,
-                            MainBlueColor
+                            2.dp, MainBlueColor
                         ) else BorderStroke(1.dp, Color.Black),
                         modifier = Modifier
                             .height(50.dp)
@@ -510,7 +506,7 @@ fun QuestionListSelector(
                             onGoToSelectedIndex.invoke(it)
                         },
                         colors = CardDefaults.cardColors(
-                            if (hasAnswer.contains(it))
+                            if (hasAnswer.contains(it) && currentSelected != it)
                                 MainBlueColor else Color.Transparent
                         )
                     ) {
@@ -548,9 +544,7 @@ fun QuestionListSelector(
                     colors = ButtonDefaults.buttonColors(MainBlueColor)
                 ) {
                     CustomText(
-                        text = "Submit",
-                        color = MainYellowColor,
-                        fontWeight = FontWeight.Bold
+                        text = "Submit", color = MainYellowColor, fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -560,8 +554,7 @@ fun QuestionListSelector(
 
 @Composable
 fun ListQuestionHolder(
-    onDismiss: () -> Unit,
-    content: @Composable () -> Unit
+    onDismiss: () -> Unit, content: @Composable () -> Unit
 ) {
     var animatedFloat by remember {
         mutableStateOf(0.01F)
@@ -587,11 +580,11 @@ fun ListQuestionHolder(
             })
     ) {
         AnimatedVisibility(
-            visible = animateBackground.value == 0.7F, enter = slideInHorizontally(
-                tween(250), initialOffsetX = {
-                    it * 2
-                }
-            ), exit = slideOutHorizontally(tween(250), targetOffsetX = {
+            visible = animateBackground.value == 0.7F,
+            enter = slideInHorizontally(tween(250), initialOffsetX = {
+                it * 2
+            }),
+            exit = slideOutHorizontally(tween(250), targetOffsetX = {
                 it - 50 * 2
             })
         ) {
@@ -635,31 +628,24 @@ fun DialogIsOver(onSubmitClick: () -> Unit, onCancelClick: () -> Unit) {
                     Button(
                         onClick = {
                             onCancelClick.invoke()
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
+                        }, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(
                             MainBlueColor
                         )
                     ) {
                         CustomText(
-                            text = "Cancel",
-                            fontWeight = FontWeight.Bold,
-                            color = MainYellowColor
+                            text = "Cancel", fontWeight = FontWeight.Bold, color = MainYellowColor
                         )
                     }
                     Spacer(modifier = Modifier.weight(1F))
                     Button(
                         onClick = {
                             onSubmitClick.invoke()
-                        }, shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
+                        }, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(
                             MainBlueColor
                         )
                     ) {
                         CustomText(
-                            text = "Submit",
-                            fontWeight = FontWeight.Bold,
-                            color = MainYellowColor
+                            text = "Submit", fontWeight = FontWeight.Bold, color = MainYellowColor
                         )
                     }
 
@@ -695,20 +681,22 @@ fun QuestionDiscussionListSelector(
         }
     }
     LaunchedEffect(key1 = Unit, block = {
+        if (questionData.isEmpty()) {
+            return@LaunchedEffect
+        }
         finalResult = (100 / questionData.size) * countRightAnswer
     })
     val scrollState = rememberScrollState()
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(12.dp)
-            .onSizeChanged {
-                parentSize = it
-            }
-            .clickable(MutableInteractionSource(), indication = null, enabled = false, onClick = {
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .wrapContentHeight()
+        .padding(12.dp)
+        .onSizeChanged {
+            parentSize = it
+        }
+        .clickable(MutableInteractionSource(), indication = null, enabled = false, onClick = {
 
-            })
+        })
     ) {
         Column(
             modifier = Modifier
@@ -734,8 +722,7 @@ fun QuestionDiscussionListSelector(
                             onGoToSelectedIndex.invoke(index)
                         },
                         colors = CardDefaults.cardColors(
-                            if (allAnswer.contains(data.correctAnswer))
-                                Color.Green else Color.Red
+                            if (allAnswer.contains(data.correctAnswer)) Color.Green else Color.Red
                         )
                     ) {
                         Column(
@@ -746,7 +733,8 @@ fun QuestionDiscussionListSelector(
                             CustomText(
                                 text = (index + 1).toString(),
                                 fontWeight = FontWeight.Bold,
-                                color = MainYellowColor, fontSize = 20.sp
+                                color = MainYellowColor,
+                                fontSize = 20.sp
                             )
                         }
                     }
@@ -767,20 +755,18 @@ fun QuestionDiscussionListSelector(
             colors = ButtonDefaults.buttonColors(MainBlueColor)
         ) {
             CustomText(
-                text = "Pembahasan",
-                color = MainYellowColor,
-                fontWeight = FontWeight.Bold
+                text = "Pembahasan", color = MainYellowColor, fontWeight = FontWeight.Bold
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp), border = BorderStroke(1.dp, Color.Black)
+                .padding(horizontal = 12.dp),
+            border = BorderStroke(1.dp, Color.Black)
         ) {
             Column(
-                modifier = Modifier
-                    .padding(top = 12.dp)
+                modifier = Modifier.padding(top = 12.dp)
             ) {
                 CustomText(
                     text = "Detail",
@@ -835,19 +821,14 @@ fun QuestionDiscussionListSelector(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp)
                 ) {
                     CustomText(
-                        text = "Nilai",
-                        fontWeight = FontWeight.Bold,
-                        color = MainBlueColor
+                        text = "Nilai", fontWeight = FontWeight.Bold, color = MainBlueColor
                     )
                     Spacer(modifier = Modifier.weight(1F))
                     CustomText(
-                        text = "$finalResult",
-                        fontWeight = FontWeight.Bold,
-                        color = MainYellowColor
+                        text = "$finalResult", fontWeight = FontWeight.Bold, color = MainYellowColor
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))

@@ -1,5 +1,8 @@
 package com.example.nineintelligence.presentation.tryout
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.core.AuthPrefs
@@ -24,6 +27,8 @@ class TryoutViewModel(
     val tryoutState = _tryoutState.asStateFlow()
     private val _hasTakenTryOut = MutableStateFlow<List<String>>(emptyList())
     val hasTakenTryOut = _hasTakenTryOut.asStateFlow()
+    var tryOutWarning by mutableStateOf("")
+        private set
 
     init {
         viewModelScope.launch {
@@ -84,6 +89,10 @@ class TryoutViewModel(
         }
     }
 
+    fun nullifyText() {
+        tryOutWarning = ""
+    }
+
     fun signTryOut(slugName: String) = viewModelScope.launch(Dispatchers.IO) {
         val res = signTryout.takeTryOut(slugName)
         when (res) {
@@ -97,7 +106,11 @@ class TryoutViewModel(
             }
 
             is Resource.Error -> {
-                println("Failed")
+                if (res.errorMessages?.contains("You have taken") == true) {
+                    tryOutWarning = "You have taken this tryout"
+                } else if (res.errorMessages?.contains("400") == true) {
+                    tryOutWarning = "Your session has over"
+                }
             }
 
             is Resource.Empty -> {

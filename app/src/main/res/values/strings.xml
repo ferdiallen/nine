@@ -26,5 +26,6 @@
     <string name="penalaran_matematika_title">Penalaran Matematika</string>
     <string name="detail_tryout_title">Detail Tryout</string>
     <string name="to_dimulai_title">TO Dimulai</string>
-    <string name="start_at_to_title">%1$d Hari, %2$d Jam, %3$d Menit</string>
+    <string name="start_at_to_title">%1$s Hari, %2$s Jam, %3$s Menit</string>
+    <string name="sign">Daftar</string>
 </resources>
