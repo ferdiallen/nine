@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import kotlin.time.Duration.Companion.seconds
 
 class WorkerTimer(
     private val context: Context,
@@ -18,18 +19,12 @@ class WorkerTimer(
 ) : CoroutineWorker(context, worker) {
     override suspend fun doWork(): Result {
         return withContext(Dispatchers.IO) {
-            val expectedTimeout = authPrefs.readTime() ?: return@withContext Result.failure()
+            var expectedTimeout = 10.seconds
             do {
                 delay(1000L)
-                val currentTime = ZonedDateTime.now()
-                val formattedCurrentTime = DateTimeFormatter.ofPattern("HH:mm")
-                    .format(currentTime)
-                Log.d("TAG", "CurrentTime : $formattedCurrentTime")
-                Log.d("TAG", "expiredTime : $expectedTimeout")
-            } while (formattedCurrentTime.replace(":", "")
-                    .toInt() < expectedTimeout.replace(":", "").toInt()
-            )
-            Log.d("TAG", "Expired")
+                Log.d("TAG", "Running")
+                expectedTimeout -= 1.seconds
+            } while (expectedTimeout > 1.seconds)
             return@withContext Result.success()
         }
     }
