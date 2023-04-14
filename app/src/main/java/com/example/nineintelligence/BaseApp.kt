@@ -12,7 +12,6 @@ class BaseApp : Application(), KoinComponent {
         super.onCreate()
         startKoin {
             androidContext(this@BaseApp)
-            workManagerFactory()
             modules(appModule)
         }
     }

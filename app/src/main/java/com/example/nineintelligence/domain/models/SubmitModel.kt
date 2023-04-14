@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SubmitModel(
-    @SerialName("user_answer") val userAnswers: List<UserAnswerData> = emptyList()
+    @SerialName("user_answers") val userAnswers: List<UserAnswerData> = emptyList()
 ) {
     @Serializable
     data class UserAnswerData(

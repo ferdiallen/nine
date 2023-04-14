@@ -14,7 +14,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.work.WorkManager
 import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.core.Notification
-import com.example.nineintelligence.core.WorkerTimer
 import com.example.nineintelligence.data.network.apiservice.DetailUser
 import com.example.nineintelligence.data.network.apiservice.GetBankSoalList
 import com.example.nineintelligence.data.network.apiservice.GetListTryout
@@ -112,7 +111,7 @@ val appModule = module {
         EnterViewModel(get(), get())
     }
     viewModel {
-        NavigationViewModel(get(), get())
+        NavigationViewModel(get())
     }
     viewModel {
         ProfileViewModel(get(), get(), get(), get())
@@ -120,8 +119,6 @@ val appModule = module {
     viewModel {
         HomeViewModel(get(), get())
     }
-
-
     viewModel {
         TryOutInformationViewModel(get(), get())
     }
@@ -192,9 +189,6 @@ val appModule = module {
     single {
         TakenTryOutUseCase(get())
     }
-    worker {
-        WorkerTimer(androidContext(), get(), get())
-    }
     single {
         WorkManager.getInstance(androidContext())
     }
@@ -212,6 +206,6 @@ val appModule = module {
         TryoutSubmitUseCase(get())
     }
     viewModel {
-        ExamViewModel(get())
+        ExamViewModel(get(),get())
     }
 }

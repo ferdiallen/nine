@@ -2,11 +2,7 @@ package com.example.nineintelligence.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.example.nineintelligence.core.AuthPrefs
-import com.example.nineintelligence.core.WorkerTimer
 import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
@@ -14,7 +10,6 @@ import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfi
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakenTryOutUseCase
 import com.example.nineintelligence.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

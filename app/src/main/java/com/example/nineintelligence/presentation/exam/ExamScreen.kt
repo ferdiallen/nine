@@ -74,6 +74,7 @@ import androidx.navigation.NavController
 import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.domain.models.ExamModel
+import com.example.nineintelligence.domain.models.SubmitModel
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.MainBlueColor
@@ -197,14 +198,17 @@ fun ExamScreen(
                     questionText = retrievedSoal[out].content ?: "",
                     userAnswer = savedAnswerViewModel?.find {
                         it.first == out
-                    }?.second ?: "",
+                    }?.second?.answer ?: "",
                     questionAnswerList = retrievedSoal[out].answers as? List<String> ?: emptyList(),
                     onClickedAnswer = { _, answer ->
-                        vm.stateFlowMethodSaveAnswer(out, answer)
+                        vm.stateFlowMethodSaveAnswer(
+                            out,
+                            SubmitModel.UserAnswerData(retrievedSoal[out].idSoal, answer)
+                        )
                     },
                     selectedAnswerIndex = savedAnswerViewModel?.find {
                         it.first == out
-                    }?.second,
+                    }?.second?.answer ?: "",
                     parentScreenSize = parentSize,
                     isClickable = typeOf == ExamType.TAKE_EXAMS,
                     showRightWrongAnswer = typeOf == ExamType.DISCUSSION,
@@ -293,7 +297,7 @@ fun ExamScreen(
                             pagerState.scrollToPage(it)
                         }
                     }, allAnswer = savedAnswerViewModel?.map {
-                        it.second
+                        it.second.answer ?: ""
                     } ?: emptyList())
                 }
 
@@ -316,9 +320,12 @@ fun ExamScreen(
         Dialog(onDismissRequest = { shouldShowDialogOver = false }) {
             DialogIsOver(onSubmitClick = {
                 shouldShowDialogOver = false
-                controller.navigate(NavigationHolder.QuestionDiscussion.route) {
+                /*controller.navigate(NavigationHolder.QuestionDiscussion.route) {
                     popUpTo(NavigationHolder.BankSoalScreen.route)
-                }
+                }*/
+                vm.saveAnswer(SubmitModel(savedAnswerViewModel?.map {
+                    it.second
+                }?: emptyList()),slugName)
             }, onCancelClick = {
                 shouldShowDialogOver = false
             })
