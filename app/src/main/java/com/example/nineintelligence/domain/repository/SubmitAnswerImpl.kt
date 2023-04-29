@@ -20,8 +20,8 @@ class SubmitAnswerImpl(
 ) : SubmitAnswer {
     override suspend fun submitAnswer(answer: SubmitModel, slugName: String): String {
         val res = http.post("${BuildConfig.BASE_URL}tryouts/$slugName/submit") {
-            contentType(ContentType.Application.Json)
             bearerAuth(prefs.readToken() ?: return@post)
+            contentType(ContentType.Application.Json)
             setBody(answer)
         }.body<String>()
         return res

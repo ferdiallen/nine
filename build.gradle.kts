@@ -3,6 +3,10 @@ buildscript {
     val agp_version by extra("8.1.0-alpha11")
     val agp_version1 by extra(agp_version)
     val agp_version2 by extra("7.4.2")
+    val agp_version3 by extra(agp_version1)
+    val agp_version4 by extra("7.4.2")
+    val agp_version5 by extra(agp_version1)
+    val agp_version6 by extra(agp_version1)
     repositories {
         google()
         mavenCentral()
@@ -10,7 +14,7 @@ buildscript {
     }
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0")
-        classpath("com.android.tools.build:gradle:$agp_version2")
+        classpath("com.android.tools.build:gradle:$agp_version6")
 
     }
 }

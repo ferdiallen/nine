@@ -3,9 +3,11 @@ package com.example.nineintelligence.presentation.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.core.AuthPrefs
+import com.example.nineintelligence.domain.models.HistoryModel
 import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
+import com.example.nineintelligence.domain.use_case.profile_use_case.HistoryUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakenTryOutUseCase
 import com.example.nineintelligence.domain.util.Resource
@@ -19,7 +21,8 @@ class ProfileViewModel(
     private val store: AuthPrefs,
     private val useCase: DetailProfileUseCase,
     private val updateUseCase: UpdateProfileUseCase,
-    private val listTakenTryOut: TakenTryOutUseCase
+    private val listTakenTryOut: TakenTryOutUseCase,
+    private val historyUseCase: HistoryUseCase
 ) : ViewModel() {
     private val _userDataInfo = MutableStateFlow<UserProfileModel?>(null)
     val userDataInfo = _userDataInfo.asStateFlow()
@@ -28,16 +31,38 @@ class ProfileViewModel(
 
     private val _listTakenTryOut = MutableStateFlow<List<TakenTryOutModel>>(emptyList())
     val listTakenTryOutModel = _listTakenTryOut.asStateFlow()
-    init {
 
+    private val _userHistory = MutableStateFlow<List<HistoryModel>>(emptyList())
+    val userHistory = _userHistory.asStateFlow()
+
+    init {
         viewModelScope.launch(Dispatchers.IO) {
             getUserInfo()
             getTakenTryOut()
+            getUserHistory()
+        }
+    }
+
+    private suspend fun getUserHistory() {
+        when (val res = historyUseCase.getHistory()) {
+            is Resource.Success -> {
+                _userHistory.update {
+                    res.data ?: emptyList()
+                }
+            }
+
+            is Resource.Error -> {
+
+            }
+
+            else -> {
+
+            }
         }
     }
 
 
-    private suspend fun getUserInfo()  {
+    private suspend fun getUserInfo() {
         _shouldShowLoadingScreen.update {
             true
         }

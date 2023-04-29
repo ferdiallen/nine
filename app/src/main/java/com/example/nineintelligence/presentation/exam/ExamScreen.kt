@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.exam
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -48,6 +49,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -71,10 +74,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
-import com.example.nineintelligence.domain.models.ExamModel
+import com.example.nineintelligence.domain.models.DiscussModel
+import com.example.nineintelligence.domain.models.GetSoalModel
 import com.example.nineintelligence.domain.models.SubmitModel
+import com.example.nineintelligence.domain.models.UserAnswerData
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.MainBlueColor
@@ -108,9 +114,18 @@ fun ExamScreen(
         mutableStateOf(false)
     }
     LaunchedEffect(key1 = Unit, block = {
-        vm.retrieveSoalList(slugName)
-        if (time > 0) {
-            vm.setLengthTime(time)
+        when (typeOf) {
+            ExamType.TAKE_EXAMS -> {
+                vm.retrieveSoalList(slugName)
+                if (time > 0) {
+                    vm.setLengthTime(time)
+                }
+            }
+
+            ExamType.DISCUSSION -> {
+                vm.retrieveSoalList(slugName)
+                vm.getPembahasan(slugName)
+            }
         }
     })
     val currentTime by vm.savedTime.collectAsStateWithLifecycle()
@@ -118,8 +133,22 @@ fun ExamScreen(
     val scope = rememberCoroutineScope()
     val savedAnswerViewModel by vm.savedAnswerStateFlow.collectAsStateWithLifecycle()
     val retrievedSoal by vm.listQuestion.collectAsStateWithLifecycle()
+    val discussionResponse by vm.discussionResponse.collectAsStateWithLifecycle()
+    val resultSubmit by vm.resultSubmit.collectAsStateWithLifecycle()
+    BackHandler {
+        controller.navigate(NavigationHolder.ProfileScreenChild.route) {
+            popUpTo(NavigationHolder.ProfileScreenChild.route) {
+                inclusive = true
+            }
+        }
+    }
     var formattedCurrentTime: String? by remember {
         mutableStateOf(null)
+    }
+    val listSize by remember {
+        derivedStateOf {
+            retrievedSoal.size
+        }
     }
     val currentPage by remember {
         derivedStateOf {
@@ -142,7 +171,11 @@ fun ExamScreen(
         Row(modifier = Modifier.fillMaxWidth()) {
             Spacer(modifier = Modifier.height(12.dp))
             TopBar(onBackPress = {
-                controller.popBackStack()
+                controller.navigate(NavigationHolder.ProfileScreenChild.route) {
+                    popUpTo(NavigationHolder.ProfileScreenChild.route) {
+                        inclusive = true
+                    }
+                }
             })
         }
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -192,18 +225,28 @@ fun ExamScreen(
             Spacer(modifier = Modifier.height(12.dp))
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalPager(
-                count = retrievedSoal.size, state = pagerState, userScrollEnabled = false
+                count = listSize, state = pagerState, userScrollEnabled = false
             ) { out ->
                 QuestionArea(
                     questionText = retrievedSoal[out].content ?: "",
-                    userAnswer = savedAnswerViewModel?.find {
-                        it.first == out
-                    }?.second?.answer ?: "",
+                    userAnswer = if (typeOf == ExamType.TAKE_EXAMS) {
+                        savedAnswerViewModel?.find {
+                            it.first == out
+                        }?.second?.answer ?: ""
+                    } else {
+                        if (discussionResponse.isNotEmpty()) {
+                            discussionResponse.find {
+                                it.soalDetail?.soalId == retrievedSoal[out].idSoal
+                            }?.userAnswer ?: ""
+                        } else {
+                            ""
+                        }
+                    },
                     questionAnswerList = retrievedSoal[out].answers as? List<String> ?: emptyList(),
                     onClickedAnswer = { _, answer ->
                         vm.stateFlowMethodSaveAnswer(
                             out,
-                            SubmitModel.UserAnswerData(retrievedSoal[out].idSoal, answer)
+                            UserAnswerData(retrievedSoal[out].idSoal ?: 0, answer)
                         )
                     },
                     selectedAnswerIndex = savedAnswerViewModel?.find {
@@ -212,7 +255,10 @@ fun ExamScreen(
                     parentScreenSize = parentSize,
                     isClickable = typeOf == ExamType.TAKE_EXAMS,
                     showRightWrongAnswer = typeOf == ExamType.DISCUSSION,
-                    rightAnswer = ""
+                    rightAnswer = if (discussionResponse.isNotEmpty())
+                        discussionResponse.find {
+                            it.soalDetail?.soalId == retrievedSoal[out].idSoal
+                        }?.soalDetail?.correctAns ?: "" else ""
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -290,15 +336,16 @@ fun ExamScreen(
         }) {
             when (typeOf) {
                 ExamType.DISCUSSION -> {
-                    QuestionDiscussionListSelector(questionData = emptyList(), onSubmitClick = {
-                        controller.navigate(NavigationHolder.DiscussionScreen.route)
-                    }, onGoToSelectedIndex = {
-                        scope.launch {
-                            pagerState.scrollToPage(it)
-                        }
-                    }, allAnswer = savedAnswerViewModel?.map {
-                        it.second.answer ?: ""
-                    } ?: emptyList())
+                    QuestionDiscussionListSelector(questionData = discussionResponse,
+                        onSubmitClick = {
+                            controller.navigate(NavigationHolder.DiscussionScreen.route)
+                        }, onGoToSelectedIndex = {
+                            scope.launch {
+                                pagerState.scrollToPage(it)
+                            }
+                        }, allAnswer = discussionResponse.map {
+                            it.userAnswer ?: ""
+                        })
                 }
 
                 ExamType.TAKE_EXAMS -> {
@@ -319,13 +366,18 @@ fun ExamScreen(
     if (shouldShowDialogOver) {
         Dialog(onDismissRequest = { shouldShowDialogOver = false }) {
             DialogIsOver(onSubmitClick = {
-                shouldShowDialogOver = false
-                /*controller.navigate(NavigationHolder.QuestionDiscussion.route) {
-                    popUpTo(NavigationHolder.BankSoalScreen.route)
-                }*/
-                vm.saveAnswer(SubmitModel(savedAnswerViewModel?.map {
+                /*vm.saveAnswer(SubmitModel(savedAnswerViewModel?.map {
                     it.second
-                }?: emptyList()),slugName)
+                } ?: return@DialogIsOver), slugName)
+                resultSubmit?.let {
+
+                }*/
+                shouldShowDialogOver = false
+                controller.navigate(NavigationHolder.QuestionDiscussion.route + "/$slugName") {
+                    popUpTo(NavigationHolder.ProfileScreenChild.route) {
+                        inclusive = true
+                    }
+                }
             }, onCancelClick = {
                 shouldShowDialogOver = false
             })
@@ -347,7 +399,6 @@ private fun QuestionArea(
     showRightWrongAnswer: Boolean = false,
     rightAnswer: String
 ) {
-    val density = LocalDensity.current
     Column(modifier = Modifier.padding(horizontal = 8.dp)) {
         val availableAnswer = remember {
             ('A'..'E').toList()
@@ -665,7 +716,7 @@ fun DialogIsOver(onSubmitClick: () -> Unit, onCancelClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuestionDiscussionListSelector(
-    questionData: List<ExamModel>,
+    questionData: List<DiscussModel>,
     onSubmitClick: () -> Unit,
     onGoToSelectedIndex: (Int) -> Unit,
     allAnswer: List<String>
@@ -684,7 +735,7 @@ fun QuestionDiscussionListSelector(
     }
     LaunchedEffect(key1 = Unit) {
         questionData.forEach {
-            if (allAnswer.contains(it.correctAnswer)) countRightAnswer++ else countWrongAnswer++
+            if (allAnswer.contains("")) countRightAnswer++ else countWrongAnswer++
         }
     }
     LaunchedEffect(key1 = Unit, block = {
@@ -729,7 +780,8 @@ fun QuestionDiscussionListSelector(
                             onGoToSelectedIndex.invoke(index)
                         },
                         colors = CardDefaults.cardColors(
-                            if (allAnswer.contains(data.correctAnswer)) Color.Green else Color.Red
+                            if (data.userAnswer == data.soalDetail?.correctAns)
+                                Color.Green else Color.Red
                         )
                     ) {
                         Column(

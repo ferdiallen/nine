@@ -15,21 +15,27 @@ import androidx.work.WorkManager
 import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.core.Notification
 import com.example.nineintelligence.data.network.apiservice.DetailUser
+import com.example.nineintelligence.data.network.apiservice.Discussion
 import com.example.nineintelligence.data.network.apiservice.GetBankSoalList
 import com.example.nineintelligence.data.network.apiservice.GetListTryout
 import com.example.nineintelligence.data.network.apiservice.GetSoal
+import com.example.nineintelligence.data.network.apiservice.History
 import com.example.nineintelligence.domain.repository.LoginUserImpl
 import com.example.nineintelligence.data.network.apiservice.RegisterUser
 import com.example.nineintelligence.domain.repository.RegisterUserImpl
 import com.example.nineintelligence.data.network.apiservice.LoginUser
+import com.example.nineintelligence.data.network.apiservice.StartTryout
 import com.example.nineintelligence.data.network.apiservice.SubmitAnswer
 import com.example.nineintelligence.data.network.apiservice.TakeTryout
 import com.example.nineintelligence.data.network.apiservice.TakenTryOut
 import com.example.nineintelligence.data.network.apiservice.UpdateProfile
 import com.example.nineintelligence.domain.repository.BankSoalListImpl
 import com.example.nineintelligence.domain.repository.DetailUserImpl
+import com.example.nineintelligence.domain.repository.DiscussionImpl
 import com.example.nineintelligence.domain.repository.GetSoalImpl
+import com.example.nineintelligence.domain.repository.HistoryImpl
 import com.example.nineintelligence.domain.repository.ListTryOutImpl
+import com.example.nineintelligence.domain.repository.StartTryoutImpl
 import com.example.nineintelligence.domain.repository.SubmitAnswerImpl
 import com.example.nineintelligence.domain.repository.TakeTryoutImpl
 import com.example.nineintelligence.domain.repository.TakenTryOutImpl
@@ -38,7 +44,10 @@ import com.example.nineintelligence.domain.use_case.bank_soal_use_case.GetListBa
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
 import com.example.nineintelligence.domain.use_case.login_use_case.LoginUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
+import com.example.nineintelligence.domain.use_case.profile_use_case.HistoryUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
+import com.example.nineintelligence.domain.use_case.tryout_use_case.DiscussionUseCase
+import com.example.nineintelligence.domain.use_case.tryout_use_case.StartTryoutUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakeTryOutUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakenTryOutUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TryoutSubmitUseCase
@@ -46,6 +55,7 @@ import com.example.nineintelligence.domain.use_case.tryout_use_case.TryoutUseCas
 import com.example.nineintelligence.navigation.NavigationViewModel
 import com.example.nineintelligence.presentation.banksoal.BankSoalViewModel
 import com.example.nineintelligence.presentation.discuss.DiscussionViewModel
+import com.example.nineintelligence.presentation.dummy.SubmitViewModel
 import com.example.nineintelligence.presentation.enter.EnterViewModel
 import com.example.nineintelligence.presentation.enter.RegisterViewModel
 import com.example.nineintelligence.presentation.exam.ExamViewModel
@@ -114,7 +124,7 @@ val appModule = module {
         NavigationViewModel(get())
     }
     viewModel {
-        ProfileViewModel(get(), get(), get(), get())
+        ProfileViewModel(get(), get(), get(), get(), get())
     }
     viewModel {
         HomeViewModel(get(), get())
@@ -205,7 +215,25 @@ val appModule = module {
     single {
         TryoutSubmitUseCase(get())
     }
+    single<StartTryout> {
+        StartTryoutImpl(get(), get())
+    }
+    single {
+        StartTryoutUseCase(get())
+    }
+    single<Discussion> {
+        DiscussionImpl(get(), get())
+    }
+    single {
+        DiscussionUseCase(get())
+    }
     viewModel {
-        ExamViewModel(get(),get())
+        ExamViewModel(get(), get(), get())
+    }
+    single<History> {
+        HistoryImpl(get(), get())
+    }
+    single {
+        HistoryUseCase(get())
     }
 }

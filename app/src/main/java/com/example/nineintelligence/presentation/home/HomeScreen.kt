@@ -124,8 +124,8 @@ fun HomeScreen(
     })
     LaunchedEffect(key1 = viewModel.shouldNavigateToLoginScreen, block = {
         if (viewModel.shouldNavigateToLoginScreen) {
-            rootController.navigate(NavigationHolder.LoginScreen.route){
-                popUpTo(NavigationHolder.HomeScreen.route){
+            rootController.navigate(NavigationHolder.LoginScreen.route) {
+                popUpTo(NavigationHolder.HomeScreen.route) {
                     inclusive = true
                 }
             }
@@ -234,7 +234,7 @@ fun HomeScreen(
                     },
                     navArgument(
                         "time"
-                    ){
+                    ) {
                         type = NavType.IntType
                         nullable = false
                     }
@@ -246,7 +246,7 @@ fun HomeScreen(
                     controller = controller, modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 22.dp),
-                    typeOf = ExamType.TAKE_EXAMS, slugName = getSlug ?: "",time = getTime ?: 0
+                    typeOf = ExamType.TAKE_EXAMS, slugName = getSlug ?: "", time = getTime ?: 0
                 )
             }
             composable(route = NavigationHolder.DiscussionScreen.route) {
@@ -258,12 +258,19 @@ fun HomeScreen(
                     bankSoalOf = 1, typeOf = "Bank Soal", controller = controller
                 )
             }
-            composable(route = NavigationHolder.QuestionDiscussion.route) {
+            composable(route = NavigationHolder.QuestionDiscussion.route + "/{slug}",
+                arguments = listOf(
+                    navArgument("slug") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }
+                )) {out->
+                val getSlug = out.arguments?.getString("slug")
                 ExamScreen(
                     controller = controller, modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 22.dp),
-                    typeOf = ExamType.DISCUSSION,time = 0
+                    typeOf = ExamType.DISCUSSION, time = 0, slugName = getSlug ?: ""
                 )
             }
             composable(route = NavigationHolder.SubjectScreen.route) {

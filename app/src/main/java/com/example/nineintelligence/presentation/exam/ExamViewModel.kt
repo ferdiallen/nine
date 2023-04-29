@@ -1,12 +1,14 @@
 package com.example.nineintelligence.presentation.exam
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nineintelligence.domain.models.DiscussModel
 import com.example.nineintelligence.domain.models.GetSoalModel
 import com.example.nineintelligence.domain.models.SubmitModel
 import com.example.nineintelligence.domain.models.SubmitResponse
+import com.example.nineintelligence.domain.models.UserAnswerData
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
+import com.example.nineintelligence.domain.use_case.tryout_use_case.DiscussionUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TryoutSubmitUseCase
 import com.example.nineintelligence.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +16,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
@@ -24,18 +25,24 @@ import kotlin.time.Duration.Companion.seconds
 
 class ExamViewModel(
     private val getSoal: GetSoalUseCase,
-    private val submitUseCase: TryoutSubmitUseCase
+    private val submitUseCase: TryoutSubmitUseCase,
+    private val discussionUseCase: DiscussionUseCase
 ) : ViewModel() {
     private var _listQuestion = MutableStateFlow<List<GetSoalModel>>(emptyList())
     val listQuestion = _listQuestion.asStateFlow()
+
     private var _resultSubmit = MutableStateFlow<SubmitResponse?>(null)
     val resultSubmit = _resultSubmit.asStateFlow()
+
     private var _savedAnswerStateFlow = MutableStateFlow<List<Pair<Int,
-            SubmitModel.UserAnswerData>>?>(null)
+            UserAnswerData>>?>(null)
     val savedAnswerStateFlow = _savedAnswerStateFlow.asStateFlow()
 
     private val _savedTime = MutableStateFlow(0.seconds)
     val savedTime = _savedTime.asStateFlow()
+
+    private val _discussionResult = MutableStateFlow<List<DiscussModel>>(emptyList())
+    val discussionResponse = _discussionResult.asStateFlow()
 
     suspend fun retrieveSoalList(slugName: String) {
         when (val res = getSoal.getSoal(slugName)) {
@@ -59,14 +66,12 @@ class ExamViewModel(
         }
     }
 
-    fun saveAnswer(answer: SubmitModel, slugName: String) = viewModelScope.launch(Dispatchers.IO) {
-        val res = submitUseCase.submitAnswer(answer.userAnswers, slugName)
-        when (res) {
+    suspend fun getPembahasan(slugName: String) {
+        when (val res = discussionUseCase.getPembahasan(slugName)) {
             is Resource.Success -> {
-                println(res.data)
-                val decoder = Json.decodeFromString<SubmitResponse>(res.data ?: return@launch)
-                _resultSubmit.update {
-                    decoder
+                println(res.data?.first()?.score)
+                _discussionResult.update {
+                    res.data ?: emptyList()
                 }
             }
 
@@ -74,13 +79,33 @@ class ExamViewModel(
 
             }
 
-            is Resource.Empty -> {
+            else -> {}
+        }
+    }
 
+    fun saveAnswer(answer: SubmitModel, slugName: String) = viewModelScope.launch {
+        submitUseCase.submitAnswer(answer.userAnswers, slugName).let {
+            when (it) {
+                is Resource.Success -> {
+                    val decoder = Json.decodeFromString<SubmitResponse>(it.data ?: return@launch)
+                    _resultSubmit.update {
+                        decoder
+                    }
+                }
+
+                is Resource.Error -> {
+
+                }
+
+                is Resource.Empty -> {
+
+                }
+
+                is Resource.Loading -> {
+
+                }
             }
 
-            is Resource.Loading -> {
-
-            }
         }
     }
 
@@ -106,7 +131,7 @@ class ExamViewModel(
         }
     }
 
-    fun stateFlowMethodSaveAnswer(indexQuestion: Int, answer: SubmitModel.UserAnswerData) =
+    fun stateFlowMethodSaveAnswer(indexQuestion: Int, answer: UserAnswerData) =
         viewModelScope.launch {
             _savedAnswerStateFlow.update {
                 val currentArray = it?.toMutableList()

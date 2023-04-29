@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.enter
 
+import android.util.Patterns
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -53,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
+import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
@@ -74,6 +77,9 @@ fun LoginForm(
     var passwordVisibility by remember {
         mutableStateOf(true)
     }
+    var hasFocusedEmail by remember {
+        mutableStateOf(false)
+    }
     val userData by viewModel.loginState
     LaunchedEffect(key1 = userData.tokenData, block = {
         if (userData.tokenData != "" && userData.tokenData != null) {
@@ -84,6 +90,9 @@ fun LoginForm(
             }
         }
     })
+    val isErrorEmailAddress = remember(email) {
+        !Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
     val annotatedText = remember {
         buildAnnotatedString {
             append("Don't Have an account yet ? \n Make a new account")
@@ -137,7 +146,14 @@ fun LoginForm(
                     OutlinedTextField(
                         value = email,
                         onValueChange = viewModel::onEmailChange,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged {
+                                if (hasFocusedEmail) {
+                                    return@onFocusChanged
+                                }
+                                hasFocusedEmail = it.isFocused
+                            },
                         shape = RoundedCornerShape(14.dp),
                         placeholder = {
                             Text(
@@ -147,8 +163,13 @@ fun LoginForm(
                                 fontFamily = font,
                                 fontSize = 14.sp
                             )
-                        },
+                        }, isError = if (hasFocusedEmail) isErrorEmailAddress else false,
                         singleLine = true,
+                        supportingText = {
+                             if(hasFocusedEmail && isErrorEmailAddress) {
+                                 CustomText(text = "Invalid Email Address")
+                             }
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
 

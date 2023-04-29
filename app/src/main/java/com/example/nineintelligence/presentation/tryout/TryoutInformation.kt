@@ -85,7 +85,6 @@ fun TryoutInformation(
                     tryoutInfo?.tryoutDetails?.startsAt ?: return@launch
                 )
                 resultTimeBetween = TryoutInfoModel(res[0], res[1], res[2])
-                Log.d("TAG", "Size ${resultTimeBetween.minutes}")
             }
         }
     })
@@ -145,12 +144,17 @@ fun TryoutInformation(
                     )
                     Spacer(modifier = Modifier.weight(1F))
                     CustomText(
-                        text = stringResource(
-                            R.string.start_at_to_title,
-                            resultTimeBetween.days,
-                            resultTimeBetween.hours,
-                            resultTimeBetween.minutes
-                        ), color = Color.White,
+                        text = if ((resultTimeBetween.days.toIntOrNull() ?: 0) <= 0 &&
+                            (resultTimeBetween.hours.toIntOrNull() ?: 0) <= 0 &&
+                            (resultTimeBetween.minutes.toIntOrNull() ?: 0) <= 0
+                        )
+                            stringResource(R.string.tryout_has_started) else
+                            stringResource(
+                                R.string.start_at_to_title,
+                                resultTimeBetween.days,
+                                resultTimeBetween.hours,
+                                resultTimeBetween.minutes
+                            ), color = Color.White,
                         fontSize = 13.sp
                     )
                 }

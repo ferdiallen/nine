@@ -102,6 +102,7 @@ import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.core.toPreferrableFormatDate
+import com.example.nineintelligence.domain.models.HistoryModel
 import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.models.TryoutDataModel
 import com.example.nineintelligence.domain.models.UpdateProfileModel
@@ -155,6 +156,7 @@ fun ProfileScreen(
     val userDataInfo by viewModel.userDataInfo.collectAsStateWithLifecycle()
     val showLoadingProgress by viewModel.shouldShowLoadingScreen.collectAsStateWithLifecycle()
     val takenTryOutData by viewModel.listTakenTryOutModel.collectAsStateWithLifecycle()
+    val userHistory by viewModel.userHistory.collectAsStateWithLifecycle()
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         ChildProfileScreen(
             modifier,
@@ -164,7 +166,8 @@ fun ProfileScreen(
                 shouldShowSettingsMenu = !shouldShowSettingsMenu
             },
             userDataInfo = userDataInfo,
-            pagerState = pagerState, takenTryOutData, controller = controller
+            pagerState = pagerState, takenTryOutData, controller = controller,
+            userHistory
         )
     }
     if (shouldShowSettingsMenu) {
@@ -225,7 +228,8 @@ private fun ChildProfileScreen(
     shouldShowSettingsMenu: () -> Unit,
     userDataInfo: UserProfileModel?,
     pagerState: PagerState,
-    takenTryOut: List<TakenTryOutModel>, controller: NavController
+    takenTryOut: List<TakenTryOutModel>, controller: NavController,
+    history:List<HistoryModel>
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -277,7 +281,8 @@ private fun ChildProfileScreen(
                     contentDescription = null,
                     modifier = Modifier
                         .size(120.dp)
-                        .clip(CircleShape).clickable {
+                        .clip(CircleShape)
+                        .clickable {
 
                         },
                     contentScale = ContentScale.Crop
@@ -381,8 +386,8 @@ private fun ChildProfileScreen(
                         2 -> ActivityTab(
                             font = font,
                             type = ActivityType.DISCUSSION,
-                            listOf<String>(), navigateToTryOutInformation = {
-
+                            history, navigateToTryOutInformation = {
+                                controller.navigate(NavigationHolder.DiscussionScreen.route)
                             }
                         )
                     }
@@ -656,6 +661,32 @@ private fun <T> ActivityTab(
                 }
             }
 
+        }else{
+            LazyColumn(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp)
+            ) {
+                items(data.filterIsInstance<HistoryModel>()) {
+                    ActivityList(
+                        font = font,
+                        tryOutName = it.tryoutDetails?.tryOutTitle ?: "",
+                        startDate = it.tryoutDetails?.startsAt?.toPreferrableFormatDate() ?: "",
+                        onClick = {
+                            navigateToTryOutInformation.invoke(
+                                it.tryoutDetails?.tryOutSlug ?: return@ActivityList
+                            )
+                        },
+                        activityType = type, buttonEnabled = true, onCardClick = {
+
+                        }
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
         }
     }
 }

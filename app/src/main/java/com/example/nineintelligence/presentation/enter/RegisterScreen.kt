@@ -14,10 +14,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +39,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +62,15 @@ fun RegisterScreen(
     controller: NavController
 ) {
     val registerState by viewModel.registerState.collectAsStateWithLifecycle()
+    var passwordVisibility by remember {
+        mutableStateOf(true)
+    }
+    var confirmPasswordVisibility by remember {
+        mutableStateOf(true)
+    }
+    val correctBothPassword = remember(viewModel.password,viewModel.confirmPassword) {
+        viewModel.password == viewModel.confirmPassword
+    }
     val context = LocalContext.current
     LaunchedEffect(key1 = registerState, block = {
         if (registerState?.userName != null) {
@@ -226,6 +242,8 @@ fun RegisterScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
+                        visualTransformation = if (passwordVisibility) PasswordVisualTransformation()
+                        else VisualTransformation.None,
                         placeholder = {
                             Text(
                                 text = "Password",
@@ -234,7 +252,16 @@ fun RegisterScreen(
                             )
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
+                                Icon(
+                                    imageVector = if (passwordVisibility) Icons.Filled.VisibilityOff
+                                    else Icons.Filled.Visibility,
+                                    contentDescription = null
+                                )
+                            }
+                        }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -261,7 +288,18 @@ fun RegisterScreen(
                             )
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true
+                        singleLine = true, trailingIcon = {
+                            IconButton(onClick = {
+                                confirmPasswordVisibility = !confirmPasswordVisibility
+                            }) {
+                                Icon(
+                                    imageVector = if (confirmPasswordVisibility)
+                                        Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                    contentDescription = null
+                                )
+                            }
+                        }, visualTransformation = if (confirmPasswordVisibility)
+                            PasswordVisualTransformation() else VisualTransformation.None
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(

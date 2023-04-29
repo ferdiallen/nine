@@ -14,6 +14,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.RootNavigation
+import com.example.nineintelligence.presentation.dummy.SubmitTest
+import com.example.nineintelligence.presentation.enter.LoginForm
+import com.example.nineintelligence.presentation.enter.RegisterScreen
 import com.example.nineintelligence.presentation.exam.ExamScreen
 import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
@@ -29,13 +32,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
+                    /*SubmitTest()*/
                     /*GreetingReadingSubject(
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )*/
                     /*MainReadingSubject(
                         modifier = Modifier.padding(horizontal = 12.dp) 
                     )*/
-                    RootNavigation()
+                    /*RootNavigation()*/
+                    RegisterScreen(controller = rememberNavController())
                     /*ProfileScreen(
                         Modifier
                             .fillMaxSize()
@@ -57,11 +62,11 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(horizontal = 12.dp),
                         slugname = "testing-broww"
                     )*/
-                   /* ExamScreen(
+                    /*ExamScreen(
                         controller = rememberNavController(), modifier = Modifier
                             .fillMaxSize()
                             .padding(horizontal = 22.dp),
-                        typeOf = ExamType.TAKE_EXAMS, slugName = "brush-teeth-4", time = 60
+                        typeOf = ExamType.TAKE_EXAMS, slugName = "tryout-testing-1", time = 60
                     )*/
                     /*BankSoal(controller = rememberNavController(), modifier = Modifier.fillMaxSize())*/
                 }

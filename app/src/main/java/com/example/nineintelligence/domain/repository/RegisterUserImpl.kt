@@ -30,13 +30,10 @@ class RegisterUserImpl(private val client: HttpClient) : RegisterUser {
                 setBody(UserModel(name, email, password, phoneNumber))
             }.body()
         } catch (e: Exception) {
-            println(e.message)
             null
         } catch (e: IOException) {
-            println(e.message)
             null
         } catch (e: HttpException) {
-            println(e.message)
             null
         }
     }
