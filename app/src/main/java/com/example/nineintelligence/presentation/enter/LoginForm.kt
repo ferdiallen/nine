@@ -4,6 +4,7 @@ import android.util.Patterns
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +25,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
@@ -67,8 +70,7 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginForm(
-    viewModel: EnterViewModel = koinViewModel(),
-    controller: NavController
+    viewModel: EnterViewModel = koinViewModel(), controller: NavController
 ) {
     val email by viewModel.currentEmail.collectAsStateWithLifecycle()
     val password by viewModel.currentPassword.collectAsStateWithLifecycle()
@@ -163,12 +165,13 @@ fun LoginForm(
                                 fontFamily = font,
                                 fontSize = 14.sp
                             )
-                        }, isError = if (hasFocusedEmail) isErrorEmailAddress else false,
+                        },
+                        isError = if (hasFocusedEmail) isErrorEmailAddress else false,
                         singleLine = true,
                         supportingText = {
-                             if(hasFocusedEmail && isErrorEmailAddress) {
-                                 CustomText(text = "Invalid Email Address")
-                             }
+                            if (hasFocusedEmail && isErrorEmailAddress) {
+                                CustomText(text = "Invalid Email Address")
+                            }
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
@@ -204,8 +207,7 @@ fun LoginForm(
                             }) {
                                 Icon(
                                     imageVector = if (passwordVisibility) Icons.Filled.VisibilityOff
-                                    else Icons.Filled.Visibility,
-                                    contentDescription = null
+                                    else Icons.Filled.Visibility, contentDescription = null
                                 )
                             }
                         },
@@ -254,7 +256,16 @@ fun LoginForm(
                 }
             }
         }
+        Box(
+            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+        ) {
+            if(viewModel.isLoadingLogin){
+                Dialog(onDismissRequest = {  }) {
+                    CircularProgressIndicator(color = MainYellowColor)
+                }
 
+            }
+        }
     }
 
 }

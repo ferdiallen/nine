@@ -5,10 +5,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SubmitModel(
-    @SerialName("user_answers") val userAnswers: List<UserAnswerData>
+    @SerialName("user_answers") val userAnswers: List<UserAnswerData> = emptyList()
 )
 @Serializable
 data class UserAnswerData(
-    @SerialName("soal_id") val id: Int,
-    @SerialName("answer") val answer: String
+    @SerialName("soal_id") val id: Int = 0,
+    @SerialName("answer") val answer: String = ""
 )

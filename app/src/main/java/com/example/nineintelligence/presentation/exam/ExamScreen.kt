@@ -135,6 +135,16 @@ fun ExamScreen(
     val retrievedSoal by vm.listQuestion.collectAsStateWithLifecycle()
     val discussionResponse by vm.discussionResponse.collectAsStateWithLifecycle()
     val resultSubmit by vm.resultSubmit.collectAsStateWithLifecycle()
+    LaunchedEffect(key1 = resultSubmit, block = {
+        resultSubmit?.let {
+            shouldShowDialogOver = false
+            controller.navigate(NavigationHolder.QuestionDiscussion.route + "/$slugName") {
+                popUpTo(NavigationHolder.ExamScreen.route + "/$slugName") {
+                    inclusive = true
+                }
+            }
+        }
+    })
     BackHandler {
         controller.navigate(NavigationHolder.ProfileScreenChild.route) {
             popUpTo(NavigationHolder.ProfileScreenChild.route) {
@@ -366,18 +376,10 @@ fun ExamScreen(
     if (shouldShowDialogOver) {
         Dialog(onDismissRequest = { shouldShowDialogOver = false }) {
             DialogIsOver(onSubmitClick = {
-                /*vm.saveAnswer(SubmitModel(savedAnswerViewModel?.map {
+                vm.saveAnswer(SubmitModel(savedAnswerViewModel?.map {
                     it.second
                 } ?: return@DialogIsOver), slugName)
-                resultSubmit?.let {
 
-                }*/
-                shouldShowDialogOver = false
-                controller.navigate(NavigationHolder.QuestionDiscussion.route + "/$slugName") {
-                    popUpTo(NavigationHolder.ProfileScreenChild.route) {
-                        inclusive = true
-                    }
-                }
             }, onCancelClick = {
                 shouldShowDialogOver = false
             })

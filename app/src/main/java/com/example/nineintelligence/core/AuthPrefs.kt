@@ -16,15 +16,23 @@ class AuthPrefs(
 
     private companion object {
         const val AUTH_KEY = "auth_token"
-        const val TIMER_KEY = "token_time"
+        const val SAVED_USERNAME = "username"
+        const val SAVED_PASSWORD = "password"
         val AUTH_KEY_PREF = stringPreferencesKey(AUTH_KEY)
-        val TIMER_KEY_PREF = stringPreferencesKey(TIMER_KEY)
+        val USER_PREF = stringPreferencesKey(SAVED_USERNAME)
+        val PASSWORD_PREF = stringPreferencesKey(SAVED_PASSWORD)
     }
 
-    suspend fun saveToken(key: String, definedTime: String) {
+    suspend fun saveToken(key: String) {
         store.edit { authKey ->
             authKey[AUTH_KEY_PREF] = key
-            authKey[TIMER_KEY_PREF] = definedTime
+        }
+    }
+
+    suspend fun rememberUser(name: String, password: String) {
+        store.edit { userPrefs ->
+            userPrefs[USER_PREF] = name
+            userPrefs[PASSWORD_PREF] = password
         }
     }
 
@@ -34,15 +42,38 @@ class AuthPrefs(
         }.first()
     }
 
-    suspend fun readTime(): String? {
+    suspend fun readTokenNonBlocking(): String? {
         return store.data.map {
-            it[TIMER_KEY_PREF]
+            it[AUTH_KEY_PREF]
         }.first()
+    }
+
+    suspend fun isRememberSaved(userName: (String) -> Unit, password: (String) -> Unit): Boolean {
+        val savedUser = store.data.map {
+            listOf(
+                it[USER_PREF],
+                it[PASSWORD_PREF]
+            ).takeWhile { out ->
+                out != null
+            }
+        }.first()
+        if (savedUser.isNotEmpty()) {
+            userName(savedUser[0] ?: "")
+            password(savedUser[1] ?: "")
+        }
+        return savedUser.isNotEmpty()
     }
 
     suspend fun clearData() {
         store.edit {
-            it.clear()
+            it.remove(AUTH_KEY_PREF)
+        }
+    }
+
+    suspend fun deleteSavedUser() {
+        store.edit {
+            it.remove(USER_PREF)
+            it.remove(PASSWORD_PREF)
         }
     }
 }

@@ -116,7 +116,6 @@ fun DiscussionScreen(
             controller.popBackStack()
         }
     )
-
     if (shouldShowPlaylistSelector) {
         MenuListDialog(onDismiss = {
             shouldShowPlaylistSelector = false
@@ -172,9 +171,10 @@ private fun MainScreen(
 
                     color = MainBlueColor
                 )
-                SideEffect {
+                LaunchedEffect(key1 = Unit, block = {
                     playSelectedVideo(videoList[it], context, player = playerExo)
-                }
+                })
+
                 DisposableEffect(key1 = true, effect = {
                     onDispose {
                         playerExo.release()

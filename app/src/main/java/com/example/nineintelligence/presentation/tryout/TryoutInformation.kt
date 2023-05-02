@@ -232,6 +232,7 @@ fun TryoutInformation(
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = {
+                        viewModel.startTryout(slugname)
                         controller.navigate(
                             NavigationHolder.ExamScreen.route + "/$slugname/" +
                                     "${tryoutInfo?.tryoutDetails?.duration}"

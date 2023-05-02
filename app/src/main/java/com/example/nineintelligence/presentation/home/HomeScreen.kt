@@ -183,7 +183,7 @@ fun HomeScreen(
                         modifier = Modifier.padding(
                             top = 32.dp,
                             bottom = 64.dp
-                        )
+                        ), upcomingTryout = ""
                     )
                 }
             }
@@ -264,7 +264,7 @@ fun HomeScreen(
                         type = NavType.StringType
                         defaultValue = ""
                     }
-                )) {out->
+                )) { out ->
                 val getSlug = out.arguments?.getString("slug")
                 ExamScreen(
                     controller = controller, modifier = Modifier
@@ -368,7 +368,8 @@ private fun HeaderRow(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreenChild(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    upcomingTryout: String = ""
 ) {
     var shouldShowReminderDialog by remember {
         mutableStateOf(false)

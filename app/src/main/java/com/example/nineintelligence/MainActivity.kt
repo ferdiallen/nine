@@ -14,12 +14,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.RootNavigation
+import com.example.nineintelligence.presentation.discuss.DiscussionScreen
 import com.example.nineintelligence.presentation.dummy.SubmitTest
 import com.example.nineintelligence.presentation.enter.LoginForm
 import com.example.nineintelligence.presentation.enter.RegisterScreen
 import com.example.nineintelligence.presentation.exam.ExamScreen
+import com.example.nineintelligence.presentation.home.HomeScreen
 import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import org.koin.android.ext.android.get
 
 @UnstableApi
@@ -39,8 +42,8 @@ class MainActivity : ComponentActivity() {
                     /*MainReadingSubject(
                         modifier = Modifier.padding(horizontal = 12.dp) 
                     )*/
-                    /*RootNavigation()*/
-                    RegisterScreen(controller = rememberNavController())
+                     RootNavigation()
+                    /*RegisterScreen(controller = rememberNavController())*/
                     /*ProfileScreen(
                         Modifier
                             .fillMaxSize()
@@ -69,6 +72,11 @@ class MainActivity : ComponentActivity() {
                         typeOf = ExamType.TAKE_EXAMS, slugName = "tryout-testing-1", time = 60
                     )*/
                     /*BankSoal(controller = rememberNavController(), modifier = Modifier.fillMaxSize())*/
+                    /*HomeScreen(
+                        systemUi = rememberSystemUiController(),
+                        rootController = rememberNavController()
+                    )*/
+                   /* DiscussionScreen(typeOf = "", controller = rememberNavController())*/
                 }
             }
         }

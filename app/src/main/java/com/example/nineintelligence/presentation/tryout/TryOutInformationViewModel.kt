@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.domain.models.GetSoalModel
 import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
+import com.example.nineintelligence.domain.use_case.tryout_use_case.StartTryoutUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakenTryOutUseCase
 import com.example.nineintelligence.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
@@ -15,13 +16,32 @@ import kotlinx.coroutines.launch
 
 class TryOutInformationViewModel(
     private val takenTryOutUseCase: TakenTryOutUseCase,
-    private val getSoalUseCase: GetSoalUseCase
+    private val getSoalUseCase: GetSoalUseCase,
+    private val startTryoutUseCase: StartTryoutUseCase
 ) : ViewModel() {
     private val _takenTryOutInformation = MutableStateFlow<TakenTryOutModel?>(null)
     val takenTryOutInformation = _takenTryOutInformation.asStateFlow()
 
     private val _getSoal = MutableStateFlow<List<GetSoalModel>>(emptyList())
     val getSoal = _getSoal.asStateFlow()
+
+    fun startTryout(slugname: String) = viewModelScope.launch(Dispatchers.IO) {
+        startTryoutUseCase.startTryout(slugname).let {
+            when (it) {
+                is Resource.Success -> {
+                    println(it.data?.duration)
+                }
+
+                is Resource.Error -> {
+
+                }
+
+                else -> {
+
+                }
+            }
+        }
+    }
 
     suspend fun readTryOutRequiredInformation(slugname: String) {
         when (val res = takenTryOutUseCase.getListTakenTryOut()) {

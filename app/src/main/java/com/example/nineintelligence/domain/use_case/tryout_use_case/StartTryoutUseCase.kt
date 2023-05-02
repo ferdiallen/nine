@@ -12,10 +12,10 @@ class StartTryoutUseCase(
         return try {
             val res = tryout.startTryout(slugname)
             Resource.Success(res)
-        } catch (e: Exception) {
+        }/* catch (e: Exception) {
             println(e.message)
             Resource.Error(e.message)
-        } catch (e: IOException) {
+        }*/ catch (e: IOException) {
             println(e.message)
             Resource.Error(e.message)
         }

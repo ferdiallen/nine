@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
+import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.PlaceholderColor
@@ -68,8 +70,11 @@ fun RegisterScreen(
     var confirmPasswordVisibility by remember {
         mutableStateOf(true)
     }
-    val correctBothPassword = remember(viewModel.password,viewModel.confirmPassword) {
+    val correctBothPassword = remember(viewModel.confirmPassword,viewModel.password) {
         viewModel.password == viewModel.confirmPassword
+    }
+    var hasFocusedConfirmPassword by remember {
+        mutableStateOf(false)
     }
     val context = LocalContext.current
     LaunchedEffect(key1 = registerState, block = {
@@ -278,7 +283,16 @@ fun RegisterScreen(
                                 context
                             )
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged {
+                                if (hasFocusedConfirmPassword) {
+                                    return@onFocusChanged
+                                }
+                                if (it.isFocused) {
+                                    hasFocusedConfirmPassword = true
+                                }
+                            },
                         shape = RoundedCornerShape(14.dp),
                         placeholder = {
                             Text(
@@ -299,7 +313,12 @@ fun RegisterScreen(
                                 )
                             }
                         }, visualTransformation = if (confirmPasswordVisibility)
-                            PasswordVisualTransformation() else VisualTransformation.None
+                            PasswordVisualTransformation() else VisualTransformation.None,
+                        isError = !correctBothPassword, supportingText = {
+                            if(!correctBothPassword){
+                                CustomText(text = "Confirm Password incorrect")
+                            }
+                        }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(

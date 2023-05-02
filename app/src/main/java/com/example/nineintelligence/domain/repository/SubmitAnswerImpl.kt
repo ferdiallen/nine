@@ -20,7 +20,7 @@ class SubmitAnswerImpl(
 ) : SubmitAnswer {
     override suspend fun submitAnswer(answer: SubmitModel, slugName: String): String {
         val res = http.post("${BuildConfig.BASE_URL}tryouts/$slugName/submit") {
-            bearerAuth(prefs.readToken() ?: return@post)
+            bearerAuth(prefs.readTokenNonBlocking() ?: return@post)
             contentType(ContentType.Application.Json)
             setBody(answer)
         }.body<String>()

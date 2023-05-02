@@ -130,7 +130,7 @@ val appModule = module {
         HomeViewModel(get(), get())
     }
     viewModel {
-        TryOutInformationViewModel(get(), get())
+        TryOutInformationViewModel(get(), get(), get())
     }
 
     single<GetBankSoalList> {
