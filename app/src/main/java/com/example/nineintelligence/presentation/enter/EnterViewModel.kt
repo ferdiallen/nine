@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.enter
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
+import kotlin.random.nextInt
 
 class EnterViewModel(
     private val login: LoginUseCase,
@@ -23,10 +26,10 @@ class EnterViewModel(
     private val _currentEmail = MutableStateFlow("")
     private val _currentPassword = MutableStateFlow("")
     private val _isCheckedRememberMe = MutableStateFlow(false)
-    private val _loginState = mutableStateOf(LoginState())
+    private val _loginState: MutableState<LoginState?> = mutableStateOf(null)
     var isLoadingLogin by mutableStateOf(false)
         private set
-    val loginState: State<LoginState> = _loginState
+    val loginState: State<LoginState?> = _loginState
     val currentEmail = _currentEmail.asStateFlow()
     val currentPassword = _currentPassword.asStateFlow()
     val isCheckedRememberMe = _isCheckedRememberMe.asStateFlow()
@@ -58,6 +61,7 @@ class EnterViewModel(
         _isCheckedRememberMe.update { data }
     }
 
+
     fun loginUser(username: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
         isLoadingLogin = true
         login.getUserAuth(username, password).let { out ->
@@ -73,7 +77,10 @@ class EnterViewModel(
 
                 is Resource.Error -> {
                     isLoadingLogin = false
-                    _loginState.value = LoginState(false, null, out.errorMessages ?: "")
+                    _loginState.value = LoginState(
+                        false, null,
+                        out.errorMessages + Random.nextInt(0,100)
+                    )
                 }
 
                 is Resource.Loading -> {

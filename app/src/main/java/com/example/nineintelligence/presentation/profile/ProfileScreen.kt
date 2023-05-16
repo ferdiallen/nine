@@ -1,16 +1,14 @@
 package com.example.nineintelligence.presentation.profile
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.TwoWayConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.animateValueAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -50,6 +48,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalCellularAlt
@@ -81,34 +80,39 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.Navigation
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
+import com.example.nineintelligence.core.isTryoutOver
 import com.example.nineintelligence.core.toPreferrableFormatDate
 import com.example.nineintelligence.domain.models.HistoryModel
+import com.example.nineintelligence.domain.models.TakenBankSoal
 import com.example.nineintelligence.domain.models.TakenTryOutModel
-import com.example.nineintelligence.domain.models.TryoutDataModel
 import com.example.nineintelligence.domain.models.UpdateProfileModel
 import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.domain.util.ActivityType
+import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.domain.util.SettingsModel
+import com.example.nineintelligence.domain.util.TakenTryoutIdentifier.wheterContaintsTakenTryout
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
@@ -127,8 +131,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter
-import java.util.function.BooleanSupplier
-import kotlin.random.Random
 
 
 private val tabNameList = listOf("Statistik", "Kegiatanku", "History")
@@ -137,6 +139,8 @@ private val settingsList = listOf(
     SettingsModel("Edit Profile", Icons.Filled.Edit),
     SettingsModel("Log Out", Icons.Filled.Logout)
 )
+
+private val subActivityList = listOf("Tryout", "Banksoal")
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -157,6 +161,7 @@ fun ProfileScreen(
     val showLoadingProgress by viewModel.shouldShowLoadingScreen.collectAsStateWithLifecycle()
     val takenTryOutData by viewModel.listTakenTryOutModel.collectAsStateWithLifecycle()
     val userHistory by viewModel.userHistory.collectAsStateWithLifecycle()
+    val takenBankSoalList by viewModel.takenBankSoal.collectAsStateWithLifecycle()
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         ChildProfileScreen(
             modifier,
@@ -167,7 +172,7 @@ fun ProfileScreen(
             },
             userDataInfo = userDataInfo,
             pagerState = pagerState, takenTryOutData, controller = controller,
-            userHistory
+            userHistory, takenBankSoal = takenBankSoalList
         )
     }
     if (shouldShowSettingsMenu) {
@@ -229,9 +234,12 @@ private fun ChildProfileScreen(
     userDataInfo: UserProfileModel?,
     pagerState: PagerState,
     takenTryOut: List<TakenTryOutModel>, controller: NavController,
-    history:List<HistoryModel>
+    history: List<HistoryModel>, takenBankSoal: List<TakenBankSoal> = emptyList()
 ) {
     val scope = rememberCoroutineScope()
+    val hasNotTakenTryout = remember(history) {
+        history.wheterContaintsTakenTryout(takenTryOut)
+    }
     Column(
         modifier = modifier
             .animateContentSize(tween(100)),
@@ -295,52 +303,61 @@ private fun ChildProfileScreen(
                     fontWeight = FontWeight.Bold,
                     color = MainYellowColor
                 )
+                Text(
+                    text = userDataInfo?.userEmail ?: "",
+                    fontSize = 12.sp,
+                    fontFamily = font,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 15.sp,
+                    color = MainBlueColor
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.2F),
+                        .fillMaxHeight(0.15F),
                     shape = RoundedCornerShape(0.dp),
                     colors = CardDefaults.cardColors(MainYellowColor)
                 ) {
-                    Column(Modifier.fillMaxSize()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "Jln. Tawangsari No. 44, Lawang, Kab. Malang",
-                                fontSize = 12.sp,
-                                fontFamily = font,
-                                modifier = Modifier.width(113.dp),
-                                textAlign = TextAlign.Center,
-                                lineHeight = 15.sp,
-                                color = MainBlueColor
+                    Column(
+                        Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Row(horizontalArrangement = Arrangement.Center) {
+                            Icon(
+                                imageVector = Icons.Filled.LocationOn,
+                                contentDescription = "",
+                                modifier = Modifier.size(20.dp)
                             )
-                            Spacer(modifier = Modifier.weight(1F))
                             Text(
-                                text = "Bogor, 10 Oktober 2000",
+                                text = userDataInfo?.address ?: "",
                                 fontSize = 12.sp,
                                 fontFamily = font,
                                 modifier = Modifier.width(113.dp),
                                 textAlign = TextAlign.Center,
                                 lineHeight = 15.sp,
-                                color = MainBlueColor
+                                color = MainBlueColor, maxLines = 1
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.Center) {
+                            Icon(
+                                imageVector = Icons.Filled.CalendarMonth,
+                                contentDescription = "",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "Coming Soon",
+                                fontSize = 12.sp,
+                                fontFamily = font,
+                                modifier = Modifier.width(113.dp),
+                                textAlign = TextAlign.Center,
+                                lineHeight = 15.sp,
+                                color = MainBlueColor, maxLines = 1
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = userDataInfo?.userEmail ?: "",
-                            fontSize = 12.sp,
-                            fontFamily = font,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            lineHeight = 15.sp,
-                            color = MainBlueColor
-                        )
                     }
                 }
                 TabRow(selectedTabIndex = pagerState.currentPage) {
@@ -354,7 +371,8 @@ private fun ChildProfileScreen(
                                 text = string,
                                 fontFamily = font,
                                 fontWeight = if (pagerState.currentPage == index) FontWeight.Bold
-                                else FontWeight.Normal
+                                else FontWeight.Normal, maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         })
                     }
@@ -368,25 +386,30 @@ private fun ChildProfileScreen(
                     userScrollEnabled = !isUserScrolled
                 ) { page ->
                     when (page) {
-                        0 -> StatisticScreen(font) {
+                        0 -> StatisticScreen(font, history = history, isScrolling = {
                             isUserScrolled = it
-                        }
+                        }, unfinishedTryout = hasNotTakenTryout)
 
                         1 -> ActivityTab(
                             font = font,
                             type = ActivityType.MYACTIVITY,
-                            takenTryOut,
+                            takenTryOut, secondData = history, navigateToExamScreen = {
+                                controller.navigate(NavigationHolder.ExamScreen.route + "/$it/${0}/${ExamType.BANK_SOAL}")
+                            },
                             navigateToTryOutInformation = {
                                 controller.navigate(
                                     NavigationHolder.TryoutInformation.route
                                             + "/$it"
                                 )
-                            })
+                            }, bankSoalModel = takenBankSoal
+                        )
 
                         2 -> ActivityTab(
                             font = font,
                             type = ActivityType.DISCUSSION,
-                            history, navigateToTryOutInformation = {
+                            history, navigateToExamScreen = {
+
+                            }, navigateToTryOutInformation = {
                                 controller.navigate(NavigationHolder.DiscussionScreen.route)
                             }
                         )
@@ -415,7 +438,7 @@ private fun TopBarMain(font: FontFamily, onBackPress: () -> Unit) {
 @Composable
 private fun StatisticScreen(
     font: FontFamily,
-    isScrolling: (Boolean) -> Unit
+    isScrolling: (Boolean) -> Unit, history: List<HistoryModel>,unfinishedTryout:Int = 0
 ) {
     val scrollState = rememberLazyListState()
     LaunchedEffect(key1 = scrollState.isScrollInProgress, block = {
@@ -453,7 +476,7 @@ private fun StatisticScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "1",
+                            text = "$unfinishedTryout",
                             fontFamily = font,
                             fontSize = 12.sp,
                             color = StrongYellow,
@@ -490,7 +513,7 @@ private fun StatisticScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "1",
+                            text = "${history.size}",
                             fontFamily = font,
                             fontSize = 12.sp,
                             color = StrongGreen,
@@ -527,21 +550,21 @@ private fun StatisticScreen(
                 ) {
                     LazyRow(
                         modifier = Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.Bottom,
                         contentPadding = PaddingValues(horizontal = 8.dp),
                         state = scrollState
                     ) {
-                        items(20) {
-                            var animateInt by remember {
+                        items(history) {
+                            var animateScore by remember {
                                 mutableStateOf(0)
                             }
                             LaunchedEffect(key1 = Unit, block = {
-                                animateInt = Random.nextInt(10, 100)
+                                animateScore = it.hasilTryout?.score ?: 0
                             })
                             val animatedValue = animateIntAsState(
-                                targetValue = animateInt,
-                                tween(450), label = ""
+                                targetValue = animateScore,
+                                tween(250), label = ""
                             )
                             ItemsChart(
                                 animatedValue.value
@@ -582,86 +605,158 @@ private fun ItemsChart(result: Int, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 private fun <T> ActivityTab(
     font: FontFamily,
     type: ActivityType,
     data: List<T>,
+    secondData: List<HistoryModel> = emptyList(),
+    bankSoalModel: List<TakenBankSoal> = emptyList(),
+    navigateToExamScreen: (String) -> Unit,
     navigateToTryOutInformation: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val pagerState = rememberPagerState()
+    val scope = rememberCoroutineScope()
     Column(modifier = Modifier.fillMaxSize()) {
         if (type == ActivityType.MYACTIVITY) {
-            LazyColumn(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp)
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                modifier = Modifier.wrapContentHeight()
             ) {
-                item {
-                    CustomText(
-                        text = "Ongoing",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        color = MainBlueColor,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 30.dp),
-                        textAlign = TextAlign.Start
-                    )
-                }
-                items(data.filterIsInstance<TakenTryOutModel>().filter {
-                    it.details == "Ongoing"
-                }) {
-                    ActivityList(
-                        font = font,
-                        tryOutName = it.tryoutDetails?.tryOutTitle ?: "",
-                        startDate = it.tryoutDetails?.startsAt?.toPreferrableFormatDate() ?: "",
+                subActivityList.forEachIndexed { index, string ->
+                    Tab(
+                        selected = string == subActivityList[pagerState.currentPage],
                         onClick = {
-                            navigateToTryOutInformation.invoke(
-                                it.tryoutDetails?.tryOutSlug ?: return@ActivityList
-                            )
-                        },
-                        activityType = type, buttonEnabled = true, onCardClick = {
-
-                        }
-                    )
-                }
-                item {
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-                item {
-                    CustomText(
-                        text = "Upcoming",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        color = MainBlueColor,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 30.dp),
-                        textAlign = TextAlign.Start
-                    )
-                }
-                items(data.filterIsInstance<TakenTryOutModel>().filter {
-                    it.details == "Upcoming"
-                }) {
-                    ActivityList(
-                        font = font,
-                        tryOutName = it.tryoutDetails?.tryOutTitle.toString(),
-                        startDate = it.tryoutDetails?.startsAt?.toPreferrableFormatDate()
-                            .toString(),
-                        onClick = {
-
-                        },
-                        activityType = type, buttonEnabled = false, onCardClick = {
-                            navigateToTryOutInformation.invoke(
-                                it.tryoutDetails?.tryOutSlug ?: return@ActivityList
-                            )
-                        }
-                    )
+                            scope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        }) {
+                        CustomText(
+                            text = string,
+                            fontWeight = if (index == pagerState.currentPage) FontWeight.Bold
+                            else FontWeight.Normal,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    }
                 }
             }
+            HorizontalPager(
+                count = subActivityList.size,
+                state = pagerState
+            ) {
+                when (it) {
+                    0 -> {
+                        LazyColumn(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp)
+                        ) {
+                            item {
+                                CustomText(
+                                    text = "Ongoing",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = MainBlueColor,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 30.dp),
+                                    textAlign = TextAlign.Start
+                                )
+                            }
+                            items(data.filterIsInstance<TakenTryOutModel>().filter { out ->
+                                out.details == "Ongoing"
+                            }) { data ->
+                                ActivityList(
+                                    font = font,
+                                    tryOutName = data.tryoutDetails?.tryOutTitle ?: "",
+                                    startDate = data.tryoutDetails?.startsAt?.toPreferrableFormatDate()
+                                        ?: "",
+                                    onClick = {
+                                        if (secondData.find { out ->
+                                                out.tryoutDetails?.tryOutSlug == data.tryoutDetails?.tryOutSlug
+                                            } != null) {
+                                            Toast.makeText(
+                                                context,
+                                                "You have submitted this tryout",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            return@ActivityList
+                                        }
+                                        navigateToTryOutInformation.invoke(
+                                            data.tryoutDetails?.tryOutSlug ?: return@ActivityList
+                                        )
+                                    },
+                                    activityType = type, buttonEnabled = true, onCardClick = {
 
-        }else{
+                                    }
+                                )
+                            }
+                            item {
+                                Spacer(modifier = Modifier.height(4.dp))
+                            }
+                            item {
+                                CustomText(
+                                    text = "Upcoming",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = MainBlueColor,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 30.dp),
+                                    textAlign = TextAlign.Start
+                                )
+                            }
+                            items(data.filterIsInstance<TakenTryOutModel>().filter { out ->
+                                out.details == "Upcoming" && out.tryoutDetails?.endsAt?.isTryoutOver() == false
+                            }) {
+                                ActivityList(
+                                    font = font,
+                                    tryOutName = it.tryoutDetails?.tryOutTitle.toString(),
+                                    startDate = it.tryoutDetails?.startsAt?.toPreferrableFormatDate()
+                                        .toString(),
+                                    onClick = {
+
+                                    },
+                                    activityType = type, buttonEnabled = false, onCardClick = {
+
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    1 -> {
+                        LazyColumn(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp)
+                        ) {
+                            items(bankSoalModel) { data ->
+                                ActivityList(
+                                    font = font,
+                                    tryOutName = data.tryoutDetails?.tryOutTitle ?: "",
+                                    startDate = data.tryoutDetails?.createdAt?.toPreferrableFormatDate()
+                                        ?: "",
+                                    onClick = {
+                                        navigateToExamScreen.invoke(
+                                            data.tryoutDetails?.tryOutSlug ?: return@ActivityList
+                                        )
+                                    },
+                                    activityType = type, buttonEnabled = true, onCardClick = {
+
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize(),
@@ -696,7 +791,7 @@ private fun <T> ActivityTab(
 private fun ActivityList(
     font: FontFamily,
     tryOutName: String,
-    startDate: String,
+    startDate: String = "",
     activityType: ActivityType,
     onClick: () -> Unit,
     buttonEnabled: Boolean = false,
@@ -775,6 +870,7 @@ private fun ProfileEdit(
     onSaved: (UpdateProfileModel) -> Unit, font: FontFamily,
     onTapExit: () -> Unit, enableOnDismiss: Boolean, currentData: UserProfileModel?
 ) {
+    val focusState = LocalFocusManager.current
     var temporaryUserProfile: Uri? by remember {
         mutableStateOf(null)
     }
@@ -828,9 +924,11 @@ private fun ProfileEdit(
     if (shouldShowDatePicker) {
         DatePickerDialog(onDismissRequest = {
             shouldShowDatePicker = false
+            focusState.clearFocus()
         }, onDateChange = {
             birthDate = it.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
             shouldShowDatePicker = false
+            focusState.clearFocus()
         })
     }
     Box(
@@ -864,7 +962,6 @@ private fun ProfileEdit(
                         modifier = Modifier
                             .wrapContentHeight()
                             .statusBarsPadding()
-                            .navigationBarsPadding()
                             .imePadding()
                             .padding(12.dp)
                     ) {
@@ -975,7 +1072,7 @@ private fun ProfileEdit(
                                                 imageVector = Icons.Filled.ArrowBackIosNew,
                                                 contentDescription = null,
                                                 modifier = Modifier.rotate(
-                                                    if (shouldExpandGenderList) 270F else 90F
+                                                    if (shouldExpandGenderList) 90F else 270F
                                                 )
                                             )
                                         }
@@ -1059,7 +1156,13 @@ private fun ProfileEdit(
                                         )
                                     }
                                 }, readOnly = true,
-                                modifier = Modifier.fillMaxWidth(0.9F)
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9F)
+                                    .onFocusChanged {
+                                        if (it.hasFocus) {
+                                            shouldShowDatePicker = !shouldShowDatePicker
+                                        }
+                                    }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(

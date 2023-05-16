@@ -1,5 +1,7 @@
 package com.example.nineintelligence.core
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,6 +35,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +49,7 @@ import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.launch
 
 
 private val paymentOptions = listOf(
@@ -64,12 +71,13 @@ fun PaymentDialog(modifier: Modifier = Modifier) {
             pagerState.currentPage
         }
     }
+    val scope = rememberCoroutineScope()
     LaunchedEffect(key1 = currentPage, block = {
         when (pagerState.currentPage) {
             0 -> currentCardColor = Color.White
             1 -> currentCardColor = Color.White
             2 -> currentCardColor = Color.Green
-            3 -> currentCardColor = Color.Red.copy(0.5F)
+            3 -> currentCardColor = Color.Red
             4 -> currentCardColor = Color.White
         }
     })
@@ -81,8 +89,12 @@ fun PaymentDialog(modifier: Modifier = Modifier) {
         HorizontalPager(count = 5, state = pagerState) {
             when (it) {
                 0 -> {
-                    SelectingPayment(selectedPayment = selectedPayment, onSelectedPayment = {
-                        selectedPayment = it
+                    SelectingPayment(selectedPayment = selectedPayment, onSelectedPayment = { out ->
+                        selectedPayment = out
+                    }, onPayButtonClicked = {
+                        scope.launch {
+                            pagerState.scrollToPage(pagerState.currentPage + 1)
+                        }
                     })
                 }
 
@@ -110,7 +122,7 @@ fun PaymentDialog(modifier: Modifier = Modifier) {
 
 @Composable
 private fun SelectingPayment(
-    selectedPayment: String, onSelectedPayment: (String) -> Unit
+    selectedPayment: String, onSelectedPayment: (String) -> Unit, onPayButtonClicked: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -164,7 +176,9 @@ private fun SelectingPayment(
             }
         }
         Button(
-            onClick = { },
+            onClick = {
+                onPayButtonClicked.invoke()
+            },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(4.dp),
             colors = ButtonDefaults.buttonColors(MainBlueColor)
@@ -177,7 +191,7 @@ private fun SelectingPayment(
 @Composable
 private fun LoadingPayment() {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.wrapContentSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -231,7 +245,7 @@ private fun PaymentAccepted() {
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(45.dp)
+            modifier = Modifier.size(80.dp)
         )
     }
 }
@@ -241,6 +255,7 @@ private fun PaymentDeclined() {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.White.copy(0.3F))
             .padding(bottom = 12.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
@@ -259,7 +274,13 @@ private fun PaymentDeclined() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CustomText(text = "Pembayaran Gagal", color = Color.White)
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+        Icon(
+            imageVector = Icons.Rounded.Error,
+            contentDescription = "",
+            modifier = Modifier.size(80.dp), tint = Color.White
+        )
+        Spacer(modifier = Modifier.height(12.dp))
         CustomText(
             text = "Silahkan cek kembali apakah semua data sudah benar",
             textAlign = TextAlign.Center,
@@ -321,8 +342,7 @@ private fun InvoiceGenerated(
             }
             Spacer(modifier = Modifier.height(12.dp))
             CustomText(
-                text = "Anda telah berlangganan paket ." +
-                        " Selamat menikmati dan tetap semangat untuk belajar!",
+                text = "Anda telah berlangganan paket ." + " Selamat menikmati dan tetap semangat untuk belajar!",
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(12.dp))

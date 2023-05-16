@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -41,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -58,6 +62,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
+import com.example.nineintelligence.core.CustomSnackBar
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
@@ -65,6 +70,7 @@ import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.example.nineintelligence.ui.theme.PlaceholderColor
 import com.example.nineintelligence.ui.theme.Poppins
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,16 +88,16 @@ fun LoginForm(
     var hasFocusedEmail by remember {
         mutableStateOf(false)
     }
+    var shouldShowSnackbar by remember {
+        mutableStateOf(false)
+    }
     val userData by viewModel.loginState
-    LaunchedEffect(key1 = userData.tokenData, block = {
-        if (userData.tokenData != "" && userData.tokenData != null) {
-            controller.navigate(NavigationHolder.HomeScreen.route) {
-                popUpTo(NavigationHolder.LoginScreen.route) {
-                    inclusive = true
-                }
-            }
+    LaunchedEffect(key1 = userData, block = {
+        if(userData!=null){
+            shouldShowSnackbar = true
         }
     })
+
     val isErrorEmailAddress = remember(email) {
         !Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
@@ -122,150 +128,177 @@ fun LoginForm(
                 shape = RoundedCornerShape(36.dp, 36.dp),
                 colors = CardDefaults.cardColors(Color.White)
             ) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(top = 24.dp)
                         .padding(horizontal = 28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "Login",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = font
-                    )
-                    Spacer(modifier = Modifier.height(70.dp))
-                    Text(
-                        text = "Username",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Start,
-                        fontFamily = font
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = viewModel::onEmailChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onFocusChanged {
-                                if (hasFocusedEmail) {
-                                    return@onFocusChanged
-                                }
-                                hasFocusedEmail = it.isFocused
-                            },
-                        shape = RoundedCornerShape(14.dp),
-                        placeholder = {
-                            Text(
-                                text = "Email or Phone Number",
-                                fontWeight = FontWeight.SemiBold,
-                                color = PlaceholderColor.copy(0.7F),
-                                fontFamily = font,
-                                fontSize = 14.sp
-                            )
-                        },
-                        isError = if (hasFocusedEmail) isErrorEmailAddress else false,
-                        singleLine = true,
-                        supportingText = {
-                            if (hasFocusedEmail && isErrorEmailAddress) {
-                                CustomText(text = "Invalid Email Address")
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        text = "Password",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Start,
-                        fontFamily = font
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = viewModel::onPasswordChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        placeholder = {
-                            Text(
-                                text = "Password",
-                                fontWeight = FontWeight.SemiBold,
-                                color = PlaceholderColor.copy(0.7F),
-                                fontFamily = font,
-                                fontSize = 14.sp
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = {
-                                passwordVisibility = !passwordVisibility
-                            }) {
-                                Icon(
-                                    imageVector = if (passwordVisibility) Icons.Filled.VisibilityOff
-                                    else Icons.Filled.Visibility, contentDescription = null
-                                )
-                            }
-                        },
-                        visualTransformation = if (passwordVisibility) PasswordVisualTransformation()
-                        else VisualTransformation.None,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = checkedRemember,
-                            onCheckedChange = viewModel::onCheckedChange,
-                            colors = CheckboxDefaults.colors(checkedColor = MainBlueColor)
+                    item {
+                        Text(
+                            text = "Login",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = font
                         )
-                        Text(text = "Remember Me", modifier = Modifier.clickable {
-                            viewModel.onCheckedChange(data = !checkedRemember)
-                        }, fontFamily = font, fontSize = 14.sp, color = MainBlueColor)
-                    }
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Button(
-                        onClick = {
-                            viewModel.loginUser(email, password)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MainYellowColor)
-                    ) {
-                        Text(text = "Sign In", fontSize = 16.sp, fontFamily = font)
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ClickableText(text = annotatedText, onClick = { offset ->
-                        annotatedText.getStringAnnotations(
-                            tag = context.getString(R.string.signup_tag),
-                            start = offset,
-                            end = offset
-                        ).firstOrNull()?.let { _ ->
-                            controller.navigate(NavigationHolder.RegisterScreen.route)
+                        Spacer(modifier = Modifier.height(70.dp))
+                        Text(
+                            text = "Username",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Start,
+                            fontFamily = font
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = viewModel::onEmailChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onFocusChanged {
+                                    if (hasFocusedEmail) {
+                                        return@onFocusChanged
+                                    }
+                                    hasFocusedEmail = it.isFocused
+                                },
+                            shape = RoundedCornerShape(14.dp),
+                            placeholder = {
+                                Text(
+                                    text = "Email or Phone Number",
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PlaceholderColor.copy(0.7F),
+                                    fontFamily = font,
+                                    fontSize = 14.sp
+                                )
+                            },
+                            isError = if (hasFocusedEmail) isErrorEmailAddress else false,
+                            singleLine = true,
+                            supportingText = {
+                                if (hasFocusedEmail && isErrorEmailAddress) {
+                                    CustomText(text = "Invalid Email Address")
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            text = "Password",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Start,
+                            fontFamily = font
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = viewModel::onPasswordChange,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            placeholder = {
+                                Text(
+                                    text = "Password",
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PlaceholderColor.copy(0.7F),
+                                    fontFamily = font,
+                                    fontSize = 14.sp
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    passwordVisibility = !passwordVisibility
+                                }) {
+                                    Icon(
+                                        imageVector = if (passwordVisibility) Icons.Filled.VisibilityOff
+                                        else Icons.Filled.Visibility, contentDescription = null
+                                    )
+                                }
+                            },
+                            visualTransformation = if (passwordVisibility) PasswordVisualTransformation()
+                            else VisualTransformation.None,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = checkedRemember,
+                                onCheckedChange = viewModel::onCheckedChange,
+                                colors = CheckboxDefaults.colors(checkedColor = MainBlueColor)
+                            )
+                            Text(text = "Remember Me", modifier = Modifier.clickable {
+                                viewModel.onCheckedChange(data = !checkedRemember)
+                            }, fontFamily = font, fontSize = 14.sp, color = MainBlueColor)
                         }
-                    }, style = TextStyle(fontFamily = font, fontSize = 12.sp))
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Button(
+                            onClick = {
+                                viewModel.loginUser(email, password)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MainYellowColor)
+                        ) {
+                            Text(text = "Sign In", fontSize = 16.sp, fontFamily = font)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ClickableText(text = annotatedText, onClick = { offset ->
+                            annotatedText.getStringAnnotations(
+                                tag = context.getString(R.string.signup_tag),
+                                start = offset,
+                                end = offset
+                            ).firstOrNull()?.let { _ ->
+                                controller.navigate(NavigationHolder.RegisterScreen.route)
+                            }
+                        }, style = TextStyle(fontFamily = font, fontSize = 12.sp))
+                    }
                 }
             }
         }
         Box(
             modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
         ) {
-            if(viewModel.isLoadingLogin){
-                Dialog(onDismissRequest = {  }) {
+            if (viewModel.isLoadingLogin) {
+                Dialog(onDismissRequest = { }) {
                     CircularProgressIndicator(color = MainYellowColor)
                 }
 
             }
         }
     }
-
+    if (shouldShowSnackbar) {
+        if (userData?.hasError == "") {
+            CustomSnackBar(
+                text = "Berhasil Login",
+                tint = Color.Green,
+                icon = Icons.Filled.CheckCircle,
+                onDissmiss = {
+                    shouldShowSnackbar = false
+                    controller.navigate(NavigationHolder.HomeScreen.route) {
+                        popUpTo(NavigationHolder.LoginScreen.route) {
+                            inclusive = true
+                        }
+                    }
+                }, timeOut = 2000L, manualDissmiss = false
+            )
+        } else {
+            CustomSnackBar(
+                text = "Gagal login",
+                tint = Color.Red,
+                icon = Icons.Filled.Cancel,
+                onDissmiss = {
+                    shouldShowSnackbar = false
+                }, timeOut = 2000L, manualDissmiss = false
+            )
+        }
+    }
 }

@@ -48,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -57,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -64,25 +64,25 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
-import com.example.nineintelligence.navigation.NavigationHolder
-import com.example.nineintelligence.presentation.banksoal.BankSoal
-import com.example.nineintelligence.presentation.discuss.DiscussionScreen
-import com.example.nineintelligence.presentation.exam.ExamScreen
-import com.example.nineintelligence.presentation.profile.ProfileScreen
-import com.example.nineintelligence.ui.theme.DeliverCustomFonts
-import com.example.nineintelligence.ui.theme.MainBlueColor
-import com.example.nineintelligence.ui.theme.MainYellowColor
-import com.example.nineintelligence.ui.theme.Poppins
-import com.example.nineintelligence.domain.util.BottomBarData
 import com.example.nineintelligence.core.CustomText
+import com.example.nineintelligence.domain.util.BottomBarData
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.domain.util.WindowType
 import com.example.nineintelligence.domain.util.listBottomNavigation
 import com.example.nineintelligence.domain.util.rememberWindoInfo
+import com.example.nineintelligence.navigation.NavigationHolder
+import com.example.nineintelligence.presentation.banksoal.BankSoal
+import com.example.nineintelligence.presentation.discuss.DiscussionScreen
+import com.example.nineintelligence.presentation.exam.ExamScreen
 import com.example.nineintelligence.presentation.packagescreen.PackageScreen
+import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.presentation.subject.SubjectScreen
 import com.example.nineintelligence.presentation.tryout.TryoutInformation
 import com.example.nineintelligence.presentation.tryout.TryoutScreen
+import com.example.nineintelligence.ui.theme.DeliverCustomFonts
+import com.example.nineintelligence.ui.theme.MainBlueColor
+import com.example.nineintelligence.ui.theme.MainYellowColor
+import com.example.nineintelligence.ui.theme.Poppins
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -113,6 +113,7 @@ fun HomeScreen(
 ) {
     val windowInfo = rememberWindoInfo()
     val currentStack by controller.currentBackStackEntryAsState()
+    val nearestTryoutSchedule by viewModel.upcomingTryout.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = currentStack, block = {
         when (currentStack?.destination?.route) {
             NavigationHolder.HomeScreenChild.route -> systemUi.setStatusBarColor(
@@ -183,7 +184,7 @@ fun HomeScreen(
                         modifier = Modifier.padding(
                             top = 32.dp,
                             bottom = 64.dp
-                        ), upcomingTryout = ""
+                        ), upcomingTryout = nearestTryoutSchedule?.tryoutDetails?.tryOutTitle ?: ""
                     )
                 }
             }
@@ -222,7 +223,7 @@ fun HomeScreen(
                 BankSoal(controller = controller, modifier = Modifier.fillMaxSize())
             }
             composable(
-                route = NavigationHolder.ExamScreen.route + "/{slugName}/{time}",
+                route = NavigationHolder.ExamScreen.route + "/{slugName}/{time}/{type}",
                 enterTransition = {
                     slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(500))
                 }, arguments = listOf(
@@ -237,16 +238,26 @@ fun HomeScreen(
                     ) {
                         type = NavType.IntType
                         nullable = false
+                    },
+                    navArgument(
+                        "type"
+                    ) {
+                        type = NavType.StringType
+                        nullable = false
                     }
                 )
             ) {
                 val getSlug = it.arguments?.getString("slugName")
                 val getTime = it.arguments?.getInt("time")
+                val getType = it.arguments?.getString("type")
                 ExamScreen(
-                    controller = controller, modifier = Modifier
+                    controller = controller,
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 22.dp),
-                    typeOf = ExamType.TAKE_EXAMS, slugName = getSlug ?: "", time = getTime ?: 0
+                    typeOf = ExamType.valueOf(getType ?: ""),
+                    slugName = getSlug ?: "",
+                    time = getTime ?: 0
                 )
             }
             composable(route = NavigationHolder.DiscussionScreen.route) {
@@ -399,7 +410,7 @@ private fun HomeScreenChild(
                         .padding(top = 4.dp)
                 ) {
                     CustomText(
-                        text = "Tryout 1 - Senin, 1 Januari 1999",
+                        text = upcomingTryout,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp)
@@ -469,7 +480,7 @@ private fun HomeScreenChild(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(5) {
+                        items(1) {
                             var currentPercentage by remember {
                                 mutableStateOf(0F)
                             }
@@ -484,7 +495,7 @@ private fun HomeScreenChild(
                                 font = font,
                                 studyName = "Biologi",
                                 percentage = animateProgress,
-                                indexOf = it
+                                indexOf = it + 1
                             )
                         }
                         item {
@@ -696,7 +707,7 @@ private fun BottomBarCustom(
                                         Text(
                                             text = indexAt.label,
                                             fontSize = 11.sp,
-                                            fontFamily = font
+                                            fontFamily = font, maxLines = 1
                                         )
                                     }
 

@@ -1,8 +1,12 @@
 package com.example.nineintelligence.presentation.tryout
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.domain.models.GetSoalModel
+import com.example.nineintelligence.domain.models.StartTryoutResponse
 import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.StartTryoutUseCase
@@ -25,11 +29,14 @@ class TryOutInformationViewModel(
     private val _getSoal = MutableStateFlow<List<GetSoalModel>>(emptyList())
     val getSoal = _getSoal.asStateFlow()
 
+    var startAuthorizedTryout: StartTryoutResponse? by mutableStateOf(null)
+        private set
+
     fun startTryout(slugname: String) = viewModelScope.launch(Dispatchers.IO) {
         startTryoutUseCase.startTryout(slugname).let {
             when (it) {
                 is Resource.Success -> {
-                    println(it.data?.duration)
+                    startAuthorizedTryout = it.data
                 }
 
                 is Resource.Error -> {

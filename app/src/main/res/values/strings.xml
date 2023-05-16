@@ -29,4 +29,6 @@
     <string name="start_at_to_title">%1$s Hari, %2$s Jam, %3$s Menit</string>
     <string name="sign">Daftar</string>
     <string name="tryout_has_started">Tryout sudah dimulai</string>
+    <string name="address">address</string>
+    <string name="gender">gender</string>
 </resources>

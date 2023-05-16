@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.banksoal
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,10 +30,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
+import com.example.nineintelligence.domain.models.BankSoalRegisterState
 import com.example.nineintelligence.ui.theme.DeliverCustomFonts
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
@@ -57,9 +62,22 @@ fun BankSoal(
     modifier: Modifier = Modifier,
     viewModel: BankSoalViewModel = koinViewModel()
 ) {
+    val context = LocalContext.current
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
     val bankSoalList by viewModel.bankSoalList.collectAsStateWithLifecycle()
+    val bankSoalRegisterState by viewModel.registerStateBankSoal.collectAsStateWithLifecycle()
+    val takenBankSoalList by viewModel.takenBankSoal.collectAsStateWithLifecycle()
+    LaunchedEffect(key1 = bankSoalRegisterState, block = {
+        if (bankSoalRegisterState == null) return@LaunchedEffect
+        Toast.makeText(
+            context,
+            if (bankSoalRegisterState?.errorDescription == "") bankSoalRegisterState?.title
+            else "Gagal Mendaftar ${bankSoalRegisterState?.title} " +
+                    "error : ${bankSoalRegisterState?.errorDescription}",
+            Toast.LENGTH_SHORT
+        ).show()
+    })
     BackHandler {
         if (pagerState.currentPage > 0) {
             scope.launch {
@@ -130,8 +148,14 @@ fun BankSoal(
                                     pagerState.animateScrollToPage(1)
                                 }
                             }, onButtonClick = {
-
-                            }
+                                viewModel.takeBankSoal(
+                                    data.bankSoalSlug ?: return@BankSoalItemList,
+                                    title =
+                                    data.bankSoalTitle ?: ""
+                                )
+                            }, disabledButton = takenBankSoalList.find {
+                                it.tryoutDetails?.tryOutSlug == data.bankSoalSlug
+                            } != null
                         )
                     }
                 }
@@ -158,7 +182,7 @@ private fun TopBar(onBackPress: () -> Unit, font: FontFamily) {
 @Composable
 private fun BankSoalItemList(
     font: FontFamily, studyName: String, indexOf: Int,
-    onItemClick: () -> Unit, onButtonClick: () -> Unit
+    onItemClick: () -> Unit, onButtonClick: () -> Unit, disabledButton: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -215,11 +239,15 @@ private fun BankSoalItemList(
                     modifier = Modifier
                         .fillMaxWidth(0.6F)
                         .height(28.dp),
-                    colors = ButtonDefaults.buttonColors(MainBlueColor)
+                    colors = ButtonDefaults.buttonColors(
+                        MainBlueColor,
+                        disabledContainerColor = Color.Gray,
+                    ),
+                    enabled = !disabledButton
                 ) {
                     Text(
                         text = stringResource(R.string.sign), fontFamily = font,
-                        fontSize = 10.sp, color = MainYellowColor
+                        fontSize = 10.sp, color = MainYellowColor, maxLines = 1
                     )
                 }
 

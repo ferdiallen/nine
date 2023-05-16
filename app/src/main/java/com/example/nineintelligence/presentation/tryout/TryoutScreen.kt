@@ -22,6 +22,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,7 +37,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,17 +48,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
+import com.example.nineintelligence.core.CustomSnackBar
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.core.toPreferrableFormatDate
 import com.example.nineintelligence.core.toSimpleDate
 import com.example.nineintelligence.domain.models.TryoutDataModel
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -67,6 +74,15 @@ fun TryoutScreen(
     val takenTryOut by viewModel.hasTakenTryOut.collectAsStateWithLifecycle()
     val tryOutInformation = viewModel.tryOutWarning
     val context = LocalContext.current
+    val tryoutRegisterState by viewModel.tryoutRegisterState.collectAsStateWithLifecycle()
+    var shouldShowSnackbar by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(key1 = tryoutRegisterState, block = {
+        if (tryoutRegisterState == null) return@LaunchedEffect
+        shouldShowSnackbar = true
+        println("Called")
+    })
     Column(modifier) {
         TopBarMain {
             controller.popBackStack()
@@ -114,6 +130,20 @@ fun TryoutScreen(
                 }
             }
         }
+    }
+    if (shouldShowSnackbar) {
+        CustomSnackBar(
+            onDissmiss = {
+                shouldShowSnackbar = false
+            },
+            text = if ((tryoutRegisterState?.errorDescription ?: "") == "")
+                tryoutRegisterState?.title ?: ""
+            else tryoutRegisterState?.errorDescription ?: "",
+            icon = Icons.Filled.Cancel,
+            tint = if ((tryoutRegisterState?.errorDescription
+                    ?: "") == ""
+            ) Color.Green else Color.Red, timeOut = 2000L
+        )
     }
 }
 
@@ -214,7 +244,12 @@ private fun TryOutItem(
                     ),
                     modifier = Modifier.weight(0.9F)
                 ) {
-                    CustomText(text = "Daftar", fontWeight = FontWeight.Bold, color = MainBlueColor)
+                    CustomText(
+                        text = "Daftar",
+                        fontWeight = FontWeight.Bold,
+                        color = MainBlueColor,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

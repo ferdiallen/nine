@@ -99,7 +99,7 @@ fun PackageScreen(
     if (shouldShowPaymentDialog) {
         Dialog(onDismissRequest = { shouldShowPaymentDialog = false }) {
             PaymentDialog(
-                modifier = Modifier.fillMaxHeight(0.85F)
+                modifier = Modifier.height(510.dp)
             )
         }
     }

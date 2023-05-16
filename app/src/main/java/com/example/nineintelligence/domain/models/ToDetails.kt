@@ -15,3 +15,13 @@ data class ToDetails(
     @SerialName("to_summary") val tryOutSummary: String?= null,
     @SerialName("to_title") val tryOutTitle: String?= null
 )
+
+@Serializable
+data class BankSoalDetails(
+    val createdAt: String? = null,
+    val published: Boolean?= null,
+    @SerialName("bs_id") val bankSoalId: Int?= null,
+    @SerialName("bs_slug") val tryOutSlug: String?= null,
+    @SerialName("bs_summary") val tryOutSummary: String?= null,
+    @SerialName("bs_title") val tryOutTitle: String?= null
+)

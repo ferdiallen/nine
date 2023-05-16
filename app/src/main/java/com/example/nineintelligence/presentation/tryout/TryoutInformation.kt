@@ -1,7 +1,8 @@
 package com.example.nineintelligence.presentation.tryout
 
-import android.util.Log
+import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,9 +34,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +51,7 @@ import com.example.nineintelligence.core.toPreferrableFormatDate
 import com.example.nineintelligence.domain.models.TryoutInfoDetail
 import com.example.nineintelligence.domain.models.TryoutInfoModel
 import com.example.nineintelligence.domain.models.calculateMapelAndData
+import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
@@ -86,6 +91,14 @@ fun TryoutInformation(
                 )
                 resultTimeBetween = TryoutInfoModel(res[0], res[1], res[2])
             }
+        }
+    })
+    LaunchedEffect(key1 = viewModel.startAuthorizedTryout, block = {
+        if (viewModel.startAuthorizedTryout != null) {
+            controller.navigate(
+                NavigationHolder.ExamScreen.route + "/$slugname/" +
+                        "${tryoutInfo?.tryoutDetails?.duration}/${ExamType.TAKE_EXAMS}"
+            )
         }
     })
     Column(modifier) {
@@ -208,7 +221,10 @@ fun TryoutInformation(
                         CustomText(text = "Jumlah Soal ", color = Color.White, fontSize = 13.sp)
                         Spacer(modifier = Modifier.weight(1F))
                         CustomText(text = "20", color = MainYellowColor, fontSize = 13.sp)
-                        CustomText(text = " Soal", color = Color.White, fontSize = 13.sp)
+                        CustomText(
+                            text = " Soal", color = Color.White, fontSize = 13.sp,
+                            softWrap = true, maxLines = 1
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -233,10 +249,6 @@ fun TryoutInformation(
                 Button(
                     onClick = {
                         viewModel.startTryout(slugname)
-                        controller.navigate(
-                            NavigationHolder.ExamScreen.route + "/$slugname/" +
-                                    "${tryoutInfo?.tryoutDetails?.duration}"
-                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(
@@ -469,3 +481,185 @@ private fun TopBarMain(onBackPress: () -> Unit) {
         CustomText(text = "Back", fontSize = 16.sp, color = MainBlueColor)
     }
 }
+
+@Preview(
+    showSystemUi = true, showBackground = true,
+    device = "spec:width=1080px,height=2340px,dpi=480"
+)
+@Composable
+private fun TryoutInfoPreview() {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .padding(top = 4.dp)
+    ) {
+        TopBarMain(onBackPress = {
+
+        })
+        Spacer(modifier = Modifier.height(16.dp))
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            colors = CardDefaults.cardColors(MainBlueColor),
+            elevation = CardDefaults.cardElevation(10.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .padding(vertical = 10.dp)
+                    .padding(horizontal = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CustomText(
+                    text = stringResource(R.string.detail_tryout_title),
+                    color = MainYellowColor,
+                    fontWeight = FontWeight.Bold, fontSize = 17.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                CustomText(
+                    text = "Some Title",
+                    color = Color.White,
+                    fontSize = 12.sp
+                )
+                CustomText(
+                    text = "10 April " +
+                            "until " +
+                            "14 April",
+                    color = Color.White,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Divider(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.EditCalendar,
+                        contentDescription = null,
+                        tint = MainYellowColor, modifier = Modifier.size(17.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    CustomText(
+                        text = stringResource(R.string.to_dimulai_title), color = Color.White,
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.weight(1F))
+                    CustomText(
+                        text = "", color = Color.White,
+                        fontSize = 13.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Divider(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(modifier = Modifier.weight(1F)) {
+                        Icon(
+                            imageVector = Icons.Filled.AvTimer,
+                            contentDescription = null,
+                            modifier = Modifier.size(17.dp), tint = MainYellowColor
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        CustomText(
+                            text = "Waktu Tryout",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1F)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        CustomText(
+                            text = "20",
+                            color = MainYellowColor,
+                            fontSize = 13.sp, overflow = TextOverflow.Ellipsis, maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        CustomText(
+                            text = "mnt",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                    }
+                    Card(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(20.dp)
+
+                    ) {}
+                    Row(modifier = Modifier.weight(1F)) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Filled.EditCalendar,
+                            contentDescription = null,
+                            modifier = Modifier.size(17.dp),
+                            tint = MainYellowColor
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        CustomText(
+                            text = "Jumlah Soal ",
+                            color = Color.White,
+                            fontSize = 13.nonScaledSp
+                        )
+                        Spacer(modifier = Modifier.weight(1F))
+                        CustomText(text = "20", color = MainYellowColor, fontSize = 13.nonScaledSp)
+                        CustomText(
+                            text = " Soal",
+                            color = Color.White,
+                            fontSize = 13.nonScaledSp,
+                            overflow = TextOverflow.Ellipsis,
+                            softWrap = true, maxLines = 1
+
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            item {
+                QuestionSection(
+                    Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    tpsItem1 = 0,
+                    tpsItem2 = 0,
+                    tpsItem3 = 0,
+                    tpsItem4 = 0,
+                    tpsItem5 = 0,
+                    tpsItem6 = 0,
+                    tpsItem7 = 0
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = {
+
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(
+                        MainYellowColor
+                    )
+                ) {
+                    CustomText(
+                        text = "Mulai",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = MainBlueColor
+                    )
+                }
+            }
+        }
+    }
+}
+
+val Int.nonScaledSp: TextUnit
+    @Composable get() = (this / LocalDensity.current.fontScale).sp

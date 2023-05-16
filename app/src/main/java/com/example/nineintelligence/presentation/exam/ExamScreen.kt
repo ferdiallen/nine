@@ -49,8 +49,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -74,11 +72,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.domain.models.DiscussModel
-import com.example.nineintelligence.domain.models.GetSoalModel
 import com.example.nineintelligence.domain.models.SubmitModel
 import com.example.nineintelligence.domain.models.UserAnswerData
 import com.example.nineintelligence.domain.util.ExamType
@@ -126,6 +122,10 @@ fun ExamScreen(
                 vm.retrieveSoalList(slugName)
                 vm.getPembahasan(slugName)
             }
+
+            ExamType.BANK_SOAL -> {
+                vm.retrieveBankSoal(slugName)
+            }
         }
     })
     val currentTime by vm.savedTime.collectAsStateWithLifecycle()
@@ -135,6 +135,7 @@ fun ExamScreen(
     val retrievedSoal by vm.listQuestion.collectAsStateWithLifecycle()
     val discussionResponse by vm.discussionResponse.collectAsStateWithLifecycle()
     val resultSubmit by vm.resultSubmit.collectAsStateWithLifecycle()
+    val bankSoalList by vm.bankSoalListQuestion.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = resultSubmit, block = {
         resultSubmit?.let {
             shouldShowDialogOver = false
@@ -157,7 +158,8 @@ fun ExamScreen(
     }
     val listSize by remember {
         derivedStateOf {
-            retrievedSoal.size
+            if (typeOf == ExamType.TAKE_EXAMS || typeOf == ExamType.DISCUSSION) retrievedSoal.size
+            else bankSoalList.size
         }
     }
     val currentPage by remember {
@@ -238,7 +240,9 @@ fun ExamScreen(
                 count = listSize, state = pagerState, userScrollEnabled = false
             ) { out ->
                 QuestionArea(
-                    questionText = retrievedSoal[out].content ?: "",
+                    questionText = if (typeOf == ExamType.TAKE_EXAMS || typeOf == ExamType.DISCUSSION)
+                        retrievedSoal[out].content
+                            ?: "" else bankSoalList[out].content ?: "",
                     userAnswer = if (typeOf == ExamType.TAKE_EXAMS) {
                         savedAnswerViewModel?.find {
                             it.first == out
@@ -252,7 +256,9 @@ fun ExamScreen(
                             ""
                         }
                     },
-                    questionAnswerList = retrievedSoal[out].answers as? List<String> ?: emptyList(),
+                    questionAnswerList = if (typeOf == ExamType.TAKE_EXAMS || typeOf == ExamType.DISCUSSION)
+                        retrievedSoal[out].answers as? List<String>
+                            ?: emptyList() else bankSoalList[out].answers ?: emptyList(),
                     onClickedAnswer = { _, answer ->
                         vm.stateFlowMethodSaveAnswer(
                             out,
@@ -262,7 +268,6 @@ fun ExamScreen(
                     selectedAnswerIndex = savedAnswerViewModel?.find {
                         it.first == out
                     }?.second?.answer ?: "",
-                    parentScreenSize = parentSize,
                     isClickable = typeOf == ExamType.TAKE_EXAMS,
                     showRightWrongAnswer = typeOf == ExamType.DISCUSSION,
                     rightAnswer = if (discussionResponse.isNotEmpty())
@@ -369,6 +374,18 @@ fun ExamScreen(
                         it.first
                     } ?: emptyList(), currentSelected = currentPage)
                 }
+
+                ExamType.BANK_SOAL -> {
+                    QuestionListSelector(questionNumber = bankSoalList.size, onSubmitClick = {
+                        shouldShowDialogOver = !shouldShowDialogOver
+                    }, onGoToSelectedIndex = {
+                        scope.launch {
+                            pagerState.scrollToPage(it)
+                        }
+                    }, hasAnswer = savedAnswerViewModel?.map {
+                        it.first
+                    } ?: emptyList(), currentSelected = currentPage)
+                }
             }
         }
     }
@@ -396,7 +413,6 @@ private fun QuestionArea(
     questionAnswerList: List<String>,
     onClickedAnswer: (Int, String) -> Unit,
     selectedAnswerIndex: String? = null,
-    parentScreenSize: IntSize,
     isClickable: Boolean,
     showRightWrongAnswer: Boolean = false,
     rightAnswer: String

@@ -6,24 +6,18 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.rememberNavController
-import com.example.nineintelligence.core.AuthPrefs
-import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.RootNavigation
-import com.example.nineintelligence.presentation.discuss.DiscussionScreen
-import com.example.nineintelligence.presentation.dummy.SubmitTest
+import com.example.nineintelligence.presentation.banksoal.BankSoal
+import com.example.nineintelligence.presentation.dummy.NotificationTestScreen
 import com.example.nineintelligence.presentation.enter.LoginForm
-import com.example.nineintelligence.presentation.enter.RegisterScreen
-import com.example.nineintelligence.presentation.exam.ExamScreen
-import com.example.nineintelligence.presentation.home.HomeScreen
+import com.example.nineintelligence.presentation.packagescreen.PackageScreen
 import com.example.nineintelligence.presentation.profile.ProfileScreen
+import com.example.nineintelligence.presentation.tryout.TryoutScreen
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import org.koin.android.ext.android.get
 
 @UnstableApi
 class MainActivity : ComponentActivity() {
@@ -35,6 +29,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
+                    /*PackageScreen(controller = rememberNavController())*/
                     /*SubmitTest()*/
                     /*GreetingReadingSubject(
                         modifier = Modifier.padding(horizontal = 12.dp)
@@ -43,6 +38,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(horizontal = 12.dp) 
                     )*/
                      RootNavigation()
+                    /*NotificationTestScreen()*/
                     /*RegisterScreen(controller = rememberNavController())*/
                     /*ProfileScreen(
                         Modifier
@@ -63,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     /*TryoutInformation(
                         controller = rememberNavController(),
                         modifier = Modifier.padding(horizontal = 12.dp),
-                        slugname = "testing-broww"
+                        slugname = "tryout-testing-draft"
                     )*/
                     /*ExamScreen(
                         controller = rememberNavController(), modifier = Modifier
@@ -71,12 +67,16 @@ class MainActivity : ComponentActivity() {
                             .padding(horizontal = 22.dp),
                         typeOf = ExamType.TAKE_EXAMS, slugName = "tryout-testing-1", time = 60
                     )*/
-                    /*BankSoal(controller = rememberNavController(), modifier = Modifier.fillMaxSize())*/
+                    /*BankSoal(
+                        controller = rememberNavController(),
+                        modifier = Modifier.fillMaxSize()
+                    )*/
                     /*HomeScreen(
                         systemUi = rememberSystemUiController(),
                         rootController = rememberNavController()
                     )*/
                    /* DiscussionScreen(typeOf = "", controller = rememberNavController())*/
+                    /*LoginForm(controller = rememberNavController())*/
                 }
             }
         }

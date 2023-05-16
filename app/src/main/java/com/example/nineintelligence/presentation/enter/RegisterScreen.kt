@@ -70,7 +70,7 @@ fun RegisterScreen(
     var confirmPasswordVisibility by remember {
         mutableStateOf(true)
     }
-    val correctBothPassword = remember(viewModel.confirmPassword,viewModel.password) {
+    val correctBothPassword = remember(viewModel.confirmPassword, viewModel.password) {
         viewModel.password == viewModel.confirmPassword
     }
     var hasFocusedConfirmPassword by remember {
@@ -315,7 +315,7 @@ fun RegisterScreen(
                         }, visualTransformation = if (confirmPasswordVisibility)
                             PasswordVisualTransformation() else VisualTransformation.None,
                         isError = !correctBothPassword, supportingText = {
-                            if(!correctBothPassword){
+                            if (!correctBothPassword) {
                                 CustomText(text = "Confirm Password incorrect")
                             }
                         }

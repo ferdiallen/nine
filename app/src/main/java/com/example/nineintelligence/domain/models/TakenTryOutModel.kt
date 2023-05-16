@@ -9,3 +9,9 @@ data class TakenTryOutModel(
     @SerialName("taken_details") val takenDetails: TakenDetails? = null,
     @SerialName("to_details") val tryoutDetails: ToDetails? = null
 )
+
+@Serializable
+data class TakenBankSoal(
+    @SerialName("bs_details") val tryoutDetails: BankSoalDetails? = null,
+    @SerialName("taken_details") val takenDetails: TakenBankSoalDetails? = null
+)

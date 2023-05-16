@@ -2,11 +2,14 @@ package com.example.nineintelligence.presentation.exam
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nineintelligence.domain.models.BankSoalExamModel
 import com.example.nineintelligence.domain.models.DiscussModel
 import com.example.nineintelligence.domain.models.GetSoalModel
 import com.example.nineintelligence.domain.models.SubmitModel
 import com.example.nineintelligence.domain.models.SubmitResponse
 import com.example.nineintelligence.domain.models.UserAnswerData
+import com.example.nineintelligence.domain.use_case.bank_soal_use_case.GetListBankSoalUseCase
+import com.example.nineintelligence.domain.use_case.exam_use_case.BankSoalGetSoalUseCase
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.DiscussionUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TryoutSubmitUseCase
@@ -26,10 +29,14 @@ import kotlin.time.Duration.Companion.seconds
 class ExamViewModel(
     private val getSoal: GetSoalUseCase,
     private val submitUseCase: TryoutSubmitUseCase,
-    private val discussionUseCase: DiscussionUseCase
+    private val discussionUseCase: DiscussionUseCase,
+    private val getListBankSoalUseCase:BankSoalGetSoalUseCase
 ) : ViewModel() {
     private var _listQuestion = MutableStateFlow<List<GetSoalModel>>(emptyList())
     val listQuestion = _listQuestion.asStateFlow()
+
+    private val _bankSoalListQuestion = MutableStateFlow<List<BankSoalExamModel>>(emptyList())
+    val bankSoalListQuestion = _bankSoalListQuestion.asStateFlow()
 
     private var _resultSubmit = MutableStateFlow<SubmitResponse?>(null)
     val resultSubmit = _resultSubmit.asStateFlow()
@@ -61,6 +68,24 @@ class ExamViewModel(
             }
 
             is Resource.Empty -> {
+
+            }
+        }
+    }
+
+    suspend fun retrieveBankSoal(slugName: String) {
+        when (val res = getListBankSoalUseCase.getBankSoalQuestion(slugName)) {
+            is Resource.Success -> {
+                _bankSoalListQuestion.update {
+                    res?.data ?: emptyList()
+                }
+            }
+
+            is Resource.Error -> {
+
+            }
+
+            else -> {
 
             }
         }

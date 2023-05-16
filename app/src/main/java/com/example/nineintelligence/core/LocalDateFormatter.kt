@@ -1,6 +1,7 @@
 package com.example.nineintelligence.core
 
 import android.util.Log
+import com.example.nineintelligence.domain.models.TakenTryOutModel
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -34,4 +35,21 @@ fun calculateTwoDaysBetween(ends: String): List<String> {
         list.add(minutes.toString())
     }
     return list.toList()
+}
+
+fun String.isTryoutOver(): Boolean {
+    val currentTime = ZonedDateTime.now()
+    val targetTime = ZonedDateTime.parse(this)
+    return currentTime > targetTime
+}
+
+fun List<TakenTryOutModel>.nearestTryoutSchedule(): TakenTryOutModel? {
+    val currentDate = ZonedDateTime.now()
+    val tryoutList = this.find {
+        val eachDateTime = it.tryoutDetails?.startsAt?.toPreferrableFormatDate()
+        val parser = ZonedDateTime.parse(eachDateTime)
+        val res = currentDate.until(parser, ChronoUnit.DAYS)
+        res <= 1
+    }
+    return tryoutList
 }

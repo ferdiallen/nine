@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.domain.models.HistoryModel
+import com.example.nineintelligence.domain.models.TakenBankSoal
 import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.models.UserProfileModel
+import com.example.nineintelligence.domain.use_case.bank_soal_use_case.TakenBankSoalUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.HistoryUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
@@ -14,6 +16,7 @@ import com.example.nineintelligence.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,7 +25,8 @@ class ProfileViewModel(
     private val useCase: DetailProfileUseCase,
     private val updateUseCase: UpdateProfileUseCase,
     private val listTakenTryOut: TakenTryOutUseCase,
-    private val historyUseCase: HistoryUseCase
+    private val historyUseCase: HistoryUseCase,
+    private val takenBankSoalUseCase: TakenBankSoalUseCase
 ) : ViewModel() {
     private val _userDataInfo = MutableStateFlow<UserProfileModel?>(null)
     val userDataInfo = _userDataInfo.asStateFlow()
@@ -35,11 +39,33 @@ class ProfileViewModel(
     private val _userHistory = MutableStateFlow<List<HistoryModel>>(emptyList())
     val userHistory = _userHistory.asStateFlow()
 
+    private val _takenBankSoalList = MutableStateFlow<List<TakenBankSoal>>(emptyList())
+    val takenBankSoal = _takenBankSoalList.asStateFlow()
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             getUserInfo()
             getTakenTryOut()
             getUserHistory()
+            getListTakenBankSoal()
+        }
+    }
+
+    private suspend fun getListTakenBankSoal() {
+        when (val res = takenBankSoalUseCase.getListTakenBankSoal()) {
+            is Resource.Success -> {
+                _takenBankSoalList.update {
+                    res.data ?: emptyList()
+                }
+            }
+
+            is Resource.Error -> {
+
+            }
+
+            else -> {
+
+            }
         }
     }
 

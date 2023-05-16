@@ -33,6 +33,11 @@ class RegisterViewModel(
     var confirmPassword by mutableStateOf("")
         private set
 
+    var address by mutableStateOf("")
+        private set
+    var gender by mutableStateOf("")
+        private set
+
     fun setDataFor(data: String, type: String, context: Context) {
         when (type) {
             context.getString(R.string.userfirstname) -> {
@@ -58,10 +63,23 @@ class RegisterViewModel(
             context.getString(R.string.confirmpassword) -> {
                 confirmPassword = data
             }
+
+            context.getString(R.string.address) -> {
+                address = data
+            }
+
+            context.getString(R.string.gender) -> {
+                gender = data
+            }
         }
     }
 
-    fun registerUser(name: String, email: String, password: String, phoneNumber: String) =
+    fun registerUser(
+        name: String,
+        email: String,
+        password: String,
+        phoneNumber: String
+    ) =
         viewModelScope.launch(Dispatchers.IO) {
             val register = user.registerUser(name, email, password, phoneNumber)
             register?.let { out ->

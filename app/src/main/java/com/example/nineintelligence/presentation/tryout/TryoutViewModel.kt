@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.core.AuthPrefs
+import com.example.nineintelligence.domain.models.BankSoalRegisterState
 import com.example.nineintelligence.domain.models.TryoutDataModel
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakeTryOutUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakenTryOutUseCase
@@ -27,6 +28,9 @@ class TryoutViewModel(
     val tryoutState = _tryoutState.asStateFlow()
     private val _hasTakenTryOut = MutableStateFlow<List<String>>(emptyList())
     val hasTakenTryOut = _hasTakenTryOut.asStateFlow()
+
+    private val _tryoutRegisterState = MutableStateFlow<BankSoalRegisterState?>(null)
+    val tryoutRegisterState = _tryoutRegisterState.asStateFlow()
     var tryOutWarning by mutableStateOf("")
         private set
 
@@ -94,18 +98,22 @@ class TryoutViewModel(
     }
 
     fun signTryOut(slugName: String) = viewModelScope.launch(Dispatchers.IO) {
-        val res = signTryout.takeTryOut(slugName)
-        when (res) {
+        when (val res = signTryout.takeTryOut(slugName)) {
             is Resource.Success -> {
                 checkWhetherHasTakenTryOut()
-                println(res.data?.type)
+                _tryoutRegisterState.update {
+                    BankSoalRegisterState("Sukses mendaftar tryout")
+                }
             }
 
             is Resource.Loading -> {
-                println("Loading")
+
             }
 
             is Resource.Error -> {
+                _tryoutRegisterState.update {
+                    BankSoalRegisterState("Gagal Mendaftar Tryout", "Error")
+                }
                 if (res.errorMessages?.contains("You have taken") == true) {
                     tryOutWarning = "You have taken this tryout"
                 } else if (res.errorMessages?.contains("400") == true) {
@@ -114,7 +122,7 @@ class TryoutViewModel(
             }
 
             is Resource.Empty -> {
-                println("Empty")
+
             }
         }
     }

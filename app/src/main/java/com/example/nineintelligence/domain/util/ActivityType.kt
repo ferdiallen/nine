@@ -7,5 +7,6 @@ enum class ActivityType {
 
 enum class ExamType{
     TAKE_EXAMS,
-    DISCUSSION
+    DISCUSSION,
+    BANK_SOAL
 }
