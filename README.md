@@ -20,7 +20,7 @@ Smart Tryout application designed to make it easy for students to challenge thei
 
 ## Demo
 
-Currently NineIntelligence is in alpha state (0.6) and are not ready yet for production mode. But you can download demo available and install it yourself. Note that some features may changes during production mode. 
+Currently NineIntelligence is in alpha state (0.7) and are not ready yet for production mode. But you can download demo available and install it yourself. Note that some features may changes during production mode. 
 
 
 ## Usage/Examples
