@@ -46,7 +46,7 @@ fun String.isTryoutOver(): Boolean {
 fun List<TakenTryOutModel>.nearestTryoutSchedule(): TakenTryOutModel? {
     val currentDate = ZonedDateTime.now()
     val tryoutList = this.find {
-        val eachDateTime = it.tryoutDetails?.startsAt?.toPreferrableFormatDate()
+        val eachDateTime = it.tryoutDetails?.startsAt
         val parser = ZonedDateTime.parse(eachDateTime)
         val res = currentDate.until(parser, ChronoUnit.DAYS)
         res <= 1

@@ -65,6 +65,7 @@ import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
+import com.example.nineintelligence.core.toPreferrableFormatDate
 import com.example.nineintelligence.domain.util.BottomBarData
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.domain.util.WindowType
@@ -184,7 +185,9 @@ fun HomeScreen(
                         modifier = Modifier.padding(
                             top = 32.dp,
                             bottom = 64.dp
-                        ), upcomingTryout = nearestTryoutSchedule?.tryoutDetails?.tryOutTitle ?: ""
+                        ), upcomingTryout = nearestTryoutSchedule?.tryoutDetails?.tryOutTitle ?: "",
+                        upcomingTryoutDate = nearestTryoutSchedule?.tryoutDetails?.startsAt?.toPreferrableFormatDate()
+                            ?: ""
                     )
                 }
             }
@@ -380,7 +383,7 @@ private fun HeaderRow(
 @Composable
 private fun HomeScreenChild(
     modifier: Modifier = Modifier,
-    upcomingTryout: String = ""
+    upcomingTryout: String = "", upcomingTryoutDate: String = ""
 ) {
     var shouldShowReminderDialog by remember {
         mutableStateOf(false)
@@ -410,7 +413,7 @@ private fun HomeScreenChild(
                         .padding(top = 4.dp)
                 ) {
                     CustomText(
-                        text = upcomingTryout,
+                        text = "$upcomingTryout, $upcomingTryoutDate",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp)

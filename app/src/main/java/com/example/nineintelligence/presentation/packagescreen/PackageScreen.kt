@@ -35,11 +35,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.core.PaymentDialog
+import com.example.nineintelligence.core.toProperRupiah
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
+import org.koin.androidx.compose.koinViewModel
 
 data class PackageModel(
     val id: Int, val packageName: String, val packagePrice: String, val pakcageDescription: String
@@ -62,11 +65,17 @@ private val packageOptions = listOf(
 
 @Composable
 fun PackageScreen(
-    modifier: Modifier = Modifier,controller: NavController
+    modifier: Modifier = Modifier,
+    controller: NavController,
+    viewModel: PackageViewModel = koinViewModel()
 ) {
     var shouldShowPaymentDialog by remember {
         mutableStateOf(false)
     }
+    var selectedPrice by remember {
+        mutableStateOf("")
+    }
+    val paymentItems by viewModel.paymentItemList.collectAsStateWithLifecycle()
     Column(modifier) {
         TopBarMain(onBackPress = {
             controller.popBackStack()
@@ -83,13 +92,14 @@ fun PackageScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp)
         ) {
-            items(packageOptions) {
+            items(paymentItems) {
                 PackageItem(
-                    name = it.packageName,
-                    price = it.packagePrice,
-                    desc = it.pakcageDescription,
-                    onClickItem = {
+                    name = it.itemName ?: "",
+                    price = it.price?.toProperRupiah() ?: "",
+                    desc = "",
+                    onClickItem = {out->
                         shouldShowPaymentDialog = !shouldShowPaymentDialog
+                        selectedPrice = out
                     }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -99,7 +109,7 @@ fun PackageScreen(
     if (shouldShowPaymentDialog) {
         Dialog(onDismissRequest = { shouldShowPaymentDialog = false }) {
             PaymentDialog(
-                modifier = Modifier.height(510.dp)
+                modifier = Modifier.height(510.dp), price = selectedPrice
             )
         }
     }
@@ -123,7 +133,7 @@ private fun TopBarMain(onBackPress: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PackageItem(
-    name: String, price: String, desc: String, onClickItem: () -> Unit
+    name: String, price: String, desc: String, onClickItem: (String) -> Unit
 ) {
     var shouldExpand by remember {
         mutableStateOf(false)
@@ -137,7 +147,7 @@ private fun PackageItem(
             .fillMaxWidth()
             .wrapContentHeight(), onClick = {
             if (shouldExpand) {
-                onClickItem.invoke()
+                onClickItem.invoke(price)
             }
         }
     ) {

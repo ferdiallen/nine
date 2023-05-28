@@ -11,6 +11,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -66,6 +68,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +82,8 @@ import com.example.nineintelligence.domain.models.SubmitModel
 import com.example.nineintelligence.domain.models.UserAnswerData
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.NavigationHolder
+import com.example.nineintelligence.ui.theme.CorrectAnswerColor
+import com.example.nineintelligence.ui.theme.IncorrectAnswerColor
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -167,6 +172,7 @@ fun ExamScreen(
             pagerState.currentPage
         }
     }
+    println(currentPage < listSize - 1)
     LaunchedEffect(key1 = currentTime, block = {
         currentTime.toComponents { hours, minutes, seconds, _ ->
             if (hours == 0L && minutes == 0 && seconds == 0) {
@@ -230,6 +236,21 @@ fun ExamScreen(
                 )
             }
         }
+        if (typeOf == ExamType.DISCUSSION) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CustomText(text = "TPS", fontWeight = FontWeight.SemiBold, color = MainBlueColor)
+                Spacer(modifier = Modifier.width(12.dp))
+                CustomText(
+                    text = "Penalaran Umum",
+                    fontWeight = FontWeight.SemiBold,
+                    color = MainYellowColor
+                )
+            }
+
+        }
         Column(
             modifier = Modifier
                 .padding(bottom = 12.dp)
@@ -244,6 +265,10 @@ fun ExamScreen(
                         retrievedSoal[out].content
                             ?: "" else bankSoalList[out].content ?: "",
                     userAnswer = if (typeOf == ExamType.TAKE_EXAMS) {
+                        savedAnswerViewModel?.find {
+                            it.first == out
+                        }?.second?.answer ?: ""
+                    } else if (typeOf == ExamType.BANK_SOAL) {
                         savedAnswerViewModel?.find {
                             it.first == out
                         }?.second?.answer ?: ""
@@ -262,13 +287,16 @@ fun ExamScreen(
                     onClickedAnswer = { _, answer ->
                         vm.stateFlowMethodSaveAnswer(
                             out,
-                            UserAnswerData(retrievedSoal[out].idSoal ?: 0, answer)
+                            UserAnswerData(
+                                if (typeOf == ExamType.TAKE_EXAMS) retrievedSoal[out].idSoal
+                                    ?: 0 else bankSoalList[out].soalId ?: 0, answer
+                            )
                         )
                     },
                     selectedAnswerIndex = savedAnswerViewModel?.find {
                         it.first == out
                     }?.second?.answer ?: "",
-                    isClickable = typeOf == ExamType.TAKE_EXAMS,
+                    isClickable = typeOf == ExamType.TAKE_EXAMS || typeOf == ExamType.BANK_SOAL,
                     showRightWrongAnswer = typeOf == ExamType.DISCUSSION,
                     rightAnswer = if (discussionResponse.isNotEmpty())
                         discussionResponse.find {
@@ -316,7 +344,7 @@ fun ExamScreen(
             }
             Spacer(modifier = Modifier.weight(1F))
             AnimatedVisibility(
-                visible = currentPage < retrievedSoal.size - 1,
+                visible = currentPage < listSize - 1,
                 enter = fadeIn(tween(200)),
                 exit = fadeOut(tween(200))
             ) {
@@ -358,8 +386,6 @@ fun ExamScreen(
                             scope.launch {
                                 pagerState.scrollToPage(it)
                             }
-                        }, allAnswer = discussionResponse.map {
-                            it.userAnswer ?: ""
                         })
                 }
 
@@ -427,7 +453,7 @@ private fun QuestionArea(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp),
+                            .requiredHeight(250.dp),
                         colors = CardDefaults.cardColors(MainYellowColor.copy(0.4F))
                     ) {
                         Box(
@@ -437,7 +463,8 @@ private fun QuestionArea(
                             contentAlignment = Alignment.Center
                         ) {
                             CustomText(
-                                text = questionText, color = MainBlueColor
+                                text = questionText,
+                                color = MainBlueColor
                             )
                         }
                     }
@@ -449,9 +476,9 @@ private fun QuestionArea(
                 Card(colors = when (showRightWrongAnswer) {
                     true -> {
                         CardDefaults.cardColors(
-                            if (rightAnswer == userAnswer && out == rightAnswer) Color.Green
-                            else if (out == rightAnswer) Color.Green
-                            else if (userAnswer == out) Color.Red
+                            if (rightAnswer == userAnswer && out == rightAnswer) CorrectAnswerColor
+                            else if (out == rightAnswer) CorrectAnswerColor
+                            else if (userAnswer == out) IncorrectAnswerColor
                             else Color.Transparent
                         )
                     }
@@ -736,8 +763,7 @@ fun DialogIsOver(onSubmitClick: () -> Unit, onCancelClick: () -> Unit) {
 fun QuestionDiscussionListSelector(
     questionData: List<DiscussModel>,
     onSubmitClick: () -> Unit,
-    onGoToSelectedIndex: (Int) -> Unit,
-    allAnswer: List<String>
+    onGoToSelectedIndex: (Int) -> Unit
 ) {
     var parentSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -753,7 +779,7 @@ fun QuestionDiscussionListSelector(
     }
     LaunchedEffect(key1 = Unit) {
         questionData.forEach {
-            if (allAnswer.contains("")) countRightAnswer++ else countWrongAnswer++
+            if (it.userAnswer == it.soalDetail?.correctAns) countRightAnswer++ else countWrongAnswer++
         }
     }
     LaunchedEffect(key1 = Unit, block = {
@@ -799,7 +825,7 @@ fun QuestionDiscussionListSelector(
                         },
                         colors = CardDefaults.cardColors(
                             if (data.userAnswer == data.soalDetail?.correctAns)
-                                Color.Green else Color.Red
+                                CorrectAnswerColor else IncorrectAnswerColor
                         )
                     ) {
                         Column(

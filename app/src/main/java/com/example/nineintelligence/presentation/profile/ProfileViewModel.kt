@@ -3,6 +3,7 @@ package com.example.nineintelligence.presentation.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nineintelligence.core.AuthPrefs
+import com.example.nineintelligence.domain.models.HistoryBankSoalTryout
 import com.example.nineintelligence.domain.models.HistoryModel
 import com.example.nineintelligence.domain.models.TakenBankSoal
 import com.example.nineintelligence.domain.models.TakenTryOutModel
@@ -36,7 +37,7 @@ class ProfileViewModel(
     private val _listTakenTryOut = MutableStateFlow<List<TakenTryOutModel>>(emptyList())
     val listTakenTryOutModel = _listTakenTryOut.asStateFlow()
 
-    private val _userHistory = MutableStateFlow<List<HistoryModel>>(emptyList())
+    private val _userHistory = MutableStateFlow<HistoryBankSoalTryout?>(null)
     val userHistory = _userHistory.asStateFlow()
 
     private val _takenBankSoalList = MutableStateFlow<List<TakenBankSoal>>(emptyList())
@@ -73,12 +74,12 @@ class ProfileViewModel(
         when (val res = historyUseCase.getHistory()) {
             is Resource.Success -> {
                 _userHistory.update {
-                    res.data ?: emptyList()
+                    res.data ?: return
                 }
             }
 
             is Resource.Error -> {
-
+                println(res.errorMessages)
             }
 
             else -> {

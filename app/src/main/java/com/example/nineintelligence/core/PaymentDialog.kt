@@ -58,7 +58,7 @@ private val paymentOptions = listOf(
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun PaymentDialog(modifier: Modifier = Modifier) {
+fun PaymentDialog(modifier: Modifier = Modifier, price: String = "") {
     val pagerState = rememberPagerState()
     var selectedPayment by remember {
         mutableStateOf("")
@@ -95,7 +95,7 @@ fun PaymentDialog(modifier: Modifier = Modifier) {
                         scope.launch {
                             pagerState.scrollToPage(pagerState.currentPage + 1)
                         }
-                    })
+                    }, price)
                 }
 
                 1 -> {
@@ -122,7 +122,10 @@ fun PaymentDialog(modifier: Modifier = Modifier) {
 
 @Composable
 private fun SelectingPayment(
-    selectedPayment: String, onSelectedPayment: (String) -> Unit, onPayButtonClicked: () -> Unit
+    selectedPayment: String,
+    onSelectedPayment: (String) -> Unit,
+    onPayButtonClicked: () -> Unit,
+    price: String
 ) {
     Column(
         modifier = Modifier

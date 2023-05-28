@@ -1,6 +1,7 @@
 package com.example.nineintelligence.domain.use_case.profile_use_case
 
 import com.example.nineintelligence.data.network.apiservice.History
+import com.example.nineintelligence.domain.models.HistoryBankSoalTryout
 import com.example.nineintelligence.domain.models.HistoryModel
 import com.example.nineintelligence.domain.util.Resource
 import java.io.IOException
@@ -8,7 +9,7 @@ import java.io.IOException
 class HistoryUseCase(
     private val history: History
 ) {
-    suspend fun getHistory(): Resource<List<HistoryModel>> {
+    suspend fun getHistory(): Resource<HistoryBankSoalTryout> {
         return try {
             val res = history.getHistory()
             Resource.Success(res)

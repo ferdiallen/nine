@@ -10,10 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.rememberNavController
+import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.RootNavigation
 import com.example.nineintelligence.presentation.banksoal.BankSoal
 import com.example.nineintelligence.presentation.dummy.NotificationTestScreen
 import com.example.nineintelligence.presentation.enter.LoginForm
+import com.example.nineintelligence.presentation.exam.ExamScreen
 import com.example.nineintelligence.presentation.packagescreen.PackageScreen
 import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.presentation.tryout.TryoutScreen
@@ -38,6 +40,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(horizontal = 12.dp) 
                     )*/
                      RootNavigation()
+                    /*ExamScreen(
+                        controller = rememberNavController(), modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 22.dp),
+                        typeOf = ExamType.DISCUSSION, time = 0, slugName = "test-tryout"
+                    )*/
                     /*NotificationTestScreen()*/
                     /*RegisterScreen(controller = rememberNavController())*/
                     /*ProfileScreen(
@@ -77,6 +85,15 @@ class MainActivity : ComponentActivity() {
                     )*/
                    /* DiscussionScreen(typeOf = "", controller = rememberNavController())*/
                     /*LoginForm(controller = rememberNavController())*/
+                    /*ExamScreen(
+                        controller = rememberNavController(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 22.dp),
+                        typeOf = ExamType.BANK_SOAL,
+                        slugName =  "bank-soal-1",
+                        time = 0
+                    )*/
                 }
             }
         }

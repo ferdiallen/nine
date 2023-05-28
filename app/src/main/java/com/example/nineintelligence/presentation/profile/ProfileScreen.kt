@@ -104,6 +104,7 @@ import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.core.isTryoutOver
 import com.example.nineintelligence.core.toPreferrableFormatDate
+import com.example.nineintelligence.domain.models.HistoryBankSoalTryout
 import com.example.nineintelligence.domain.models.HistoryModel
 import com.example.nineintelligence.domain.models.TakenBankSoal
 import com.example.nineintelligence.domain.models.TakenTryOutModel
@@ -234,11 +235,11 @@ private fun ChildProfileScreen(
     userDataInfo: UserProfileModel?,
     pagerState: PagerState,
     takenTryOut: List<TakenTryOutModel>, controller: NavController,
-    history: List<HistoryModel>, takenBankSoal: List<TakenBankSoal> = emptyList()
+    history: HistoryBankSoalTryout?, takenBankSoal: List<TakenBankSoal> = emptyList()
 ) {
     val scope = rememberCoroutineScope()
     val hasNotTakenTryout = remember(history) {
-        history.wheterContaintsTakenTryout(takenTryOut)
+        history?.tryoutContent?.wheterContaintsTakenTryout(takenTryOut) ?: 0
     }
     Column(
         modifier = modifier
@@ -386,14 +387,21 @@ private fun ChildProfileScreen(
                     userScrollEnabled = !isUserScrolled
                 ) { page ->
                     when (page) {
-                        0 -> StatisticScreen(font, history = history, isScrolling = {
-                            isUserScrolled = it
-                        }, unfinishedTryout = hasNotTakenTryout)
+                        0 -> StatisticScreen(
+                            font,
+                            history = history?.tryoutContent ?: emptyList(),
+                            isScrolling = {
+                                isUserScrolled = it
+                            },
+                            unfinishedTryout = hasNotTakenTryout
+                        )
 
                         1 -> ActivityTab(
                             font = font,
                             type = ActivityType.MYACTIVITY,
-                            takenTryOut, secondData = history, navigateToExamScreen = {
+                            takenTryOut,
+                            secondData = history?.tryoutContent ?: emptyList(),
+                            navigateToExamScreen = {
                                 controller.navigate(NavigationHolder.ExamScreen.route + "/$it/${0}/${ExamType.BANK_SOAL}")
                             },
                             navigateToTryOutInformation = {
@@ -401,16 +409,18 @@ private fun ChildProfileScreen(
                                     NavigationHolder.TryoutInformation.route
                                             + "/$it"
                                 )
-                            }, bankSoalModel = takenBankSoal
+                            },
+                            bankSoalModel = takenBankSoal
                         )
 
                         2 -> ActivityTab(
                             font = font,
                             type = ActivityType.DISCUSSION,
-                            history, navigateToExamScreen = {
+                            history?.tryoutContent ?: emptyList(), navigateToExamScreen = {
 
                             }, navigateToTryOutInformation = {
-                                controller.navigate(NavigationHolder.DiscussionScreen.route)
+                                controller.navigate(NavigationHolder.QuestionDiscussion.route
+                                        + "/$it")
                             }
                         )
                     }
@@ -438,7 +448,7 @@ private fun TopBarMain(font: FontFamily, onBackPress: () -> Unit) {
 @Composable
 private fun StatisticScreen(
     font: FontFamily,
-    isScrolling: (Boolean) -> Unit, history: List<HistoryModel>,unfinishedTryout:Int = 0
+    isScrolling: (Boolean) -> Unit, history: List<HistoryModel>, unfinishedTryout: Int = 0
 ) {
     val scrollState = rememberLazyListState()
     LaunchedEffect(key1 = scrollState.isScrollInProgress, block = {

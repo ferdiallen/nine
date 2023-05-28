@@ -18,6 +18,7 @@ import com.example.nineintelligence.data.network.apiservice.BankSoalQuestion
 import com.example.nineintelligence.data.network.apiservice.DetailUser
 import com.example.nineintelligence.data.network.apiservice.Discussion
 import com.example.nineintelligence.data.network.apiservice.GetBankSoalList
+import com.example.nineintelligence.data.network.apiservice.GetItemsPayment
 import com.example.nineintelligence.data.network.apiservice.GetListTryout
 import com.example.nineintelligence.data.network.apiservice.GetSoal
 import com.example.nineintelligence.data.network.apiservice.History
@@ -36,6 +37,7 @@ import com.example.nineintelligence.domain.repository.BankSoalListImpl
 import com.example.nineintelligence.domain.repository.DetailUserImpl
 import com.example.nineintelligence.domain.repository.DiscussionImpl
 import com.example.nineintelligence.domain.repository.GetBankSoalQuestion
+import com.example.nineintelligence.domain.repository.GetItemsPaymentImpl
 import com.example.nineintelligence.domain.repository.GetSoalImpl
 import com.example.nineintelligence.domain.repository.HistoryImpl
 import com.example.nineintelligence.domain.repository.ListTryOutImpl
@@ -52,6 +54,7 @@ import com.example.nineintelligence.domain.use_case.bank_soal_use_case.TakenBank
 import com.example.nineintelligence.domain.use_case.exam_use_case.BankSoalGetSoalUseCase
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
 import com.example.nineintelligence.domain.use_case.login_use_case.LoginUseCase
+import com.example.nineintelligence.domain.use_case.payment_use_case.GetListPaymentItemsUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.HistoryUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
@@ -68,6 +71,7 @@ import com.example.nineintelligence.presentation.enter.EnterViewModel
 import com.example.nineintelligence.presentation.enter.RegisterViewModel
 import com.example.nineintelligence.presentation.exam.ExamViewModel
 import com.example.nineintelligence.presentation.home.HomeViewModel
+import com.example.nineintelligence.presentation.packagescreen.PackageViewModel
 import com.example.nineintelligence.presentation.profile.ProfileViewModel
 import com.example.nineintelligence.presentation.subject.SubjectViewModel
 import com.example.nineintelligence.presentation.tryout.TryOutInformationViewModel
@@ -134,7 +138,7 @@ val appModule = module {
         ProfileViewModel(get(), get(), get(), get(), get(), get())
     }
     viewModel {
-        HomeViewModel(get(), get(),get())
+        HomeViewModel(get(), get(), get())
     }
     viewModel {
         TryOutInformationViewModel(get(), get(), get())
@@ -247,7 +251,7 @@ val appModule = module {
         DiscussionUseCase(get())
     }
     viewModel {
-        ExamViewModel(get(), get(), get(),get())
+        ExamViewModel(get(), get(), get(), get())
     }
     single<History> {
         HistoryImpl(get(), get())
@@ -260,5 +264,14 @@ val appModule = module {
     }
     single {
         BankSoalGetSoalUseCase(get())
+    }
+    single<GetItemsPayment> {
+        GetItemsPaymentImpl(get(), get())
+    }
+    single {
+        GetListPaymentItemsUseCase(get())
+    }
+    viewModel {
+        PackageViewModel(get())
     }
 }

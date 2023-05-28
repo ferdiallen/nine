@@ -8,3 +8,9 @@ data class HistoryModel(
     @SerialName("to_hasil") val hasilTryout: SubmitResponse? = null,
     @SerialName("to_details") val tryoutDetails: ToDetails? = null
 )
+
+@Serializable
+data class HistoryBankSoalTryout(
+    @SerialName("to_content") val tryoutContent: List<HistoryModel> = emptyList(),
+    @SerialName("bs_content") val bankSoalContent: List<HistoryModel> = emptyList()
+)

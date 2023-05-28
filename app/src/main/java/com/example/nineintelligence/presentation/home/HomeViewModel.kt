@@ -33,6 +33,7 @@ class HomeViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             getUserName()
+            getUpcomingTryout()
         }
     }
 

@@ -1,17 +1,23 @@
 package com.example.nineintelligence.presentation.tryout
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,14 +40,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.nineintelligence.R
@@ -70,6 +80,7 @@ fun TryoutInformation(
     var resultTimeBetween by remember {
         mutableStateOf(TryoutInfoModel())
     }
+    val context = LocalContext.current
     LaunchedEffect(key1 = Unit, block = {
         viewModel.readTryOutRequiredInformation(slugname)
         viewModel.readSoalList(slugname)
@@ -78,6 +89,19 @@ fun TryoutInformation(
     val tryoutInfo by viewModel.takenTryOutInformation.collectAsStateWithLifecycle()
     var tryOutSoalInfo: TryoutInfoDetail? by remember {
         mutableStateOf(null)
+    }
+    var shouldShowConfirmExam by remember {
+        mutableStateOf(false)
+    }
+    if (shouldShowConfirmExam) {
+        Dialog(onDismissRequest = { }) {
+            ConfirmStartTryout(onSubmitClick = {
+                viewModel.startTryout(slugname)
+                shouldShowConfirmExam = false
+            }, onCancelClick = {
+                shouldShowConfirmExam = false
+            })
+        }
     }
     LaunchedEffect(key1 = soalList, block = {
         tryOutSoalInfo = calculateMapelAndData(soalList)
@@ -220,7 +244,11 @@ fun TryoutInformation(
                         Spacer(modifier = Modifier.width(4.dp))
                         CustomText(text = "Jumlah Soal ", color = Color.White, fontSize = 13.sp)
                         Spacer(modifier = Modifier.weight(1F))
-                        CustomText(text = "20", color = MainYellowColor, fontSize = 13.sp)
+                        CustomText(
+                            text = "${soalList?.size}",
+                            color = MainYellowColor,
+                            fontSize = 13.sp
+                        )
                         CustomText(
                             text = " Soal", color = Color.White, fontSize = 13.sp,
                             softWrap = true, maxLines = 1
@@ -248,7 +276,11 @@ fun TryoutInformation(
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = {
-                        viewModel.startTryout(slugname)
+                        if (soalList.isEmpty()) {
+                            Toast.makeText(context, "Soal tidak ada", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        shouldShowConfirmExam = !shouldShowConfirmExam
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(
@@ -261,6 +293,68 @@ fun TryoutInformation(
                         fontSize = 17.sp,
                         color = MainBlueColor
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConfirmStartTryout(onSubmitClick: () -> Unit, onCancelClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.57F)
+    ) {
+        Column(
+            modifier = Modifier
+                .wrapContentSize()
+                .padding(horizontal = 24.dp)
+                .padding(top = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CustomText(
+                text = "Apakah anda yakin ingin memulai ujian?",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                fontWeight = FontWeight.Bold,
+                color = MainBlueColor,
+                fontSize = 16.sp,
+                letterSpacing = 0.5.sp
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Image(painter = painterResource(id = R.drawable.puzzled), contentDescription = null)
+            Box(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(bottom = 12.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
+                    Button(
+                        onClick = {
+                            onCancelClick.invoke()
+                        }, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(
+                            MainBlueColor
+                        )
+                    ) {
+                        CustomText(
+                            text = "Cancel", fontWeight = FontWeight.Bold, color = MainYellowColor
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1F))
+                    Button(
+                        onClick = {
+                            onSubmitClick.invoke()
+                        }, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(
+                            MainBlueColor
+                        )
+                    ) {
+                        CustomText(
+                            text = "Mulai", fontWeight = FontWeight.Bold, color = MainYellowColor
+                        )
+                    }
+
                 }
             }
         }
