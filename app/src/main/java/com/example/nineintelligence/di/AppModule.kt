@@ -15,6 +15,7 @@ import androidx.work.WorkManager
 import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.core.Notification
 import com.example.nineintelligence.data.network.apiservice.BankSoalQuestion
+import com.example.nineintelligence.data.network.apiservice.CreatePayment
 import com.example.nineintelligence.data.network.apiservice.DetailUser
 import com.example.nineintelligence.data.network.apiservice.Discussion
 import com.example.nineintelligence.data.network.apiservice.GetBankSoalList
@@ -34,6 +35,7 @@ import com.example.nineintelligence.data.network.apiservice.TakenBankSoal
 import com.example.nineintelligence.data.network.apiservice.TakenTryOut
 import com.example.nineintelligence.data.network.apiservice.UpdateProfile
 import com.example.nineintelligence.domain.repository.BankSoalListImpl
+import com.example.nineintelligence.domain.repository.CreatePaymentImpl
 import com.example.nineintelligence.domain.repository.DetailUserImpl
 import com.example.nineintelligence.domain.repository.DiscussionImpl
 import com.example.nineintelligence.domain.repository.GetBankSoalQuestion
@@ -54,6 +56,7 @@ import com.example.nineintelligence.domain.use_case.bank_soal_use_case.TakenBank
 import com.example.nineintelligence.domain.use_case.exam_use_case.BankSoalGetSoalUseCase
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
 import com.example.nineintelligence.domain.use_case.login_use_case.LoginUseCase
+import com.example.nineintelligence.domain.use_case.payment_use_case.CreatePaymentUseCase
 import com.example.nineintelligence.domain.use_case.payment_use_case.GetListPaymentItemsUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.HistoryUseCase
@@ -272,6 +275,12 @@ val appModule = module {
         GetListPaymentItemsUseCase(get())
     }
     viewModel {
-        PackageViewModel(get())
+        PackageViewModel(get(),get(),get())
+    }
+    single<CreatePayment> {
+        CreatePaymentImpl(get(), get())
+    }
+    single {
+        CreatePaymentUseCase(get())
     }
 }

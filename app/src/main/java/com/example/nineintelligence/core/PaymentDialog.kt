@@ -53,12 +53,12 @@ import kotlinx.coroutines.launch
 
 
 private val paymentOptions = listOf(
-    "QRIS", "OVO", "Cash", "Gopay", "Brimo"
+    "BCA"
 )
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun PaymentDialog(modifier: Modifier = Modifier, price: String = "") {
+fun PaymentDialog(modifier: Modifier = Modifier, price: String = "", onclickPayment: () -> Unit) {
     val pagerState = rememberPagerState()
     var selectedPayment by remember {
         mutableStateOf("")
@@ -93,6 +93,7 @@ fun PaymentDialog(modifier: Modifier = Modifier, price: String = "") {
                         selectedPayment = out
                     }, onPayButtonClicked = {
                         scope.launch {
+                            onclickPayment.invoke()
                             pagerState.scrollToPage(pagerState.currentPage + 1)
                         }
                     }, price)
@@ -127,6 +128,9 @@ private fun SelectingPayment(
     onPayButtonClicked: () -> Unit,
     price: String
 ) {
+    val getPrice = remember {
+        price.drop(2).replace(".", "").toInt()
+    }
     Column(
         modifier = Modifier
             .wrapContentSize()
@@ -139,7 +143,7 @@ private fun SelectingPayment(
         Row(modifier = Modifier.fillMaxWidth()) {
             CustomText(text = "Harga", fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.weight(1F))
-            CustomText(text = "Rp.0", color = MainBlueColor)
+            CustomText(text = price, color = MainBlueColor)
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -157,7 +161,7 @@ private fun SelectingPayment(
         Row(modifier = Modifier.fillMaxWidth()) {
             CustomText(text = "Total Bayar", fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.weight(1F))
-            CustomText(text = "Rp.0", color = MainBlueColor)
+            CustomText(text = (getPrice - 0 - 0).toProperRupiah(), color = MainBlueColor)
         }
         Spacer(modifier = Modifier.height(20.dp))
         CustomText(
@@ -184,9 +188,12 @@ private fun SelectingPayment(
             },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(4.dp),
-            colors = ButtonDefaults.buttonColors(MainBlueColor)
+            colors = ButtonDefaults.buttonColors(MainBlueColor), enabled = selectedPayment != ""
         ) {
-            CustomText(text = "Bayar", color = MainYellowColor)
+            CustomText(
+                text = "Bayar",
+                color = if (selectedPayment != "") MainYellowColor else Color.Gray
+            )
         }
     }
 }

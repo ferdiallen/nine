@@ -1,5 +1,6 @@
 package com.example.nineintelligence.presentation.packagescreen
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,27 +44,13 @@ import com.example.nineintelligence.core.PaymentDialog
 import com.example.nineintelligence.core.toProperRupiah
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
+import com.google.accompanist.web.AccompanistWebChromeClient
+import com.google.accompanist.web.AccompanistWebViewClient
+import com.google.accompanist.web.WebView
+import com.google.accompanist.web.rememberWebViewState
 import org.koin.androidx.compose.koinViewModel
 
-data class PackageModel(
-    val id: Int, val packageName: String, val packagePrice: String, val pakcageDescription: String
-)
-
-private val packageOptions = listOf(
-    PackageModel(
-        1,
-        "Starter",
-        "Free",
-        "Semua gratis hanya " + "untuk 3 Bank Soal pertama, 1 Tryout Pertama, dan 3 Materi Pertama"
-    ),
-    PackageModel(
-        2, "Basic", "Rp.500k", "Paket yang berdurasi 6" + " bulan dan mendapatkan semua akses."
-    ),
-    PackageModel(
-        3, "Pro", "Rp.1000k", "Paket yang " + "berdurasi 12 bulan dan mendapatkan semua akses."
-    ),
-)
-
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun PackageScreen(
     modifier: Modifier = Modifier,
@@ -75,7 +63,19 @@ fun PackageScreen(
     var selectedPrice by remember {
         mutableStateOf("")
     }
+    var selectedPriceInteger by remember {
+        mutableStateOf(0)
+    }
+    var shouldShowPaymentGateway by remember {
+        mutableStateOf(false)
+    }
     val paymentItems by viewModel.paymentItemList.collectAsStateWithLifecycle()
+    val paymentResult by viewModel.paymentResult.collectAsStateWithLifecycle()
+    val webViewState =
+        rememberWebViewState(url = paymentResult?.redirectUrl ?: "https://www.google.com")
+    LaunchedEffect(key1 = paymentResult, block = {
+        shouldShowPaymentGateway = paymentResult!=null
+    })
     Column(modifier) {
         TopBarMain(onBackPress = {
             controller.popBackStack()
@@ -97,9 +97,10 @@ fun PackageScreen(
                     name = it.itemName ?: "",
                     price = it.price?.toProperRupiah() ?: "",
                     desc = "",
-                    onClickItem = {out->
+                    onClickItem = { out ->
                         shouldShowPaymentDialog = !shouldShowPaymentDialog
                         selectedPrice = out
+                        selectedPriceInteger = it.price ?: 0
                     }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -109,7 +110,23 @@ fun PackageScreen(
     if (shouldShowPaymentDialog) {
         Dialog(onDismissRequest = { shouldShowPaymentDialog = false }) {
             PaymentDialog(
-                modifier = Modifier.height(510.dp), price = selectedPrice
+                modifier = Modifier.height(510.dp), price = selectedPrice, onclickPayment = {
+                    viewModel.createPayment(paymentItems.find { it.price == selectedPriceInteger }
+                        ?: return@PaymentDialog)
+                }
+            )
+        }
+    }
+    if (shouldShowPaymentGateway){
+        Dialog(onDismissRequest = { shouldShowPaymentGateway = false }) {
+            WebView(state = webViewState, onCreated = {
+                it.settings.javaScriptEnabled = true
+            }, onDispose = {
+                it.clearHistory()
+            }, modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(vertical = 12.dp)
             )
         }
     }
