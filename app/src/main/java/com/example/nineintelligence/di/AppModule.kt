@@ -16,6 +16,7 @@ import com.example.nineintelligence.core.AuthPrefs
 import com.example.nineintelligence.core.Notification
 import com.example.nineintelligence.data.network.apiservice.BankSoalQuestion
 import com.example.nineintelligence.data.network.apiservice.CreatePayment
+import com.example.nineintelligence.data.network.apiservice.DeleteOrder
 import com.example.nineintelligence.data.network.apiservice.DetailUser
 import com.example.nineintelligence.data.network.apiservice.Discussion
 import com.example.nineintelligence.data.network.apiservice.GetBankSoalList
@@ -23,6 +24,7 @@ import com.example.nineintelligence.data.network.apiservice.GetItemsPayment
 import com.example.nineintelligence.data.network.apiservice.GetListTryout
 import com.example.nineintelligence.data.network.apiservice.GetSoal
 import com.example.nineintelligence.data.network.apiservice.History
+import com.example.nineintelligence.data.network.apiservice.LatestTransaction
 import com.example.nineintelligence.domain.repository.LoginUserImpl
 import com.example.nineintelligence.data.network.apiservice.RegisterUser
 import com.example.nineintelligence.domain.repository.RegisterUserImpl
@@ -33,15 +35,18 @@ import com.example.nineintelligence.data.network.apiservice.TakeBankSoal
 import com.example.nineintelligence.data.network.apiservice.TakeTryout
 import com.example.nineintelligence.data.network.apiservice.TakenBankSoal
 import com.example.nineintelligence.data.network.apiservice.TakenTryOut
+import com.example.nineintelligence.data.network.apiservice.UpdatePayment
 import com.example.nineintelligence.data.network.apiservice.UpdateProfile
 import com.example.nineintelligence.domain.repository.BankSoalListImpl
 import com.example.nineintelligence.domain.repository.CreatePaymentImpl
+import com.example.nineintelligence.domain.repository.DeleteOrderImpl
 import com.example.nineintelligence.domain.repository.DetailUserImpl
 import com.example.nineintelligence.domain.repository.DiscussionImpl
 import com.example.nineintelligence.domain.repository.GetBankSoalQuestion
 import com.example.nineintelligence.domain.repository.GetItemsPaymentImpl
 import com.example.nineintelligence.domain.repository.GetSoalImpl
 import com.example.nineintelligence.domain.repository.HistoryImpl
+import com.example.nineintelligence.domain.repository.LatestTransactionImpl
 import com.example.nineintelligence.domain.repository.ListTryOutImpl
 import com.example.nineintelligence.domain.repository.StartTryoutImpl
 import com.example.nineintelligence.domain.repository.SubmitAnswerImpl
@@ -49,6 +54,7 @@ import com.example.nineintelligence.domain.repository.TakeBankSoalImpl
 import com.example.nineintelligence.domain.repository.TakeTryoutImpl
 import com.example.nineintelligence.domain.repository.TakenBankSoalImpl
 import com.example.nineintelligence.domain.repository.TakenTryOutImpl
+import com.example.nineintelligence.domain.repository.UpdatePaymentImpl
 import com.example.nineintelligence.domain.repository.UpdateProfileImpl
 import com.example.nineintelligence.domain.use_case.bank_soal_use_case.GetListBankSoalUseCase
 import com.example.nineintelligence.domain.use_case.bank_soal_use_case.TakeBankSoalUseCase
@@ -57,7 +63,10 @@ import com.example.nineintelligence.domain.use_case.exam_use_case.BankSoalGetSoa
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
 import com.example.nineintelligence.domain.use_case.login_use_case.LoginUseCase
 import com.example.nineintelligence.domain.use_case.payment_use_case.CreatePaymentUseCase
+import com.example.nineintelligence.domain.use_case.payment_use_case.DeletePaymentUseCase
 import com.example.nineintelligence.domain.use_case.payment_use_case.GetListPaymentItemsUseCase
+import com.example.nineintelligence.domain.use_case.payment_use_case.LatestPaymentUseCase
+import com.example.nineintelligence.domain.use_case.payment_use_case.UpdatePaymentUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.DetailProfileUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.HistoryUseCase
 import com.example.nineintelligence.domain.use_case.profile_use_case.UpdateProfileUseCase
@@ -275,12 +284,28 @@ val appModule = module {
         GetListPaymentItemsUseCase(get())
     }
     viewModel {
-        PackageViewModel(get(),get(),get())
+        PackageViewModel(get(), get(), get(), get(), get(), get())
     }
     single<CreatePayment> {
         CreatePaymentImpl(get(), get())
     }
     single {
         CreatePaymentUseCase(get())
+    }
+    single<UpdatePayment> {
+        UpdatePaymentImpl(get(), get())
+    }
+    single {
+        UpdatePaymentUseCase(get())
+    }
+    single<LatestTransaction> {
+        LatestTransactionImpl(get(), get())
+    }
+    single {
+        LatestPaymentUseCase(get())
+    }
+    single<DeleteOrder> { DeleteOrderImpl(get(), get()) }
+    single {
+        DeletePaymentUseCase(get())
     }
 }

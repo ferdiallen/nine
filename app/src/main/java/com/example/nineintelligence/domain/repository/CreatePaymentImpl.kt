@@ -32,8 +32,14 @@ class CreatePaymentImpl(
                 PaymentModel(
                     OrderDetails(paymentInfo.itemId, paymentInfo.price, paymentInfo.itemName),
                     CustomerDetails(userData.userName, "", userData.userEmail, ""),
-                    BillingAddress(userData.userName, "", userData.address, "", 0),
-                    ShippingAddress(userData.userName, "", userData.address, "", 0)
+                    BillingAddress(
+                        userData.userName, "", userData.address ?: "",
+                        "", 0
+                    ),
+                    ShippingAddress(
+                        userData.userName, "", userData.address ?: "",
+                        "", 0
+                    )
                 )
             )
             contentType(ContentType.Application.Json)

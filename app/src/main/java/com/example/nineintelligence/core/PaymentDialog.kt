@@ -19,9 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -31,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nineintelligence.domain.util.PaymentState
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -58,7 +58,12 @@ private val paymentOptions = listOf(
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun PaymentDialog(modifier: Modifier = Modifier, price: String = "", onclickPayment: () -> Unit) {
+fun PaymentDialog(
+    modifier: Modifier = Modifier,
+    price: String = "",
+    onclickPayment: () -> Unit,
+    currentPaymentState: State<PaymentState>, onClosePage: () -> Unit, onFailedPage: () -> Unit
+) {
     val pagerState = rememberPagerState()
     var selectedPayment by remember {
         mutableStateOf("")
@@ -72,6 +77,27 @@ fun PaymentDialog(modifier: Modifier = Modifier, price: String = "", onclickPaym
         }
     }
     val scope = rememberCoroutineScope()
+    LaunchedEffect(key1 = currentPaymentState.value, block = {
+        when (currentPaymentState.value) {
+            PaymentState.IDLE -> {}
+            PaymentState.ONCHECK -> {
+                pagerState.animateScrollToPage(1)
+            }
+
+            PaymentState.SUCCESS -> {
+                pagerState.animateScrollToPage(2)
+            }
+
+            PaymentState.FAILED -> {
+                onFailedPage.invoke()
+                pagerState.animateScrollToPage(3)
+            }
+
+            PaymentState.INVOICE_GENERATED -> {
+                pagerState.animateScrollToPage(4)
+            }
+        }
+    })
     LaunchedEffect(key1 = currentPage, block = {
         when (pagerState.currentPage) {
             0 -> currentCardColor = Color.White
@@ -86,17 +112,12 @@ fun PaymentDialog(modifier: Modifier = Modifier, price: String = "", onclickPaym
             containerColor = currentCardColor
         )
     ) {
-        HorizontalPager(count = 5, state = pagerState) {
+        HorizontalPager(count = 5, state = pagerState, userScrollEnabled = false) {
             when (it) {
                 0 -> {
                     SelectingPayment(selectedPayment = selectedPayment, onSelectedPayment = { out ->
                         selectedPayment = out
-                    }, onPayButtonClicked = {
-                        scope.launch {
-                            onclickPayment.invoke()
-                            pagerState.scrollToPage(pagerState.currentPage + 1)
-                        }
-                    }, price)
+                    }, onPayButtonClicked = onclickPayment::invoke, price)
                 }
 
                 1 -> {
@@ -104,11 +125,13 @@ fun PaymentDialog(modifier: Modifier = Modifier, price: String = "", onclickPaym
                 }
 
                 2 -> {
-                    PaymentAccepted()
+                    PaymentAccepted(scrollToGenerateInvoice = {
+                        scope.launch { pagerState.scrollToPage(4) }
+                    })
                 }
 
                 3 -> {
-                    PaymentDeclined()
+                    PaymentDeclined(closePage = onClosePage::invoke)
                 }
 
                 4 -> {
@@ -201,7 +224,7 @@ private fun SelectingPayment(
 @Composable
 private fun LoadingPayment() {
     Column(
-        modifier = Modifier.wrapContentSize(),
+        modifier = Modifier.fillMaxSize().border(1.dp, Color.Black),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -212,7 +235,7 @@ private fun LoadingPayment() {
 }
 
 @Composable
-private fun PaymentAccepted() {
+private fun PaymentAccepted(scrollToGenerateInvoice: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -225,7 +248,7 @@ private fun PaymentAccepted() {
                 .padding(horizontal = 8.dp)
         ) {
             Button(
-                onClick = { },
+                onClick = scrollToGenerateInvoice::invoke,
                 shape = RoundedCornerShape(4.dp),
                 modifier = Modifier.weight(1F),
                 colors = ButtonDefaults.buttonColors(MainBlueColor)
@@ -261,7 +284,7 @@ private fun PaymentAccepted() {
 }
 
 @Composable
-private fun PaymentDeclined() {
+private fun PaymentDeclined(closePage: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -270,7 +293,7 @@ private fun PaymentDeclined() {
         contentAlignment = Alignment.BottomCenter
     ) {
         Button(
-            onClick = { },
+            onClick = { closePage.invoke() },
             modifier = Modifier.fillMaxWidth(0.9F),
             shape = RoundedCornerShape(4.dp),
             colors = ButtonDefaults.buttonColors(MainBlueColor)

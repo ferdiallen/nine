@@ -98,7 +98,7 @@ dependencies {
     implementation("io.insert-koin:koin-androidx-workmanager:$koinAndroid")
 
     //Coil
-    implementation("io.coil-kt:coil-compose:2.2.2")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 
     val materialDialog = "0.6.2"
     implementation("com.marosseleng.android:compose-material3-datetime-pickers:$materialDialog")

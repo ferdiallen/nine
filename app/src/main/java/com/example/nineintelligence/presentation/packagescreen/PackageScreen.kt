@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,15 +34,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.core.PaymentDialog
 import com.example.nineintelligence.core.toProperRupiah
+import com.example.nineintelligence.domain.util.GeneratedInvoiceState
+import com.example.nineintelligence.domain.util.PaymentState
 import com.example.nineintelligence.ui.theme.MainBlueColor
 import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.google.accompanist.web.AccompanistWebChromeClient
@@ -54,9 +59,10 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun PackageScreen(
     modifier: Modifier = Modifier,
-    controller: NavController,
-    viewModel: PackageViewModel = koinViewModel()
+    viewModel: PackageViewModel = koinViewModel(), popBack: () -> Unit
 ) {
+    val paymentState = viewModel.paymentState.collectAsStateWithLifecycle()
+    val generateInvoiceState by viewModel.updatePaymentState.collectAsStateWithLifecycle()
     var shouldShowPaymentDialog by remember {
         mutableStateOf(false)
     }
@@ -71,17 +77,48 @@ fun PackageScreen(
     }
     val paymentItems by viewModel.paymentItemList.collectAsStateWithLifecycle()
     val paymentResult by viewModel.paymentResult.collectAsStateWithLifecycle()
+    val emptyList = remember(paymentItems) {
+        paymentItems.isEmpty()
+    }
     val webViewState =
-        rememberWebViewState(url = paymentResult?.redirectUrl ?: "https://www.google.com")
+        rememberWebViewState(url = paymentResult?.redirectUrl ?: "")
     LaunchedEffect(key1 = paymentResult, block = {
-        shouldShowPaymentGateway = paymentResult!=null
+        shouldShowPaymentGateway = paymentResult != null
     })
+    LaunchedEffect(key1 = webViewState.content, block = {
+        if (webViewState.content.getCurrentUrl() == "") {
+            return@LaunchedEffect
+        }
+        if (webViewState.content.getCurrentUrl()
+                ?.contains("app.sandbox.midtrans.com") == false
+        ) {
+            viewModel.retrieveLatestPayment()
+            shouldShowPaymentGateway = false
+        }
+    })
+
+    LaunchedEffect(key1 = generateInvoiceState, block = {
+        when (generateInvoiceState) {
+            GeneratedInvoiceState.SUCCESS -> {
+                viewModel.updatePaymentState(PaymentState.SUCCESS)
+            }
+
+            GeneratedInvoiceState.FAILED -> {
+                viewModel.updatePaymentState(PaymentState.FAILED)
+            }
+
+            GeneratedInvoiceState.IDLE -> {
+                viewModel.updatePaymentState(PaymentState.IDLE)
+            }
+        }
+    })
+
     Column(modifier) {
         TopBarMain(onBackPress = {
-            controller.popBackStack()
+            popBack.invoke()
         })
         CustomText(
-            text = "Paket Berlangganan",
+            text = stringResource(R.string.subscription_package),
             fontWeight = FontWeight.Bold,
             color = MainBlueColor,
             modifier = Modifier.padding(horizontal = 12.dp)
@@ -92,6 +129,17 @@ fun PackageScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp)
         ) {
+            if (emptyList) {
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
             items(paymentItems) {
                 PackageItem(
                     name = it.itemName ?: "",
@@ -108,17 +156,36 @@ fun PackageScreen(
         }
     }
     if (shouldShowPaymentDialog) {
-        Dialog(onDismissRequest = { shouldShowPaymentDialog = false }) {
+        Dialog(onDismissRequest = {
+            shouldShowPaymentDialog = false
+            viewModel.updatePaymentState(PaymentState.IDLE)
+        }) {
             PaymentDialog(
-                modifier = Modifier.height(510.dp), price = selectedPrice, onclickPayment = {
+                modifier = Modifier.height(510.dp),
+                price = selectedPrice,
+                onclickPayment = {
                     viewModel.createPayment(paymentItems.find { it.price == selectedPriceInteger }
                         ?: return@PaymentDialog)
+                    viewModel.updatePaymentState(PaymentState.ONCHECK)
+                },
+                currentPaymentState = paymentState,
+                onClosePage = {
+                    shouldShowPaymentDialog = false
+                    viewModel.updatePaymentState(PaymentState.IDLE)
+                }, onFailedPage = {
+                    viewModel.retrieveLatestPayment()
+                    viewModel.deletePayment()
                 }
             )
         }
     }
-    if (shouldShowPaymentGateway){
-        Dialog(onDismissRequest = { shouldShowPaymentGateway = false }) {
+    if (shouldShowPaymentGateway) {
+        Dialog(onDismissRequest = {
+            shouldShowPaymentGateway = false
+            if (paymentState.value == PaymentState.ONCHECK) {
+                viewModel.updatePaymentState(PaymentState.FAILED)
+            }
+        }) {
             WebView(state = webViewState, onCreated = {
                 it.settings.javaScriptEnabled = true
             }, onDispose = {
@@ -128,6 +195,7 @@ fun PackageScreen(
                 .fillMaxHeight()
                 .padding(vertical = 12.dp)
             )
+
         }
     }
 }
@@ -143,7 +211,7 @@ private fun TopBarMain(onBackPress: () -> Unit) {
         }) {
             Icon(imageVector = Icons.Filled.ArrowBackIosNew, contentDescription = null)
         }
-        CustomText(text = "Back", fontSize = 16.sp, color = MainBlueColor)
+        CustomText(text = stringResource(R.string.back), fontSize = 16.sp, color = MainBlueColor)
     }
 }
 
@@ -163,9 +231,7 @@ private fun PackageItem(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(), onClick = {
-            if (shouldExpand) {
-                onClickItem.invoke(price)
-            }
+            onClickItem.invoke(price)
         }
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

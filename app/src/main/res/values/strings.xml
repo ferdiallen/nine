@@ -31,4 +31,6 @@
     <string name="tryout_has_started">Tryout sudah dimulai</string>
     <string name="address">address</string>
     <string name="gender">gender</string>
+    <string name="subscription_package">Paket Berlangganan</string>
+    <string name="back">Back</string>
 </resources>

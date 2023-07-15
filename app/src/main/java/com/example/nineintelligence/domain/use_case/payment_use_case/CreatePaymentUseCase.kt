@@ -18,6 +18,7 @@ class CreatePaymentUseCase(
             val payment = createPayment.createPayment(paymentInfo, userData)
             Resource.Success(payment)
         } catch (e: Exception) {
+            println(e.cause?.message)
             Resource.Error(e.message)
         } catch (e: IOException) {
             Resource.Error(e.message)

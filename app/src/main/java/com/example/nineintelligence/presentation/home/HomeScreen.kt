@@ -109,7 +109,7 @@ private val dataBottomBar = mapOf(
 @Composable
 fun HomeScreen(
     controller: NavHostController = rememberAnimatedNavController(),
-    systemUi: SystemUiController, rootController: NavController,
+    systemUi: SystemUiController, navigateToLoginScreen: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val windowInfo = rememberWindoInfo()
@@ -126,11 +126,7 @@ fun HomeScreen(
     })
     LaunchedEffect(key1 = viewModel.shouldNavigateToLoginScreen, block = {
         if (viewModel.shouldNavigateToLoginScreen) {
-            rootController.navigate(NavigationHolder.LoginScreen.route) {
-                popUpTo(NavigationHolder.HomeScreen.route) {
-                    inclusive = true
-                }
-            }
+            navigateToLoginScreen.invoke()
         }
     })
     Scaffold(bottomBar = {
@@ -196,19 +192,14 @@ fun HomeScreen(
             }, exitTransition = {
                 slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, tween(400))
             }) {
-                ProfileScreen(controller = controller,
+                ProfileScreen(
+                    controller = controller,
                     modifier =
                     Modifier
                         .fillMaxSize()
                         .padding(horizontal = 20.dp), onBackPress = {
                         controller.popBackStack()
-                    }, onLogoutAction = {
-                        rootController.navigate(NavigationHolder.LoginScreen.route) {
-                            popUpTo(NavigationHolder.HomeScreen.route) {
-                                inclusive = true
-                            }
-                        }
-                    }
+                    }, onLogoutAction = navigateToLoginScreen::invoke
                 )
             }
             composable(route = NavigationHolder.BankSoalScreen.route,
@@ -300,7 +291,9 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 14.dp),
-                    controller
+                    popBack = {
+                        controller.popBackStack()
+                    }
                 )
             }
             composable(route = NavigationHolder.TryoutScreen.route) {
@@ -433,7 +426,7 @@ private fun HomeScreenChild(
                 BadgedBox(badge = {
                     Badge(modifier = Modifier.offset((-15).dp)) {
                         Text(
-                            text = "8", fontSize = 12.sp, modifier = Modifier.padding(4.dp)
+                            text = "0", fontSize = 12.sp, modifier = Modifier.padding(4.dp)
                         )
                     }
                 }) {

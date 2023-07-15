@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    val agp_version by extra("8.1.0-beta05")
+    val agp_version by extra("8.1.0-rc01")
     val agp_version2 by extra("7.4.2")
     val agp_version4 by extra("7.4.2")
     repositories {

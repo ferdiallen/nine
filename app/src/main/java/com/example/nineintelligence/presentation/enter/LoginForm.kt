@@ -76,7 +76,9 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginForm(
-    viewModel: EnterViewModel = koinViewModel(), controller: NavController
+    viewModel: EnterViewModel = koinViewModel(),
+    navigateToHomeScreen: () -> Unit,
+    navigateToRegisterScreen: () -> Unit
 ) {
     val email by viewModel.currentEmail.collectAsStateWithLifecycle()
     val password by viewModel.currentPassword.collectAsStateWithLifecycle()
@@ -93,7 +95,7 @@ fun LoginForm(
     }
     val userData by viewModel.loginState
     LaunchedEffect(key1 = userData, block = {
-        if(userData!=null){
+        if (userData != null) {
             shouldShowSnackbar = true
         }
     })
@@ -257,7 +259,7 @@ fun LoginForm(
                                 start = offset,
                                 end = offset
                             ).firstOrNull()?.let { _ ->
-                                controller.navigate(NavigationHolder.RegisterScreen.route)
+                                navigateToRegisterScreen.invoke()
                             }
                         }, style = TextStyle(fontFamily = font, fontSize = 12.sp))
                     }
@@ -283,11 +285,7 @@ fun LoginForm(
                 icon = Icons.Filled.CheckCircle,
                 onDissmiss = {
                     shouldShowSnackbar = false
-                    controller.navigate(NavigationHolder.HomeScreen.route) {
-                        popUpTo(NavigationHolder.LoginScreen.route) {
-                            inclusive = true
-                        }
-                    }
+                    navigateToHomeScreen.invoke()
                 }, timeOut = 2000L, manualDissmiss = false
             )
         } else {

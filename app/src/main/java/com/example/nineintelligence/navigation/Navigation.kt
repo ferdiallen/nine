@@ -62,7 +62,13 @@ fun RootNavigation(
             enterTransition = {
                 slideIntoContainer(AnimatedContentScope.SlideDirection.Left, tween(500))
             }) {
-            HomeScreen(systemUi = sysUi, rootController = controller)
+            HomeScreen(systemUi = sysUi, navigateToLoginScreen = {
+                controller.navigate(NavigationHolder.LoginScreen.route) {
+                    popUpTo(NavigationHolder.HomeScreen.route) {
+                        inclusive = true
+                    }
+                }
+            })
         }
     }
 }
@@ -90,7 +96,15 @@ fun NavGraphBuilder.authRoute(controller: NavController) {
         })
         ) {
             LoginForm(
-                controller = controller
+             navigateToRegisterScreen = {
+                    controller.navigate(NavigationHolder.RegisterScreen.route)
+                }, navigateToHomeScreen = {
+                    controller.navigate(NavigationHolder.HomeScreen.route) {
+                        popUpTo(NavigationHolder.LoginScreen.route) {
+                            inclusive = true
+                        }
+                    }
+                }
             )
         }
         composable(route = NavigationHolder.RegisterScreen.route,
