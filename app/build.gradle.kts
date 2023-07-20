@@ -16,7 +16,7 @@ android {
         minSdk = 24
         targetSdk = 33
         versionCode = 1
-        versionName = "0.9"
+        versionName = "0.95"
         buildConfigField("String", "BASE_URL", baseUrlKey)
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -48,7 +48,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.0"
     }
-    packagingOptions {
+    packaging {
         resources {
             excludes.add("/META-INF/{AL2.0,LGPL2.1}")
         }
@@ -130,4 +130,10 @@ dependencies {
 
     //Datastore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    //CanaryLeak
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+
+    //Immutable List
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 }

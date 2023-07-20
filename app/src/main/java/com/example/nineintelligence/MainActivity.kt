@@ -7,7 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.media3.common.util.UnstableApi
+import androidx.navigation.compose.rememberNavController
+import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.RootNavigation
+import com.example.nineintelligence.presentation.exam.ExamScreen
+import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
 
 @UnstableApi
@@ -20,7 +24,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                     RootNavigation()
+                   RootNavigation()
                 }
             }
         }

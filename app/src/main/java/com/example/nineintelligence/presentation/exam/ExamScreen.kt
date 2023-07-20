@@ -80,6 +80,7 @@ import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.domain.models.DiscussModel
 import com.example.nineintelligence.domain.models.SubmitModel
 import com.example.nineintelligence.domain.models.UserAnswerData
+import com.example.nineintelligence.domain.util.DiscussionType
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.NavigationHolder
 import com.example.nineintelligence.ui.theme.CorrectAnswerColor
@@ -103,7 +104,8 @@ fun ExamScreen(
     vm: ExamViewModel = koinViewModel(),
     typeOf: ExamType,
     slugName: String = "",
-    time: Int
+    time: Int,
+    discussionType: DiscussionType? = null
 ) {
     var shouldShowQuestionList by remember {
         mutableStateOf(false)
@@ -124,8 +126,10 @@ fun ExamScreen(
             }
 
             ExamType.DISCUSSION -> {
-                vm.retrieveSoalList(slugName)
-                vm.getPembahasan(slugName)
+                discussionType?.let {
+                    vm.retrieveSoalList(slugName)
+                    vm.getPembahasan(slugName, it)
+                }
             }
 
             ExamType.BANK_SOAL -> {
@@ -140,14 +144,21 @@ fun ExamScreen(
     val retrievedSoal by vm.listQuestion.collectAsStateWithLifecycle()
     val discussionResponse by vm.discussionResponse.collectAsStateWithLifecycle()
     val resultSubmit by vm.resultSubmit.collectAsStateWithLifecycle()
+    val bankSoalSubmitResponse by vm.bankSoalSubmitResponse.collectAsStateWithLifecycle()
     val bankSoalList by vm.bankSoalListQuestion.collectAsStateWithLifecycle()
-    LaunchedEffect(key1 = resultSubmit, block = {
-        resultSubmit?.let {
-            shouldShowDialogOver = false
-            controller.navigate(NavigationHolder.QuestionDiscussion.route + "/$slugName") {
-                popUpTo(NavigationHolder.ExamScreen.route + "/$slugName") {
-                    inclusive = true
+    LaunchedEffect(key1 = resultSubmit, key2 = bankSoalSubmitResponse, block = {
+        if (typeOf == ExamType.TAKE_EXAMS) {
+            resultSubmit?.let {
+                shouldShowDialogOver = false
+                controller.navigate(NavigationHolder.QuestionDiscussion.route + "/$slugName") {
+                    popUpTo(NavigationHolder.ExamScreen.route + "/$slugName") {
+                        inclusive = true
+                    }
                 }
+            }
+        } else if (typeOf == ExamType.BANK_SOAL) {
+            bankSoalSubmitResponse?.let {
+                shouldShowDialogOver = false
             }
         }
     })
@@ -172,7 +183,6 @@ fun ExamScreen(
             pagerState.currentPage
         }
     }
-    println(currentPage < listSize - 1)
     LaunchedEffect(key1 = currentTime, block = {
         currentTime.toComponents { hours, minutes, seconds, _ ->
             if (hours == 0L && minutes == 0 && seconds == 0) {
@@ -421,7 +431,7 @@ fun ExamScreen(
             DialogIsOver(onSubmitClick = {
                 vm.saveAnswer(SubmitModel(savedAnswerViewModel?.map {
                     it.second
-                } ?: return@DialogIsOver), slugName)
+                } ?: return@DialogIsOver), slugName, typeOf)
 
             }, onCancelClick = {
                 shouldShowDialogOver = false

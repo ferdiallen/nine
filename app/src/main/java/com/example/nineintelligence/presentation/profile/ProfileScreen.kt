@@ -104,6 +104,8 @@ import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.core.isTryoutOver
 import com.example.nineintelligence.core.toPreferrableFormatDate
+import com.example.nineintelligence.domain.models.BankSoalDetails
+import com.example.nineintelligence.domain.models.HistoryBankSoalModel
 import com.example.nineintelligence.domain.models.HistoryBankSoalTryout
 import com.example.nineintelligence.domain.models.HistoryModel
 import com.example.nineintelligence.domain.models.TakenBankSoal
@@ -127,9 +129,13 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import com.google.common.collect.ImmutableList
 import com.marosseleng.compose.material3.datetimepickers.date.ui.dialog.DatePickerDialog
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import okhttp3.internal.immutableListOf
 import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter
 
@@ -400,9 +406,13 @@ private fun ChildProfileScreen(
                             font = font,
                             type = ActivityType.MYACTIVITY,
                             takenTryOut,
-                            secondData = history?.tryoutContent ?: emptyList(),
+                            secondData = history?.tryoutContent?.toImmutableList()
+                                ?: persistentListOf(),
                             navigateToExamScreen = {
-                                controller.navigate(NavigationHolder.ExamScreen.route + "/$it/${0}/${ExamType.BANK_SOAL}")
+                                controller.navigate(
+                                    NavigationHolder.ExamScreen.route +
+                                            "/$it/${0}/${ExamType.BANK_SOAL}"
+                                )
                             },
                             navigateToTryOutInformation = {
                                 controller.navigate(
@@ -410,17 +420,19 @@ private fun ChildProfileScreen(
                                             + "/$it"
                                 )
                             },
-                            bankSoalModel = takenBankSoal
+                            bankSoalModel = takenBankSoal.toImmutableList()
                         )
 
                         2 -> ActivityTab(
                             font = font,
                             type = ActivityType.DISCUSSION,
-                            history?.tryoutContent ?: emptyList(), navigateToExamScreen = {
+                            history, navigateToExamScreen = {
 
                             }, navigateToTryOutInformation = {
-                                controller.navigate(NavigationHolder.QuestionDiscussion.route
-                                        + "/$it")
+                                controller.navigate(
+                                    NavigationHolder.QuestionDiscussion.route
+                                            + "/$it"
+                                )
                             }
                         )
                     }
@@ -606,7 +618,7 @@ private fun ItemsChart(result: Int, modifier: Modifier = Modifier) {
         Card(
             modifier = Modifier
                 .width(30.dp)
-                .fillMaxHeight(result / 100F),
+                .fillMaxHeight(result.plus(if (result <= 0) 5 else 0) / 100F),
             colors = CardDefaults.cardColors(MainYellowColor),
             shape = RoundedCornerShape(
                 topStart = 8.dp, topEnd = 8.dp, bottomStart = 4.dp, bottomEnd = 4.dp
@@ -620,9 +632,9 @@ private fun ItemsChart(result: Int, modifier: Modifier = Modifier) {
 private fun <T> ActivityTab(
     font: FontFamily,
     type: ActivityType,
-    data: List<T>,
-    secondData: List<HistoryModel> = emptyList(),
-    bankSoalModel: List<TakenBankSoal> = emptyList(),
+    data: T,
+    secondData: kotlinx.collections.immutable.ImmutableList<HistoryModel> = persistentListOf(),
+    bankSoalModel: kotlinx.collections.immutable.ImmutableList<TakenBankSoal> = persistentListOf(),
     navigateToExamScreen: (String) -> Unit,
     navigateToTryOutInformation: (String) -> Unit
 ) {
@@ -659,6 +671,16 @@ private fun <T> ActivityTab(
             ) {
                 when (it) {
                     0 -> {
+                        val upcomingTryout = remember {
+                            (data as? List<TakenTryOutModel>)?.filter { out ->
+                                out.details == "Ongoing"
+                            } ?: emptyList()
+                        }
+                        val ongoingTryout = remember {
+                            (data as? List<TakenTryOutModel>)?.filter { out ->
+                                out.details == "Upcoming" && out.tryoutDetails?.endsAt?.isTryoutOver() == false
+                            } ?: emptyList()
+                        }
                         LazyColumn(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.fillMaxSize(),
@@ -677,9 +699,7 @@ private fun <T> ActivityTab(
                                     textAlign = TextAlign.Start
                                 )
                             }
-                            items(data.filterIsInstance<TakenTryOutModel>().filter { out ->
-                                out.details == "Ongoing"
-                            }) { data ->
+                            items(upcomingTryout) { data ->
                                 ActivityList(
                                     font = font,
                                     tryOutName = data.tryoutDetails?.tryOutTitle ?: "",
@@ -720,9 +740,7 @@ private fun <T> ActivityTab(
                                     textAlign = TextAlign.Start
                                 )
                             }
-                            items(data.filterIsInstance<TakenTryOutModel>().filter { out ->
-                                out.details == "Upcoming" && out.tryoutDetails?.endsAt?.isTryoutOver() == false
-                            }) {
+                            items(ongoingTryout) {
                                 ActivityList(
                                     font = font,
                                     tryOutName = it.tryoutDetails?.tryOutTitle.toString(),
@@ -767,17 +785,38 @@ private fun <T> ActivityTab(
                 }
             }
         } else {
+            val tryoutHistory = remember {
+                (data as? HistoryBankSoalTryout)?.tryoutContent ?: emptyList()
+            }
+            val bankSoalHistory = remember {
+                (data as? HistoryBankSoalTryout)?.bankSoalContent ?: emptyList()
+            }
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp)
             ) {
-                items(data.filterIsInstance<HistoryModel>()) {
+                items(tryoutHistory) {
                     ActivityList(
                         font = font,
                         tryOutName = it.tryoutDetails?.tryOutTitle ?: "",
                         startDate = it.tryoutDetails?.startsAt?.toPreferrableFormatDate() ?: "",
+                        onClick = {
+                            navigateToTryOutInformation.invoke(
+                                it.tryoutDetails?.tryOutSlug ?: return@ActivityList
+                            )
+                        },
+                        activityType = type, buttonEnabled = true, onCardClick = {
+
+                        }
+                    )
+                }
+                items(bankSoalHistory) {
+                    ActivityList(
+                        font = font,
+                        tryOutName = it.tryoutDetails?.tryOutTitle ?: "",
+                        startDate = "",
                         onClick = {
                             navigateToTryOutInformation.invoke(
                                 it.tryoutDetails?.tryOutSlug ?: return@ActivityList

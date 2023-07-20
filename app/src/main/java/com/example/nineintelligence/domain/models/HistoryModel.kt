@@ -10,7 +10,14 @@ data class HistoryModel(
 )
 
 @Serializable
+data class HistoryBankSoalModel(
+    @SerialName("bs_hasil") val hasilTryout: BankSoalSubmitResponse? = null,
+    @SerialName("bs_details") val tryoutDetails: BankSoalDetails? = null
+)
+
+
+@Serializable
 data class HistoryBankSoalTryout(
     @SerialName("to_content") val tryoutContent: List<HistoryModel> = emptyList(),
-    @SerialName("bs_content") val bankSoalContent: List<HistoryModel> = emptyList()
+    @SerialName("bs_content") val bankSoalContent: List<HistoryBankSoalModel> = emptyList()
 )
