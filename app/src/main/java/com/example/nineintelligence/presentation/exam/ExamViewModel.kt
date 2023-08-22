@@ -58,8 +58,8 @@ class ExamViewModel(
     private val _bankSoalSubmitResponse = MutableStateFlow<BankSoalSubmitResponse?>(null)
     val bankSoalSubmitResponse = _bankSoalSubmitResponse.asStateFlow()
 
-    suspend fun retrieveSoalList(slugName: String) {
-        when (val res = getSoal.getSoal(slugName)) {
+    suspend fun retrieveSoalList(slugName: String, type: DiscussionType) {
+        when (val res = getSoal.getSoal(slugName, type)) {
             is Resource.Success -> {
                 _listQuestion.update {
                     res.data ?: emptyList()
@@ -98,8 +98,8 @@ class ExamViewModel(
         }
     }
 
-    suspend fun getPembahasan(slugName: String,discussionType: DiscussionType) {
-        when (val res = discussionUseCase.getPembahasan(slugName,discussionType)) {
+    suspend fun getPembahasan(slugName: String, discussionType: DiscussionType) {
+        when (val res = discussionUseCase.getPembahasan(slugName, discussionType)) {
             is Resource.Success -> {
                 _discussionResult.update {
                     res.data ?: emptyList()
@@ -151,6 +151,7 @@ class ExamViewModel(
                     is Resource.Error -> {
 
                     }
+
                     else -> {}
                 }
             }

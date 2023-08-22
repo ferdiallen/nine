@@ -5,7 +5,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -67,6 +69,7 @@ import com.example.nineintelligence.R
 import com.example.nineintelligence.core.CustomText
 import com.example.nineintelligence.core.toPreferrableFormatDate
 import com.example.nineintelligence.domain.util.BottomBarData
+import com.example.nineintelligence.domain.util.DiscussionType
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.domain.util.WindowType
 import com.example.nineintelligence.domain.util.listBottomNavigation
@@ -143,7 +146,14 @@ fun HomeScreen(
                 modifier = Modifier.border(0.1.dp, Color.Black),
                 info = windowInfo,
                 listItem = listBottomNavigation,
-                controller
+                navigateTo = {
+                    controller.navigate(it) {
+                        launchSingleTop = true
+                        popUpTo(
+                            NavigationHolder.HomeScreenChild.route
+                        )
+                    }
+                }
             )
         }
     }, topBar = {
@@ -168,7 +178,13 @@ fun HomeScreen(
             composable(route = NavigationHolder.HomeScreenChild.route, enterTransition = {
                 slideIntoContainer(AnimatedContentScope.SlideDirection.Left)
             }, exitTransition = {
-                slideOutOfContainer(AnimatedContentScope.SlideDirection.Left)
+                if (currentStack?.destination?.route == NavigationHolder.BankSoalScreen.route ||
+                    currentStack?.destination?.route == NavigationHolder.SubjectScreen.route
+                ) {
+                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Right)
+                } else {
+                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Left)
+                }
             }) {
                 Box(
                     modifier = Modifier
@@ -263,22 +279,40 @@ fun HomeScreen(
                     bankSoalOf = 1, typeOf = "Bank Soal", controller = controller
                 )
             }
-            composable(route = NavigationHolder.QuestionDiscussion.route + "/{slug}",
+            composable(route = NavigationHolder.QuestionDiscussion.route + "/{slug}/{discussion_type}",
                 arguments = listOf(
                     navArgument("slug") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                    navArgument("discussion_type") {
                         type = NavType.StringType
                         defaultValue = ""
                     }
                 )) { out ->
                 val getSlug = out.arguments?.getString("slug")
+                val getDiscussionType = remember {
+                    DiscussionType.valueOf(
+                        out.arguments?.getString("discussion_type")
+                            ?: ""
+                    )
+                }
                 ExamScreen(
-                    controller = controller, modifier = Modifier
+                    controller = controller,
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 22.dp),
-                    typeOf = ExamType.DISCUSSION, time = 0, slugName = getSlug ?: ""
+                    typeOf = ExamType.DISCUSSION,
+                    time = 0,
+                    slugName = getSlug ?: "",
+                    discussionType = getDiscussionType
                 )
             }
-            composable(route = NavigationHolder.SubjectScreen.route) {
+            composable(route = NavigationHolder.SubjectScreen.route, enterTransition = {
+                slideInHorizontally { -it / 2 }
+            }, exitTransition = {
+                slideOutHorizontally { -it * 2 }
+            }) {
                 SubjectScreen(
                     modifier = Modifier.padding(horizontal = 12.dp),
                     controller = controller
@@ -647,7 +681,7 @@ private fun BottomBarCustom(
     modifier: Modifier = Modifier,
     info: WindowType,
     listItem: List<BottomBarData>,
-    controller: NavController
+    navigateTo:(String)->Unit
 ) {
     DeliverCustomFonts(font = Poppins.fonts) { font ->
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
@@ -677,12 +711,7 @@ private fun BottomBarCustom(
                                         .padding(start = 4.dp),
                                     onClick = {
                                         indexAt.route?.let { out ->
-                                            controller.navigate(out) {
-                                                launchSingleTop = true
-                                                popUpTo(
-                                                    NavigationHolder.HomeScreenChild.route
-                                                )
-                                            }
+                                            navigateTo.invoke(out)
                                         }
                                     },
                                     shape = CircleShape,
@@ -742,12 +771,7 @@ private fun BottomBarCustom(
                         }
                     ),
                     onClick = {
-                        controller.navigate(listBottomNavigation[2].route ?: "") {
-                            launchSingleTop = true
-                            popUpTo(NavigationHolder.HomeScreenChild.route) {
-
-                            }
-                        }
+                        navigateTo.invoke(listBottomNavigation[2].route ?: "")
                     },
                     colors = CardDefaults.cardColors(MainYellowColor),
                     border = BorderStroke(0.1.dp, color = Color.Black),

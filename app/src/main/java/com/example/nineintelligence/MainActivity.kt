@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.navigation.RootNavigation
 import com.example.nineintelligence.presentation.exam.ExamScreen
+import com.example.nineintelligence.presentation.packagescreen.PackageScreen
 import com.example.nineintelligence.presentation.profile.ProfileScreen
 import com.example.nineintelligence.ui.theme.NineIntelligenceTheme
 

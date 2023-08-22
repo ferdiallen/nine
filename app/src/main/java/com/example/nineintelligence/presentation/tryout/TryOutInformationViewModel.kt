@@ -11,6 +11,7 @@ import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.use_case.exam_use_case.GetSoalUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.StartTryoutUseCase
 import com.example.nineintelligence.domain.use_case.tryout_use_case.TakenTryOutUseCase
+import com.example.nineintelligence.domain.util.DiscussionType
 import com.example.nineintelligence.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,7 +72,7 @@ class TryOutInformationViewModel(
     }
 
     suspend fun readSoalList(slugname: String) {
-        return when (val res = getSoalUseCase.getSoal(slugname)) {
+        return when (val res = getSoalUseCase.getSoal(slugname,DiscussionType.EXAM_DISCUSSION)) {
             is Resource.Success -> {
                 _getSoal.update {
                     res.data ?: emptyList()

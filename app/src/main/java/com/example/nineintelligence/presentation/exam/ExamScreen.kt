@@ -90,6 +90,8 @@ import com.example.nineintelligence.ui.theme.MainYellowColor
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -119,7 +121,7 @@ fun ExamScreen(
     LaunchedEffect(key1 = Unit, block = {
         when (typeOf) {
             ExamType.TAKE_EXAMS -> {
-                vm.retrieveSoalList(slugName)
+                vm.retrieveSoalList(slugName, DiscussionType.EXAM_DISCUSSION)
                 if (time > 0) {
                     vm.setLengthTime(time)
                 }
@@ -127,7 +129,7 @@ fun ExamScreen(
 
             ExamType.DISCUSSION -> {
                 discussionType?.let {
-                    vm.retrieveSoalList(slugName)
+                    vm.retrieveSoalList(slugName, it)
                     vm.getPembahasan(slugName, it)
                 }
             }
@@ -151,13 +153,20 @@ fun ExamScreen(
             resultSubmit?.let {
                 shouldShowDialogOver = false
                 controller.navigate(NavigationHolder.QuestionDiscussion.route + "/$slugName") {
-                    popUpTo(NavigationHolder.ExamScreen.route + "/$slugName") {
+                    popUpTo(
+                        NavigationHolder.ExamScreen.route + "/$slugName" +
+                                "/${DiscussionType.EXAM_DISCUSSION.name}"
+                    ) {
                         inclusive = true
                     }
                 }
             }
         } else if (typeOf == ExamType.BANK_SOAL) {
             bankSoalSubmitResponse?.let {
+                controller.navigate(
+                    NavigationHolder.QuestionDiscussion.route + "/$slugName" +
+                            "/${DiscussionType.BANKSOAL_DISCUSSION.name}"
+                )
                 shouldShowDialogOver = false
             }
         }
@@ -389,14 +398,14 @@ fun ExamScreen(
         }) {
             when (typeOf) {
                 ExamType.DISCUSSION -> {
-                    QuestionDiscussionListSelector(questionData = discussionResponse,
+                    QuestionDiscussionListSelector(questionData = discussionResponse.toPersistentList(),
                         onSubmitClick = {
                             controller.navigate(NavigationHolder.DiscussionScreen.route)
                         }, onGoToSelectedIndex = {
                             scope.launch {
                                 pagerState.scrollToPage(it)
                             }
-                        })
+                        }, soalSize = { listSize })
                 }
 
                 ExamType.TAKE_EXAMS -> {
@@ -771,9 +780,10 @@ fun DialogIsOver(onSubmitClick: () -> Unit, onCancelClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuestionDiscussionListSelector(
-    questionData: List<DiscussModel>,
+    questionData: ImmutableList<DiscussModel>,
     onSubmitClick: () -> Unit,
-    onGoToSelectedIndex: (Int) -> Unit
+    onGoToSelectedIndex: (Int) -> Unit,
+    soalSize: () -> Int
 ) {
     var parentSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -824,7 +834,14 @@ fun QuestionDiscussionListSelector(
                 contentPadding = PaddingValues(start = 2.dp, bottom = 4.dp),
                 modifier = Modifier.heightIn(50.dp, 300.dp)
             ) {
-                itemsIndexed(questionData) { index, data ->
+                items(soalSize()) { index ->
+                    val rightAnswer = remember {
+                        return@remember if (index + 1 > questionData.size) {
+                            false 
+                        } else {
+                            questionData[index].userAnswer == questionData[index].soalDetail?.correctAns
+                        }
+                    }
                     Card(
                         border = BorderStroke(1.dp, Color.Black),
                         modifier = Modifier
@@ -834,8 +851,7 @@ fun QuestionDiscussionListSelector(
                             onGoToSelectedIndex.invoke(index)
                         },
                         colors = CardDefaults.cardColors(
-                            if (data.userAnswer == data.soalDetail?.correctAns)
-                                CorrectAnswerColor else IncorrectAnswerColor
+                            if (rightAnswer) CorrectAnswerColor else IncorrectAnswerColor
                         )
                     ) {
                         Column(

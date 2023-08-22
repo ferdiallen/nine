@@ -136,7 +136,7 @@ fun PaymentDialog(
 
                 4 -> {
                     InvoiceGenerated(
-                        selectedPayment
+                        selectedPayment, price,onClosePage = onClosePage::invoke
                     )
                 }
             }
@@ -224,7 +224,9 @@ private fun SelectingPayment(
 @Composable
 private fun LoadingPayment() {
     Column(
-        modifier = Modifier.fillMaxSize().border(1.dp, Color.Black),
+        modifier = Modifier
+            .fillMaxSize()
+            .border(1.dp, Color.Black),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -325,7 +327,7 @@ private fun PaymentDeclined(closePage: () -> Unit) {
 
 @Composable
 private fun InvoiceGenerated(
-    paymentType: String
+    paymentType: String, price: String,onClosePage: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -342,7 +344,7 @@ private fun InvoiceGenerated(
             Row(modifier = Modifier.fillMaxWidth()) {
                 CustomText(text = "Harga", fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1F))
-                CustomText(text = "Rp.0", color = MainBlueColor)
+                CustomText(text = price, color = MainBlueColor)
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -380,7 +382,7 @@ private fun InvoiceGenerated(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Button(
-                onClick = { },
+                onClick = onClosePage::invoke,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(4.dp),
                 colors = ButtonDefaults.buttonColors(MainBlueColor)

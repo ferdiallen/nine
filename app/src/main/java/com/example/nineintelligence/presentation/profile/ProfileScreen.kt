@@ -2,6 +2,7 @@ package com.example.nineintelligence.presentation.profile
 
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -113,6 +114,7 @@ import com.example.nineintelligence.domain.models.TakenTryOutModel
 import com.example.nineintelligence.domain.models.UpdateProfileModel
 import com.example.nineintelligence.domain.models.UserProfileModel
 import com.example.nineintelligence.domain.util.ActivityType
+import com.example.nineintelligence.domain.util.DiscussionType
 import com.example.nineintelligence.domain.util.ExamType
 import com.example.nineintelligence.domain.util.SettingsModel
 import com.example.nineintelligence.domain.util.TakenTryoutIdentifier.wheterContaintsTakenTryout
@@ -164,6 +166,16 @@ fun ProfileScreen(
     var shouldShowSettingsMenu by remember {
         mutableStateOf(false)
     }
+    BackHandler(onBack = {
+        if (shouldShowEditMenu && shouldShowSettingsMenu) {
+            shouldShowEditMenu = false
+            shouldShowSettingsMenu = false
+        }
+        if (shouldShowSettingsMenu) {
+            shouldShowSettingsMenu = false
+        }
+        onBackPress.invoke()
+    }, enabled = shouldShowEditMenu || shouldShowSettingsMenu)
     val userDataInfo by viewModel.userDataInfo.collectAsStateWithLifecycle()
     val showLoadingProgress by viewModel.shouldShowLoadingScreen.collectAsStateWithLifecycle()
     val takenTryOutData by viewModel.listTakenTryOutModel.collectAsStateWithLifecycle()
@@ -420,7 +432,10 @@ private fun ChildProfileScreen(
                                             + "/$it"
                                 )
                             },
-                            bankSoalModel = takenBankSoal.toImmutableList()
+                            bankSoalModel = takenBankSoal.toImmutableList(),
+                            navigateToPembahasanScreen = { _, _ ->
+
+                            }
                         )
 
                         2 -> ActivityTab(
@@ -429,9 +444,11 @@ private fun ChildProfileScreen(
                             history, navigateToExamScreen = {
 
                             }, navigateToTryOutInformation = {
+
+                            }, navigateToPembahasanScreen = { type, slugName ->
                                 controller.navigate(
                                     NavigationHolder.QuestionDiscussion.route
-                                            + "/$it"
+                                            + "/$slugName" + "/$type"
                                 )
                             }
                         )
@@ -636,7 +653,8 @@ private fun <T> ActivityTab(
     secondData: kotlinx.collections.immutable.ImmutableList<HistoryModel> = persistentListOf(),
     bankSoalModel: kotlinx.collections.immutable.ImmutableList<TakenBankSoal> = persistentListOf(),
     navigateToExamScreen: (String) -> Unit,
-    navigateToTryOutInformation: (String) -> Unit
+    navigateToTryOutInformation: (String) -> Unit,
+    navigateToPembahasanScreen: (DiscussionType, String) -> Unit
 ) {
     val context = LocalContext.current
     val pagerState = rememberPagerState()
@@ -785,10 +803,10 @@ private fun <T> ActivityTab(
                 }
             }
         } else {
-            val tryoutHistory = remember {
+            val tryoutHistory = remember(data) {
                 (data as? HistoryBankSoalTryout)?.tryoutContent ?: emptyList()
             }
-            val bankSoalHistory = remember {
+            val bankSoalHistory = remember(data) {
                 (data as? HistoryBankSoalTryout)?.bankSoalContent ?: emptyList()
             }
             LazyColumn(
@@ -803,7 +821,8 @@ private fun <T> ActivityTab(
                         tryOutName = it.tryoutDetails?.tryOutTitle ?: "",
                         startDate = it.tryoutDetails?.startsAt?.toPreferrableFormatDate() ?: "",
                         onClick = {
-                            navigateToTryOutInformation.invoke(
+                            navigateToPembahasanScreen.invoke(
+                                DiscussionType.EXAM_DISCUSSION,
                                 it.tryoutDetails?.tryOutSlug ?: return@ActivityList
                             )
                         },
@@ -818,7 +837,8 @@ private fun <T> ActivityTab(
                         tryOutName = it.tryoutDetails?.tryOutTitle ?: "",
                         startDate = "",
                         onClick = {
-                            navigateToTryOutInformation.invoke(
+                            navigateToPembahasanScreen.invoke(
+                                DiscussionType.BANKSOAL_DISCUSSION,
                                 it.tryoutDetails?.tryOutSlug ?: return@ActivityList
                             )
                         },
